@@ -28,10 +28,16 @@ export function QRCodeDialog({ userId, userName, onClose }: QRCodeDialogProps) {
           <div className="p-4 rounded-xl" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
             <QRCodeSVG
               value={inviteUrl}
-              size={180}
+              size={200}
               bgColor="#FAFAF8"
               fgColor="#0A0A0A"
-              level="M"
+              level="H"
+              imageSettings={{
+                src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#FDFCF9"/><circle cx="18" cy="18" r="14" fill="#F4E3BB" opacity="0.6"/><circle cx="18" cy="18" r="8" fill="#FEF4D2" opacity="0.8"/><circle cx="18" cy="18" r="4" fill="#FFFFF3"/><circle cx="18" cy="18" r="1.5" fill="#fff"/></svg>'),
+                height: 40,
+                width: 40,
+                excavate: true,
+              }}
             />
           </div>
         </div>

@@ -11,6 +11,7 @@ import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { QRCodeDialog } from '../components/auth/QRCodeDialog'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { Logo } from '../components/Logo'
+import { WandCursor } from '../components/map/WandCursor'
 import * as api from '../api/client'
 
 const BTN_SIZE = 46
@@ -228,6 +229,9 @@ function MapAppInner() {
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
+
+      {/* Zauberstab — nur Desktop, versteckt den echten Cursor */}
+      <WandCursor active={mode === 'place-light'} />
     </div>
   )
 }

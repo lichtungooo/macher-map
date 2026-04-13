@@ -16,21 +16,39 @@ function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [num
   useMapEvents({
     click(e) {
       if (placingLight && onMapClick) {
-        // Funken-Effekt
-        const point = (e as any).containerPoint || (e as any).originalEvent
-        if (point) {
-          const container = document.querySelector('.leaflet-container')
-          if (container) {
-            const rect = container.getBoundingClientRect()
-            const x = (point.x || point.clientX - rect.left) + rect.left
-            const y = (point.y || point.clientY - rect.top) + rect.top
-            const sparkle = document.createElement('div')
-            sparkle.className = 'sparkle-effect'
-            sparkle.style.left = x + 'px'
-            sparkle.style.top = y + 'px'
-            document.body.appendChild(sparkle)
-            setTimeout(() => sparkle.remove(), 1000)
+        // Funken-Effekt mit Partikeln
+        const origEvent = (e as any).originalEvent as MouseEvent | TouchEvent
+        let x = 0, y = 0
+        if (origEvent) {
+          if ('touches' in origEvent && origEvent.touches.length > 0) {
+            x = origEvent.touches[0].clientX; y = origEvent.touches[0].clientY
+          } else if ('clientX' in origEvent) {
+            x = origEvent.clientX; y = origEvent.clientY
           }
+        }
+        if (x && y) {
+          const sparkle = document.createElement('div')
+          sparkle.className = 'sparkle-effect'
+          sparkle.style.left = x + 'px'
+          sparkle.style.top = y + 'px'
+
+          // Funken-Partikel erzeugen
+          for (let i = 0; i < 8; i++) {
+            const p = document.createElement('div')
+            p.className = 'sparkle-particle'
+            const angle = (i / 8) * Math.PI * 2
+            const dist = 25 + Math.random() * 20
+            const tx = Math.cos(angle) * dist
+            const ty = Math.sin(angle) * dist
+            p.style.left = '38px'
+            p.style.top = '38px'
+            p.style.animation = `sparkle-particle 0.5s ease-out ${i * 0.03}s forwards`
+            p.style.transform = `translate(${tx}px, ${ty}px) scale(0.3)`
+            sparkle.appendChild(p)
+          }
+
+          document.body.appendChild(sparkle)
+          setTimeout(() => sparkle.remove(), 1200)
         }
         onMapClick([e.latlng.lat, e.latlng.lng])
       }
