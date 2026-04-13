@@ -1,0 +1,39 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#FDFCF9"/>
+
+  <!-- Subtle radial glow -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="40%" r="40%">
+      <stop offset="0%" stop-color="#FFF8D0" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FDFCF9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Light circle (Logo) -->
+  <circle cx="600" cy="220" r="80" fill="#FFF8D0" opacity="0.6"/>
+  <circle cx="600" cy="220" r="55" fill="#FAECC3" opacity="0.5"/>
+  <circle cx="600" cy="220" r="35" fill="#FEF4D2" opacity="0.7"/>
+  <circle cx="600" cy="220" r="15" fill="#FFFFF3" opacity="0.95"/>
+
+  <!-- Rays -->
+  <line x1="600" y1="120" x2="600" y2="140" stroke="#D4A843" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="600" y1="300" x2="600" y2="320" stroke="#D4A843" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="500" y1="220" x2="520" y2="220" stroke="#D4A843" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="680" y1="220" x2="700" y2="220" stroke="#D4A843" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Title -->
+  <text x="600" y="400" text-anchor="middle" font-family="Georgia, serif" font-size="42" fill="#0A0A0A" font-weight="400">
+    Licht fuer Frieden
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="455" text-anchor="middle" font-family="Georgia, serif" font-size="26" fill="#0A0A0A" opacity="0.45" font-style="italic">
+    Du wirst eingeladen, ein Licht zu entzuenden.
+  </text>
+
+  <!-- URL -->
+  <text x="600" y="560" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#D4A843">
+    lichtung.ooo
+  </text>
+</svg>

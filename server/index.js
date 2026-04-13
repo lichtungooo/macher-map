@@ -211,6 +211,45 @@ app.post('/api/admin/newsletter', adminAuth, async (req, res) => {
   res.json({ sent, total: recipients.length })
 })
 
+// ─── Invite OG-Tags (fuer QR-Code-Scanner Vorschau) ───
+
+app.get('/api/invite-page', (req, res) => {
+  const { id, name } = req.query
+  const inviterName = name || 'Ein Mensch'
+  const ogImage = `${process.env.BASE_URL || 'https://lichtung.ooo'}/og-invite.png`
+  const appUrl = `${process.env.BASE_URL || 'https://lichtung.ooo'}/invite?id=${id || ''}&name=${encodeURIComponent(inviterName)}`
+
+  res.setHeader('Content-Type', 'text/html')
+  res.send(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Licht fuer Frieden — ${inviterName} laedt dich ein</title>
+  <meta property="og:title" content="Licht fuer Frieden">
+  <meta property="og:description" content="${inviterName} laedt dich ein, ein Licht fuer den Frieden zu entzuenden.">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:url" content="${appUrl}">
+  <meta property="og:type" content="website">
+  <meta name="description" content="${inviterName} laedt dich ein, ein Licht fuer den Frieden zu entzuenden.">
+  <meta http-equiv="refresh" content="0;url=${appUrl}">
+</head>
+<body style="font-family: Georgia, serif; text-align: center; padding: 60px 20px; background: #FDFCF9; color: #0A0A0A;">
+  <p style="font-size: 24px;">Licht fuer Frieden</p>
+  <p style="font-size: 16px; color: rgba(10,10,10,0.5); font-style: italic;">${inviterName} laedt dich ein, ein Licht zu entzuenden.</p>
+  <p><a href="${appUrl}" style="color: #D4A843;">Weiter zur Karte</a></p>
+</body>
+</html>`)
+})
+
+// ─── Public Profile (fuer Einladungsseite) ───
+
+app.get('/api/user/:id/public', (req, res) => {
+  const user = findUserById(req.params.id)
+  if (!user) return res.status(404).json({ error: 'Nicht gefunden' })
+  res.json({ name: user.name || 'Ein Mensch', image_path: user.image_path || null })
+})
+
 // ─── Admin: User Management ───
 
 app.post('/api/admin/set-admin', adminAuth, (req, res) => {

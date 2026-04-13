@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { BlazingO } from '../components/BlazingO'
 
@@ -5,6 +6,19 @@ export default function InvitePage() {
   const [searchParams] = useSearchParams()
   const inviterName = searchParams.get('name') || 'Ein Mensch'
   const inviteId = searchParams.get('id') || ''
+  const [inviterImage, setInviterImage] = useState<string | null>(null)
+
+  // Load inviter profile image
+  useEffect(() => {
+    if (inviteId) {
+      fetch(`/api/user/${inviteId}/public`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.image_path) setInviterImage(data.image_path)
+        })
+        .catch(() => {})
+    }
+  }, [inviteId])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ background: '#fff' }}>
@@ -14,20 +28,33 @@ export default function InvitePage() {
       />
 
       <div className="relative z-10 flex flex-col items-center max-w-sm">
-        <div className="mb-6">
-          <BlazingO size={160} />
-        </div>
+        {/* Inviter Photo or BlazingO */}
+        {inviterImage ? (
+          <div className="mb-6">
+            <div
+              className="w-28 h-28 rounded-full overflow-hidden mx-auto"
+              style={{ border: '3px solid rgba(212,168,67,0.3)', boxShadow: '0 0 30px rgba(212,168,67,0.15)' }}
+            >
+              <img src={inviterImage} alt={inviterName} className="w-full h-full object-cover" />
+            </div>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <BlazingO size={140} />
+          </div>
+        )}
 
         <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(1.4rem, 4vw, 2rem)', fontWeight: 400, color: '#0A0A0A', lineHeight: 1.4, marginBottom: '0.5rem' }}>
           <span style={{ color: '#D4A843' }}>{inviterName}</span> laedt dich ein
         </h1>
 
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.1rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.45)', marginBottom: '2rem', lineHeight: 1.6 }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.15rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.45)', marginBottom: '2rem', lineHeight: 1.6 }}>
           ein Licht fuer den Frieden zu entzuenden.
         </p>
 
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: 'rgba(10,10,10,0.5)', lineHeight: 1.7, marginBottom: '2.5rem' }}>
-          Setze dein Licht auf die Weltkarte und verbinde dich mit Menschen, die fuer den Frieden leuchten.
+          Setze dein Licht auf die Weltkarte und verbinde dich mit Menschen,
+          die fuer den Frieden leuchten.
         </p>
 
         <Link

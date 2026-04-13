@@ -8,7 +8,7 @@ interface QRCodeDialogProps {
 }
 
 export function QRCodeDialog({ userId, userName, onClose }: QRCodeDialogProps) {
-  const inviteUrl = `${window.location.origin}/invite?id=${userId}&name=${encodeURIComponent(userName || 'Ein Freund')}`
+  const inviteUrl = `${window.location.origin}/api/invite-page?id=${userId}&name=${encodeURIComponent(userName || 'Ein Freund')}`
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
