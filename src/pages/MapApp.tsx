@@ -19,7 +19,7 @@ type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'qr-code'
 type Mode = 'browse' | 'place-light' | 'place-event'
 
 function MapAppInner() {
-  const { user, lights, setLights, addLight, login: loginCtx } = useApp()
+  const { user, lights, setLights, setEvents, addLight, login: loginCtx } = useApp()
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
@@ -40,9 +40,23 @@ function MapAppInner() {
     }
   }, [])
 
-  // Load lights from backend
+  // Load lights and events from backend
   useEffect(() => {
     api.getLights().then(data => setLights(data)).catch(() => {})
+    api.getEvents().then(data => {
+      const mapped = data.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        description: e.description || '',
+        position: [e.lat, e.lng] as [number, number],
+        start: e.start_time,
+        end: e.end_time,
+        type: e.type || 'meditation',
+        recurring: e.recurring,
+        createdBy: e.user_id,
+      }))
+      setEvents(mapped)
+    }).catch(() => {})
   }, [])
 
   // Auto-login passiert jetzt im AppProvider

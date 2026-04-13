@@ -40,6 +40,7 @@ interface AppState {
   logout: () => void
   updateProfile: (profile: Partial<UserProfile>) => void
   setLights: (lights: LightPin[]) => void
+  setEvents: (events: EventItem[]) => void
   addLight: (position: [number, number]) => void
   addEvent: (event: Omit<EventItem, 'id' | 'createdBy'>) => void
 }
@@ -126,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   return (
-    <AppContext.Provider value={{ user, lights, events, login, logout, updateProfile, setLights, addLight, addEvent }}>
+    <AppContext.Provider value={{ user, lights, events, login, logout, updateProfile, setLights, setEvents, addLight, addEvent }}>
       {children}
     </AppContext.Provider>
   )

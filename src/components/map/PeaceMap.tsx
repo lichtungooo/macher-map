@@ -16,6 +16,22 @@ function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [num
   useMapEvents({
     click(e) {
       if (placingLight && onMapClick) {
+        // Funken-Effekt
+        const point = (e as any).containerPoint || (e as any).originalEvent
+        if (point) {
+          const container = document.querySelector('.leaflet-container')
+          if (container) {
+            const rect = container.getBoundingClientRect()
+            const x = (point.x || point.clientX - rect.left) + rect.left
+            const y = (point.y || point.clientY - rect.top) + rect.top
+            const sparkle = document.createElement('div')
+            sparkle.className = 'sparkle-effect'
+            sparkle.style.left = x + 'px'
+            sparkle.style.top = y + 'px'
+            document.body.appendChild(sparkle)
+            setTimeout(() => sparkle.remove(), 1000)
+          }
+        }
         onMapClick([e.latlng.lat, e.latlng.lng])
       }
     },

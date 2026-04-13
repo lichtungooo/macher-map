@@ -211,6 +211,26 @@ app.post('/api/admin/newsletter', adminAuth, async (req, res) => {
   res.json({ sent, total: recipients.length })
 })
 
+// ─── Admin: User Management ───
+
+app.post('/api/admin/set-admin', adminAuth, (req, res) => {
+  const { email, isAdmin } = req.body
+  if (!email) return res.status(400).json({ error: 'E-Mail fehlt' })
+  const user = findUserByEmail(email)
+  if (!user) return res.status(404).json({ error: 'Nutzer nicht gefunden' })
+  updateUser(user.id, { is_admin: isAdmin ? 1 : 0 })
+  res.json({ ok: true })
+})
+
+app.post('/api/admin/change-password', adminAuth, async (req, res) => {
+  const { newPassword } = req.body
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Passwort muss mindestens 6 Zeichen haben' })
+  const hash = await bcrypt.hash(newPassword, 10)
+  const user = findUserById(req.userId)
+  if (user) setPassword(user.email, hash)
+  res.json({ ok: true })
+})
+
 // ─── Start ───
 
 app.listen(PORT, () => {
