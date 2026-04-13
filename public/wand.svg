@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Stab -->
+  <line x1="4" y1="28" x2="22" y2="10" stroke="#B8943A" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Spitze -->
+  <circle cx="24" cy="8" r="4" fill="#FFF8D0" opacity="0.9"/>
+  <circle cx="24" cy="8" r="2" fill="#FFFFF3"/>
+  <!-- Strahlen -->
+  <line x1="24" y1="1" x2="24" y2="4" stroke="#D4A843" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+  <line x1="24" y1="12" x2="24" y2="15" stroke="#D4A843" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+  <line x1="17" y1="8" x2="20" y2="8" stroke="#D4A843" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+  <line x1="28" y1="8" x2="31" y2="8" stroke="#D4A843" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+  <!-- Diagonale Strahlen -->
+  <line x1="20" y1="4" x2="21.5" y2="5.5" stroke="#D4A843" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="26.5" y1="10.5" x2="28" y2="12" stroke="#D4A843" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="20" y1="12" x2="21.5" y2="10.5" stroke="#D4A843" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="26.5" y1="5.5" x2="28" y2="4" stroke="#D4A843" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <!-- Funken -->
+  <circle cx="19" cy="3" r="0.8" fill="#D4A843" opacity="0.5"/>
+  <circle cx="29" cy="12" r="0.8" fill="#D4A843" opacity="0.5"/>
+</svg>

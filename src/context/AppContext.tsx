@@ -68,7 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             email: data.email,
             name: data.name || '',
             statement: data.statement || '',
-            imageUrl: data.image_path || undefined,
+            imageUrl: data.image_path && data.image_path !== 'null' ? data.image_path : undefined,
           })
         })
         .catch(() => localStorage.removeItem('lichtung-token'))

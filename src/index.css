@@ -167,7 +167,7 @@ body {
 /* ─── Zauberstab-Cursor ─── */
 
 .cursor-wand {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cline x1='4' y1='28' x2='24' y2='8' stroke='%23B8943A' stroke-width='2.5' stroke-linecap='round'/%3E%3Cline x1='22' y1='10' x2='24' y2='8' stroke='%23D4A843' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='25' cy='7' r='4' fill='%23FFF8D0' opacity='0.9'/%3E%3Ccircle cx='25' cy='7' r='2' fill='%23FFFFF3'/%3E%3Cline x1='25' y1='1' x2='25' y2='3' stroke='%23D4A843' stroke-width='1' stroke-linecap='round' opacity='0.7'/%3E%3Cline x1='25' y1='11' x2='25' y2='13' stroke='%23D4A843' stroke-width='1' stroke-linecap='round' opacity='0.7'/%3E%3Cline x1='19' y1='7' x2='21' y2='7' stroke='%23D4A843' stroke-width='1' stroke-linecap='round' opacity='0.7'/%3E%3Cline x1='29' y1='7' x2='31' y2='7' stroke='%23D4A843' stroke-width='1' stroke-linecap='round' opacity='0.7'/%3E%3Cline x1='21' y1='3' x2='22.5' y2='4.5' stroke='%23D4A843' stroke-width='0.8' stroke-linecap='round' opacity='0.5'/%3E%3Cline x1='27.5' y1='9.5' x2='29' y2='11' stroke='%23D4A843' stroke-width='0.8' stroke-linecap='round' opacity='0.5'/%3E%3C/svg%3E") 4 28, crosshair;
+  cursor: url("/wand.svg") 4 28, crosshair;
 }
 
 /* ─── Funken-Effekt ─── */
@@ -212,6 +212,15 @@ body {
 .leaflet-container {
   background: #F5F4F0 !important;
   font-family: var(--font-sans);
+  cursor: default !important;
+}
+
+.leaflet-container .leaflet-grab {
+  cursor: default !important;
+}
+
+.leaflet-container .leaflet-dragging {
+  cursor: move !important;
 }
 
 /* Leuchtende Light-Pin-Marker */
