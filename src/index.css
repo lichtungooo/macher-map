@@ -166,14 +166,20 @@ body {
 
 /* ─── Zauberstab-Cursor ─── */
 
-/* Desktop: Cursor verstecken wenn Zauberstab aktiv (WandCursor-Komponente uebernimmt) */
-.cursor-wand {
+/* Desktop: Cursor verstecken wenn Zauberstab aktiv */
+.cursor-wand,
+.cursor-wand * ,
+.cursor-wand .leaflet-container,
+.cursor-wand .leaflet-grab,
+.cursor-wand .leaflet-interactive {
   cursor: none !important;
 }
 
-/* Touch-Geraete: normaler Cursor, Funken-Effekt per Touch */
+/* Touch-Geraete: normaler Cursor */
 @media (pointer: coarse) {
-  .cursor-wand {
+  .cursor-wand,
+  .cursor-wand *,
+  .cursor-wand .leaflet-container {
     cursor: default !important;
   }
 }

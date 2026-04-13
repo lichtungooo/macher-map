@@ -143,7 +143,7 @@ function MapAppInner() {
   }
 
   return (
-    <div className="fixed inset-0" style={{ background: '#F5F4F0' }}>
+    <div className={`fixed inset-0 ${mode === 'place-light' ? 'cursor-wand' : ''}`} style={{ background: '#F5F4F0' }}>
       <PeaceMap
         onMapClick={handleMapClick}
         placingLight={mode === 'place-light' || mode === 'place-event'}
