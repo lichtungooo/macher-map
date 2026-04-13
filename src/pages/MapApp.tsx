@@ -45,17 +45,7 @@ function MapAppInner() {
     api.getLights().then(data => setLights(data)).catch(() => {})
   }, [])
 
-  // Auto-login if token exists
-  useEffect(() => {
-    const token = api.getToken()
-    if (token) {
-      api.getProfile()
-        .then(userData => {
-          loginCtx({ id: userData.id, email: userData.email, name: userData.name, statement: userData.statement, imageUrl: userData.image_path || undefined })
-        })
-        .catch(() => api.clearToken())
-    }
-  }, [])
+  // Auto-login passiert jetzt im AppProvider
 
   // Handle email verification
   useEffect(() => {

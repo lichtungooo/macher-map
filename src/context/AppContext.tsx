@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 
 // ─── Types ───
 
@@ -54,6 +54,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [lights, setLightsState] = useState<LightPin[]>([])
   const [events, setEvents] = useState<EventItem[]>([])
+
+  // Auto-Login: Token aus localStorage wiederherstellen
+  useEffect(() => {
+    const token = localStorage.getItem('lichtung-token')
+    if (token) {
+      fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => {
+          setUser({
+            id: data.id,
+            email: data.email,
+            name: data.name || '',
+            statement: data.statement || '',
+            imageUrl: data.image_path || undefined,
+          })
+        })
+        .catch(() => localStorage.removeItem('lichtung-token'))
+    }
+  }, [])
 
   const setLights = useCallback((newLights: LightPin[]) => {
     // Map backend format to frontend format
