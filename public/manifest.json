@@ -1,0 +1,22 @@
+{
+  "name": "Lichtung — Dein Licht fuer den Frieden",
+  "short_name": "Lichtung",
+  "description": "Setze dein Licht auf die Weltkarte. Verbinde dich. Meditiere mit uns.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1510",
+  "theme_color": "#1a1510",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+services:
+  app:
+    image: ghcr.io/lichtungooo/licht-fuer-frieden:latest
+    network_mode: bridge
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lichtung.rule=Host(`lichtung.ooo`)"
+      - "traefik.http.routers.lichtung.entrypoints=websecure"
+      - "traefik.http.routers.lichtung.tls.certresolver=letsencrypt"
