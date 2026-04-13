@@ -162,6 +162,10 @@ export function getAllLights() {
   `).all()
 }
 
+export function getUserLight(userId) {
+  return db.prepare('SELECT * FROM lights WHERE user_id = ?').get(userId)
+}
+
 export function createLight(userId, lat, lng, invitedBy) {
   const id = randomUUID()
   db.prepare('INSERT INTO lights (id, user_id, lat, lng, invited_by) VALUES (?, ?, ?, ?, ?)').run(id, userId, lat, lng, invitedBy || null)

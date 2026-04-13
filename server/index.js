@@ -9,7 +9,7 @@ import {
   setEmailVerified, setPassword,
   createResetToken, verifyResetToken,
   createVerifyToken, verifyEmailToken,
-  getAllLights, createLight, getLightCount,
+  getAllLights, getUserLight, createLight, getLightCount,
   getAllEvents, createEvent,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
@@ -180,6 +180,13 @@ app.get('/api/lights/count', (req, res) => res.json({ count: getLightCount() }))
 app.post('/api/lights', auth, (req, res) => {
   const { lat, lng, invited_by } = req.body
   if (lat == null || lng == null) return res.status(400).json({ error: 'Position fehlt' })
+
+  // Ein Mensch = ein Licht. Pruefen ob schon eins existiert.
+  const existing = getUserLight(req.userId)
+  if (existing) {
+    return res.status(400).json({ error: 'Du hast bereits ein Licht auf der Karte.' })
+  }
+
   res.json(createLight(req.userId, lat, lng, invited_by))
 })
 
