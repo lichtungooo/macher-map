@@ -77,8 +77,15 @@ function MapAppInner() {
 
   const handleAuthSuccess = (userData: { id: string; email: string; name: string; statement: string; image_path?: string }) => {
     loginCtx({ id: userData.id, email: userData.email, name: userData.name, statement: userData.statement, imageUrl: userData.image_path || undefined })
-    setIsNewUser(true)
-    setDialog('profile')
+    // Mark tutorial as seen after first auth
+    localStorage.setItem('lichtung-tutorial-seen', '1')
+    // Only show profile fill + set-light if name is empty (brand new user)
+    if (!userData.name) {
+      setIsNewUser(true)
+      setDialog('profile')
+    } else {
+      setDialog('none')
+    }
   }
 
   const handleProfileClose = () => {

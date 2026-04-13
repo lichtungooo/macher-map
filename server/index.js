@@ -40,7 +40,7 @@ const upload = multer({
 
 app.use(cors())
 app.use(express.json())
-app.use('/uploads', express.static(UPLOAD_DIR))
+app.use('/api/uploads', express.static(UPLOAD_DIR))
 
 // ─── Auth Middleware ───
 
@@ -167,7 +167,7 @@ app.put('/api/profile', auth, (req, res) => {
 
 app.post('/api/profile/image', auth, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Kein Bild' })
-  const image_path = `/uploads/${req.file.filename}`
+  const image_path = `/api/uploads/${req.file.filename}`
   updateUser(req.userId, { image_path })
   res.json({ image_path })
 })
