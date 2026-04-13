@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { User, Link2 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
 import { ActionButton } from '../components/map/ActionButton'
@@ -9,21 +9,44 @@ import { AuthDialog } from '../components/auth/AuthDialog'
 import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { Logo } from '../components/Logo'
+import * as api from '../api/client'
 
 type Dialog = 'none' | 'auth' | 'profile' | 'create-event'
 type Mode = 'browse' | 'place-light' | 'place-event'
 
 function MapAppInner() {
-  const { user, lights, addLight } = useApp()
+  const { user, lights, addLight, login, updateProfile: updateUserProfile } = useApp()
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
   const [tutorialStep, setTutorialStep] = useState<TutorialStep | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Check for magic link token in URL
+  useEffect(() => {
+    const token = searchParams.get('token')
+    if (token) {
+      api.verifyToken(token)
+        .then(userData => {
+          login(userData.email)
+          updateUserProfile({ id: userData.id, name: userData.name, statement: userData.statement, imageUrl: userData.image_path ? userData.image_path : undefined })
+          setSearchParams({}) // Remove token from URL
+          if (!userData.name) {
+            setDialog('profile')
+            setTutorialStep('fill-profile')
+          }
+        })
+        .catch(err => {
+          console.error('Token-Verifizierung fehlgeschlagen:', err)
+          setSearchParams({})
+        })
+    }
+  }, [])
 
   // Show tutorial on first visit
   useEffect(() => {
     const seen = localStorage.getItem('lichtung-tutorial-seen')
-    if (!seen) setTutorialStep('welcome')
+    if (!seen && !searchParams.get('token')) setTutorialStep('welcome')
   }, [])
 
   const closeTutorial = () => {
@@ -35,20 +58,20 @@ function MapAppInner() {
     if (tutorialStep === 'welcome') {
       setTutorialStep('profile')
     } else if (tutorialStep === 'profile') {
-      setTutorialStep(null) // User needs to click profile button
+      setTutorialStep(null)
       setDialog('auth')
     } else if (tutorialStep === 'fill-profile') {
-      setTutorialStep(null) // User fills profile
+      setTutorialStep(null)
     } else if (tutorialStep === 'set-light') {
-      setTutorialStep(null) // User uses plus button
+      setTutorialStep(null)
     } else if (tutorialStep === 'done') {
       closeTutorial()
     }
   }
 
   const handleAuthSuccess = () => {
-    setDialog('profile')
-    setTutorialStep('fill-profile')
+    setDialog('none')
+    // User will come back via magic link in email
   }
 
   const handleProfileClose = () => {
@@ -73,8 +96,10 @@ function MapAppInner() {
     if (mode === 'place-light') {
       addLight(position)
       setMode('browse')
-      if (tutorialStep === null && !localStorage.getItem('lichtung-tutorial-seen')) {
+      const seen = localStorage.getItem('lichtung-tutorial-seen')
+      if (!seen) {
         setTutorialStep('done')
+        localStorage.setItem('lichtung-tutorial-seen', '1')
       }
     } else if (mode === 'place-event') {
       setEventPosition(position)
@@ -92,13 +117,13 @@ function MapAppInner() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.92), rgba(255,255,255,0))', pointerEvents: 'none' }}>
-        {/* Logo */}
+        {/* Logo — groesser */}
         <Link
           to="/"
-          className="flex items-center gap-2"
+          className="flex items-center"
           style={{ textDecoration: 'none', pointerEvents: 'auto' }}
         >
-          <Logo size={28} />
+          <Logo size={40} />
         </Link>
 
         <div className="flex items-center gap-3" style={{ pointerEvents: 'auto' }}>
@@ -113,24 +138,18 @@ function MapAppInner() {
             </span>
           </button>
 
-          {/* Profile Button */}
+          {/* Profile Button — groesser, rund */}
           <button
-            onClick={() => {
-              if (user) {
-                setDialog('profile')
-              } else {
-                setDialog('auth')
-              }
-            }}
-            className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+            onClick={() => user ? setDialog('profile') : setDialog('auth')}
+            className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden"
             style={{
               background: user?.imageUrl ? 'transparent' : 'rgba(255,255,255,0.9)',
-              border: user?.imageUrl ? '2px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.08)',
+              border: user?.imageUrl ? '2.5px solid rgba(212,168,67,0.4)' : '1px solid rgba(10,10,10,0.08)',
               cursor: 'pointer',
             }}
           >
             {user?.imageUrl ? (
-              <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
+              <img src={user.imageUrl} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
               <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.4)' }} />
             )}
@@ -160,22 +179,12 @@ function MapAppInner() {
         </div>
       )}
 
-      {/* Action Button */}
-      <ActionButton
-        onSetLight={handleSetLight}
-        onCreateEvent={handleCreateEvent}
-      />
+      <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} />
 
-      {/* Guided Tutorial */}
       {tutorialStep && (
-        <GuidedTutorial
-          step={tutorialStep}
-          onNext={handleTutorialNext}
-          onClose={closeTutorial}
-        />
+        <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />
       )}
 
-      {/* Dialogs */}
       {dialog === 'auth' && (
         <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />
       )}

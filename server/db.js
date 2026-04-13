@@ -15,6 +15,7 @@ db.exec(`
     name TEXT DEFAULT '',
     statement TEXT DEFAULT '',
     image_path TEXT,
+    newsletter INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -22,7 +23,8 @@ db.exec(`
     token TEXT PRIMARY KEY,
     email TEXT NOT NULL,
     expires_at TEXT NOT NULL,
-    used INTEGER DEFAULT 0
+    used INTEGER DEFAULT 0,
+    newsletter INTEGER DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS lights (
@@ -59,10 +61,10 @@ export function findUserById(id) {
   return db.prepare('SELECT * FROM users WHERE id = ?').get(id)
 }
 
-export function createUser(email) {
+export function createUser(email, newsletter = false) {
   const id = randomUUID()
-  db.prepare('INSERT INTO users (id, email) VALUES (?, ?)').run(id, email)
-  return { id, email, name: '', statement: '' }
+  db.prepare('INSERT INTO users (id, email, newsletter) VALUES (?, ?, ?)').run(id, email, newsletter ? 1 : 0)
+  return { id, email, name: '', statement: '', newsletter }
 }
 
 export function updateUser(id, { name, statement, image_path }) {
@@ -78,10 +80,10 @@ export function updateUser(id, { name, statement, image_path }) {
 
 // ─── Magic Links ───
 
-export function createMagicLink(email) {
+export function createMagicLink(email, newsletter = false) {
   const token = randomUUID()
   const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 min
-  db.prepare('INSERT INTO magic_links (token, email, expires_at) VALUES (?, ?, ?)').run(token, email, expires_at)
+  db.prepare('INSERT INTO magic_links (token, email, expires_at, newsletter) VALUES (?, ?, ?, ?)').run(token, email, expires_at, newsletter ? 1 : 0)
   return token
 }
 
@@ -90,7 +92,7 @@ export function verifyMagicLink(token) {
   if (!row) return null
   if (new Date(row.expires_at) < new Date()) return null
   db.prepare('UPDATE magic_links SET used = 1 WHERE token = ?').run(token)
-  return row.email
+  return { email: row.email, newsletter: !!row.newsletter }
 }
 
 // ─── Lights ───

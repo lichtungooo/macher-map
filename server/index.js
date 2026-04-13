@@ -56,10 +56,11 @@ function auth(req, res, next) {
 // ─── Auth Routes ───
 
 app.post('/api/auth/magic-link', async (req, res) => {
-  const { email } = req.body
+  const { email, newsletter } = req.body
   if (!email) return res.status(400).json({ error: 'E-Mail fehlt' })
 
-  const token = createMagicLink(email)
+  // Store newsletter preference with the magic link
+  const token = createMagicLink(email, newsletter)
 
   try {
     await sendMagicLink(email, token)
@@ -74,11 +75,12 @@ app.get('/api/auth/verify', (req, res) => {
   const { token } = req.query
   if (!token) return res.status(400).json({ error: 'Token fehlt' })
 
-  const email = verifyMagicLink(token)
-  if (!email) return res.status(400).json({ error: 'Link ungueltig oder abgelaufen' })
+  const result = verifyMagicLink(token)
+  if (!result) return res.status(400).json({ error: 'Link ungueltig oder abgelaufen' })
 
+  const { email, newsletter } = result
   let user = findUserByEmail(email)
-  if (!user) user = createUser(email)
+  if (!user) user = createUser(email, newsletter)
 
   const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' })
   res.json({ token: jwtToken, user: { id: user.id, email: user.email, name: user.name, statement: user.statement, image_path: user.image_path } })
