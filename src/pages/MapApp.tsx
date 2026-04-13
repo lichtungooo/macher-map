@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
-import { User, ArrowLeft } from 'lucide-react'
+import { User, Link2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
 import { ActionButton } from '../components/map/ActionButton'
-import { OnboardingGuide } from '../components/map/OnboardingGuide'
+import { GuidedTutorial, type TutorialStep } from '../components/map/GuidedTutorial'
 import { AuthDialog } from '../components/auth/AuthDialog'
 import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
+import { Logo } from '../components/Logo'
 
 type Dialog = 'none' | 'auth' | 'profile' | 'create-event'
 type Mode = 'browse' | 'place-light' | 'place-event'
@@ -17,17 +18,44 @@ function MapAppInner() {
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [tutorialStep, setTutorialStep] = useState<TutorialStep | null>(null)
 
-  // Show onboarding on first visit
+  // Show tutorial on first visit
   useEffect(() => {
-    const seen = localStorage.getItem('lichtung-onboarding-seen')
-    if (!seen) setShowOnboarding(true)
+    const seen = localStorage.getItem('lichtung-tutorial-seen')
+    if (!seen) setTutorialStep('welcome')
   }, [])
 
-  const closeOnboarding = () => {
-    setShowOnboarding(false)
-    localStorage.setItem('lichtung-onboarding-seen', '1')
+  const closeTutorial = () => {
+    setTutorialStep(null)
+    localStorage.setItem('lichtung-tutorial-seen', '1')
+  }
+
+  const handleTutorialNext = () => {
+    if (tutorialStep === 'welcome') {
+      setTutorialStep('profile')
+    } else if (tutorialStep === 'profile') {
+      setTutorialStep(null) // User needs to click profile button
+      setDialog('auth')
+    } else if (tutorialStep === 'fill-profile') {
+      setTutorialStep(null) // User fills profile
+    } else if (tutorialStep === 'set-light') {
+      setTutorialStep(null) // User uses plus button
+    } else if (tutorialStep === 'done') {
+      closeTutorial()
+    }
+  }
+
+  const handleAuthSuccess = () => {
+    setDialog('profile')
+    setTutorialStep('fill-profile')
+  }
+
+  const handleProfileClose = () => {
+    setDialog('none')
+    if (user?.name) {
+      setTutorialStep('set-light')
+    }
   }
 
   const handleSetLight = () => {
@@ -45,15 +73,14 @@ function MapAppInner() {
     if (mode === 'place-light') {
       addLight(position)
       setMode('browse')
+      if (tutorialStep === null && !localStorage.getItem('lichtung-tutorial-seen')) {
+        setTutorialStep('done')
+      }
     } else if (mode === 'place-event') {
       setEventPosition(position)
       setDialog('create-event')
       setMode('browse')
     }
-  }
-
-  const handleAuthSuccess = () => {
-    setDialog('profile')
   }
 
   return (
@@ -65,38 +92,37 @@ function MapAppInner() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.92), rgba(255,255,255,0))', pointerEvents: 'none' }}>
+        {/* Logo */}
         <Link
           to="/"
           className="flex items-center gap-2"
-          style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: '1.1rem',
-            fontWeight: 500,
-            color: '#0A0A0A',
-            textDecoration: 'none',
-            pointerEvents: 'auto',
-          }}
+          style={{ textDecoration: 'none', pointerEvents: 'auto' }}
         >
-          <ArrowLeft size={18} />
-          Lichtung
+          <Logo size={28} />
         </Link>
 
         <div className="flex items-center gap-3" style={{ pointerEvents: 'auto' }}>
-          {/* Light Counter */}
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-            style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(10,10,10,0.06)' }}
+          {/* Light Chain */}
+          <button
+            className="flex items-center gap-2 px-3 py-2 rounded-lg"
+            style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
           >
-            <div className="w-2 h-2 rounded-full" style={{ background: '#D4A843', boxShadow: '0 0 6px rgba(212,168,67,0.5)' }} />
+            <Link2 size={14} style={{ color: '#D4A843' }} />
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 500, color: 'rgba(10,10,10,0.6)' }}>
               {lights.length} Lichter
             </span>
-          </div>
+          </button>
 
           {/* Profile Button */}
           <button
-            onClick={() => user ? setDialog('profile') : setDialog('auth')}
-            className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
+            onClick={() => {
+              if (user) {
+                setDialog('profile')
+              } else {
+                setDialog('auth')
+              }
+            }}
+            className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
             style={{
               background: user?.imageUrl ? 'transparent' : 'rgba(255,255,255,0.9)',
               border: user?.imageUrl ? '2px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.08)',
@@ -106,7 +132,7 @@ function MapAppInner() {
             {user?.imageUrl ? (
               <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <User size={16} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.4)' }} />
+              <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.4)' }} />
             )}
           </button>
         </div>
@@ -140,15 +166,21 @@ function MapAppInner() {
         onCreateEvent={handleCreateEvent}
       />
 
-      {/* Onboarding */}
-      {showOnboarding && <OnboardingGuide onClose={closeOnboarding} />}
+      {/* Guided Tutorial */}
+      {tutorialStep && (
+        <GuidedTutorial
+          step={tutorialStep}
+          onNext={handleTutorialNext}
+          onClose={closeTutorial}
+        />
+      )}
 
       {/* Dialogs */}
       {dialog === 'auth' && (
         <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />
       )}
       {dialog === 'profile' && (
-        <ProfileDialog onClose={() => setDialog('none')} />
+        <ProfileDialog onClose={handleProfileClose} />
       )}
       {dialog === 'create-event' && (
         <CreateEventDialog
