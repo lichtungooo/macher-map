@@ -8,9 +8,11 @@ import type { LatLngExpression } from 'leaflet'
 interface PeaceMapProps {
   onMapClick?: (position: [number, number]) => void
   placingLight?: boolean
+  showLights?: boolean
+  showEvents?: boolean
 }
 
-function MapClickHandler({ onMapClick, placingLight }: PeaceMapProps) {
+function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
   useMapEvents({
     click(e) {
       if (placingLight && onMapClick) {
@@ -23,15 +25,11 @@ function MapClickHandler({ onMapClick, placingLight }: PeaceMapProps) {
 
 function LocateUser() {
   const map = useMap()
-
-  useEffect(() => {
-    map.locate({ setView: true, maxZoom: 10 })
-  }, [map])
-
+  useEffect(() => { map.locate({ setView: true, maxZoom: 10 }) }, [map])
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -44,20 +42,19 @@ export function PeaceMap({ onMapClick, placingLight }: PeaceMapProps) {
       className="h-full w-full"
       style={{ cursor: placingLight ? 'crosshair' : undefined }}
     >
-      {/* CartoDB Voyager: hell, klar, friedlich, natuerliche Farben */}
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        attribution='&copy; OpenStreetMap &copy; CARTO'
       />
 
       <LocateUser />
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
 
-      {lights.map(light => (
+      {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
       ))}
 
-      {events.map(event => (
+      {showEvents && events.map(event => (
         <EventMarker key={event.id} event={event} />
       ))}
     </MapContainer>

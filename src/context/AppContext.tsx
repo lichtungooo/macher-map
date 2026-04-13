@@ -36,7 +36,7 @@ interface AppState {
   user: UserProfile | null
   lights: LightPin[]
   events: EventItem[]
-  login: (email: string) => void
+  login: (userData: { id?: string; email: string; name?: string; statement?: string; imageUrl?: string }) => void
   logout: () => void
   updateProfile: (profile: Partial<UserProfile>) => void
   setLights: (lights: LightPin[]) => void
@@ -68,9 +68,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLightsState(mapped)
   }, [])
 
-  const login = useCallback((email: string) => {
-    const id = crypto.randomUUID()
-    setUser({ id, email, name: '', statement: '' })
+  const login = useCallback((userData: { id?: string; email: string; name?: string; statement?: string; imageUrl?: string }) => {
+    setUser(prev => ({
+      id: userData.id || prev?.id || crypto.randomUUID(),
+      email: userData.email,
+      name: userData.name || prev?.name || '',
+      statement: userData.statement || prev?.statement || '',
+      imageUrl: userData.imageUrl || prev?.imageUrl,
+    }))
   }, [])
 
   const logout = useCallback(() => setUser(null), [])
