@@ -11,42 +11,45 @@ import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { Logo } from '../components/Logo'
 import * as api from '../api/client'
 
+const BTN_SIZE = 46
+
 type Dialog = 'none' | 'auth' | 'profile' | 'create-event'
 type Mode = 'browse' | 'place-light' | 'place-event'
 
 function MapAppInner() {
-  const { user, lights, addLight, login, updateProfile: updateUserProfile } = useApp()
+  const { user, lights, addLight, login: loginCtx, updateProfile: updateUserProfile } = useApp()
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
   const [tutorialStep, setTutorialStep] = useState<TutorialStep | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Check for magic link token in URL
+  // Auto-login if token exists in localStorage
   useEffect(() => {
-    const token = searchParams.get('token')
+    const token = api.getToken()
     if (token) {
-      api.verifyToken(token)
+      api.getProfile()
         .then(userData => {
-          login(userData.email)
-          updateUserProfile({ id: userData.id, name: userData.name, statement: userData.statement, imageUrl: userData.image_path ? userData.image_path : undefined })
-          setSearchParams({}) // Remove token from URL
-          if (!userData.name) {
-            setDialog('profile')
-            setTutorialStep('fill-profile')
-          }
+          loginCtx(userData.email)
+          updateUserProfile({ id: userData.id, name: userData.name, statement: userData.statement, imageUrl: userData.image_path || undefined })
         })
-        .catch(err => {
-          console.error('Token-Verifizierung fehlgeschlagen:', err)
-          setSearchParams({})
-        })
+        .catch(() => api.clearToken())
+    }
+  }, [])
+
+  // Handle email verification from URL
+  useEffect(() => {
+    const verifyToken = searchParams.get('verify')
+    if (verifyToken) {
+      api.verifyEmail(verifyToken).catch(() => {})
+      setSearchParams({})
     }
   }, [])
 
   // Show tutorial on first visit
   useEffect(() => {
     const seen = localStorage.getItem('lichtung-tutorial-seen')
-    if (!seen && !searchParams.get('token')) setTutorialStep('welcome')
+    if (!seen && !api.getToken()) setTutorialStep('welcome')
   }, [])
 
   const closeTutorial = () => {
@@ -55,30 +58,23 @@ function MapAppInner() {
   }
 
   const handleTutorialNext = () => {
-    if (tutorialStep === 'welcome') {
-      setTutorialStep('profile')
-    } else if (tutorialStep === 'profile') {
-      setTutorialStep(null)
-      setDialog('auth')
-    } else if (tutorialStep === 'fill-profile') {
-      setTutorialStep(null)
-    } else if (tutorialStep === 'set-light') {
-      setTutorialStep(null)
-    } else if (tutorialStep === 'done') {
-      closeTutorial()
-    }
+    if (tutorialStep === 'welcome') setTutorialStep('profile')
+    else if (tutorialStep === 'profile') { setTutorialStep(null); setDialog('auth') }
+    else if (tutorialStep === 'fill-profile') setTutorialStep(null)
+    else if (tutorialStep === 'set-light') setTutorialStep(null)
+    else if (tutorialStep === 'done') closeTutorial()
   }
 
-  const handleAuthSuccess = () => {
-    setDialog('none')
-    // User will come back via magic link in email
+  const handleAuthSuccess = (userData: { id: string; email: string; name: string; statement: string; image_path?: string }) => {
+    loginCtx(userData.email)
+    updateUserProfile({ id: userData.id, name: userData.name, statement: userData.statement, imageUrl: userData.image_path || undefined })
+    setDialog('profile')
+    setTutorialStep('fill-profile')
   }
 
   const handleProfileClose = () => {
     setDialog('none')
-    if (user?.name) {
-      setTutorialStep('set-light')
-    }
+    if (user?.name) setTutorialStep('set-light')
   }
 
   const handleSetLight = () => {
@@ -97,10 +93,7 @@ function MapAppInner() {
       addLight(position)
       setMode('browse')
       const seen = localStorage.getItem('lichtung-tutorial-seen')
-      if (!seen) {
-        setTutorialStep('done')
-        localStorage.setItem('lichtung-tutorial-seen', '1')
-      }
+      if (!seen) { setTutorialStep('done'); localStorage.setItem('lichtung-tutorial-seen', '1') }
     } else if (mode === 'place-event') {
       setEventPosition(position)
       setDialog('create-event')
@@ -110,48 +103,44 @@ function MapAppInner() {
 
   return (
     <div className="fixed inset-0" style={{ background: '#F5F4F0' }}>
-      <PeaceMap
-        onMapClick={handleMapClick}
-        placingLight={mode === 'place-light' || mode === 'place-event'}
-      />
+      <PeaceMap onMapClick={handleMapClick} placingLight={mode === 'place-light' || mode === 'place-event'} />
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.92), rgba(255,255,255,0))', pointerEvents: 'none' }}>
-        {/* Logo — groesser */}
-        <Link
-          to="/"
-          className="flex items-center"
-          style={{ textDecoration: 'none', pointerEvents: 'auto' }}
-        >
-          <Logo size={40} />
+        {/* Logo — rund */}
+        <Link to="/" style={{ textDecoration: 'none', pointerEvents: 'auto' }}>
+          <div className="rounded-full flex items-center justify-center shadow-sm" style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+            <Logo size={34} />
+          </div>
         </Link>
 
         <div className="flex items-center gap-3" style={{ pointerEvents: 'auto' }}>
-          {/* Light Chain */}
+          {/* Lichterkette — rund, gleiche Groesse */}
           <button
-            className="flex items-center gap-2 px-3 py-2 rounded-lg"
-            style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
+            className="rounded-full flex flex-col items-center justify-center shadow-sm"
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer', position: 'relative' }}
           >
-            <Link2 size={14} style={{ color: '#D4A843' }} />
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 500, color: 'rgba(10,10,10,0.6)' }}>
-              {lights.length} Lichter
+            <Link2 size={16} style={{ color: '#D4A843' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', marginTop: '1px' }}>
+              {lights.length}
             </span>
           </button>
 
-          {/* Profile Button — groesser, rund */}
+          {/* Profil — rund, gleiche Groesse */}
           <button
             onClick={() => user ? setDialog('profile') : setDialog('auth')}
-            className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden"
+            className="rounded-full flex items-center justify-center overflow-hidden shadow-sm"
             style={{
-              background: user?.imageUrl ? 'transparent' : 'rgba(255,255,255,0.9)',
-              border: user?.imageUrl ? '2.5px solid rgba(212,168,67,0.4)' : '1px solid rgba(10,10,10,0.08)',
+              width: BTN_SIZE, height: BTN_SIZE,
+              background: user?.imageUrl ? 'transparent' : '#fff',
+              border: user?.imageUrl ? '2.5px solid rgba(212,168,67,0.4)' : '1px solid rgba(10,10,10,0.06)',
               cursor: 'pointer',
             }}
           >
             {user?.imageUrl ? (
               <img src={user.imageUrl} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
-              <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.4)' }} />
+              <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
             )}
           </button>
         </div>
@@ -159,21 +148,11 @@ function MapAppInner() {
 
       {/* Mode Indicator */}
       {mode !== 'browse' && (
-        <div
-          className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg"
-          style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}
-        >
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A' }}>
             {mode === 'place-light' ? 'Tippe auf die Karte, um dein Licht zu setzen' : 'Tippe auf die Karte, um den Ort zu waehlen'}
           </p>
-          <button
-            onClick={() => setMode('browse')}
-            style={{
-              fontFamily: 'Inter, sans-serif', fontSize: '0.75rem',
-              color: 'rgba(10,10,10,0.4)', cursor: 'pointer',
-              background: 'none', border: 'none', textDecoration: 'underline',
-            }}
-          >
+          <button onClick={() => setMode('browse')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
             Abbrechen
           </button>
         </div>
@@ -181,21 +160,12 @@ function MapAppInner() {
 
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} />
 
-      {tutorialStep && (
-        <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />
-      )}
+      {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
 
-      {dialog === 'auth' && (
-        <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />
-      )}
-      {dialog === 'profile' && (
-        <ProfileDialog onClose={handleProfileClose} />
-      )}
+      {dialog === 'auth' && <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />}
+      {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'create-event' && (
-        <CreateEventDialog
-          position={eventPosition}
-          onClose={() => { setDialog('none'); setEventPosition(undefined) }}
-        />
+        <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />
       )}
     </div>
   )

@@ -2,8 +2,6 @@ import Database from 'better-sqlite3'
 import { randomUUID } from 'crypto'
 
 const db = new Database('/data/lichtung.db')
-
-// WAL mode for better concurrent reads
 db.pragma('journal_mode = WAL')
 
 // ─── Schema ───
@@ -12,19 +10,28 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
     name TEXT DEFAULT '',
     statement TEXT DEFAULT '',
     image_path TEXT,
     newsletter INTEGER DEFAULT 0,
+    email_verified INTEGER DEFAULT 0,
+    is_admin INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
 
-  CREATE TABLE IF NOT EXISTS magic_links (
+  CREATE TABLE IF NOT EXISTS reset_tokens (
     token TEXT PRIMARY KEY,
     email TEXT NOT NULL,
     expires_at TEXT NOT NULL,
-    used INTEGER DEFAULT 0,
-    newsletter INTEGER DEFAULT 0
+    used INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS verify_tokens (
+    token TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS lights (
@@ -51,6 +58,12 @@ db.exec(`
   );
 `)
 
+// Migration: add columns if missing
+try { db.exec('ALTER TABLE users ADD COLUMN password_hash TEXT DEFAULT ""') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN newsletter INTEGER DEFAULT 0') } catch {}
+
 // ─── Users ───
 
 export function findUserByEmail(email) {
@@ -61,38 +74,81 @@ export function findUserById(id) {
   return db.prepare('SELECT * FROM users WHERE id = ?').get(id)
 }
 
-export function createUser(email, newsletter = false) {
+export function createUser(email, passwordHash, newsletter = false) {
   const id = randomUUID()
-  db.prepare('INSERT INTO users (id, email, newsletter) VALUES (?, ?, ?)').run(id, email, newsletter ? 1 : 0)
-  return { id, email, name: '', statement: '', newsletter }
+  db.prepare('INSERT INTO users (id, email, password_hash, newsletter) VALUES (?, ?, ?, ?)').run(id, email, passwordHash, newsletter ? 1 : 0)
+  return { id, email, name: '', statement: '' }
 }
 
-export function updateUser(id, { name, statement, image_path }) {
-  const fields = []
-  const values = []
-  if (name !== undefined) { fields.push('name = ?'); values.push(name) }
-  if (statement !== undefined) { fields.push('statement = ?'); values.push(statement) }
-  if (image_path !== undefined) { fields.push('image_path = ?'); values.push(image_path) }
-  if (fields.length === 0) return
-  values.push(id)
-  db.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+export function updateUser(id, fields) {
+  const sets = []
+  const vals = []
+  for (const [key, val] of Object.entries(fields)) {
+    if (val !== undefined) { sets.push(`${key} = ?`); vals.push(val) }
+  }
+  if (sets.length === 0) return
+  vals.push(id)
+  db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
 }
 
-// ─── Magic Links ───
+export function setEmailVerified(email) {
+  db.prepare('UPDATE users SET email_verified = 1 WHERE email = ?').run(email)
+}
 
-export function createMagicLink(email, newsletter = false) {
+export function setPassword(email, passwordHash) {
+  db.prepare('UPDATE users SET password_hash = ? WHERE email = ?').run(passwordHash, email)
+}
+
+// ─── Tokens (Reset + Verify) ───
+
+export function createResetToken(email) {
   const token = randomUUID()
-  const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 min
-  db.prepare('INSERT INTO magic_links (token, email, expires_at, newsletter) VALUES (?, ?, ?, ?)').run(token, email, expires_at, newsletter ? 1 : 0)
+  const expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 Stunde
+  db.prepare('INSERT INTO reset_tokens (token, email, expires_at) VALUES (?, ?, ?)').run(token, email, expires_at)
   return token
 }
 
-export function verifyMagicLink(token) {
-  const row = db.prepare('SELECT * FROM magic_links WHERE token = ? AND used = 0').get(token)
-  if (!row) return null
-  if (new Date(row.expires_at) < new Date()) return null
-  db.prepare('UPDATE magic_links SET used = 1 WHERE token = ?').run(token)
-  return { email: row.email, newsletter: !!row.newsletter }
+export function verifyResetToken(token) {
+  const row = db.prepare('SELECT * FROM reset_tokens WHERE token = ? AND used = 0').get(token)
+  if (!row || new Date(row.expires_at) < new Date()) return null
+  db.prepare('UPDATE reset_tokens SET used = 1 WHERE token = ?').run(token)
+  return row.email
+}
+
+export function createVerifyToken(email) {
+  const token = randomUUID()
+  const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 Tage
+  db.prepare('INSERT INTO verify_tokens (token, email, expires_at) VALUES (?, ?, ?)').run(token, email, expires_at)
+  return token
+}
+
+export function verifyEmailToken(token) {
+  const row = db.prepare('SELECT * FROM verify_tokens WHERE token = ? AND used = 0').get(token)
+  if (!row || new Date(row.expires_at) < new Date()) return null
+  db.prepare('UPDATE verify_tokens SET used = 1 WHERE token = ?').run(token)
+  return row.email
+}
+
+// ─── Admin ───
+
+export function getUserCount() {
+  return db.prepare('SELECT COUNT(*) as count FROM users').get().count
+}
+
+export function getRecentUsers(limit = 20) {
+  return db.prepare('SELECT id, email, name, newsletter, email_verified, created_at FROM users ORDER BY created_at DESC LIMIT ?').all(limit)
+}
+
+export function getNewsletterEmails() {
+  return db.prepare('SELECT email, name FROM users WHERE newsletter = 1').all()
+}
+
+export function getStats() {
+  const users = db.prepare('SELECT COUNT(*) as c FROM users').get().c
+  const lights = db.prepare('SELECT COUNT(*) as c FROM lights').get().c
+  const events = db.prepare('SELECT COUNT(*) as c FROM events').get().c
+  const newsletter = db.prepare('SELECT COUNT(*) as c FROM users WHERE newsletter = 1').get().c
+  return { users, lights, events, newsletter }
 }
 
 // ─── Lights ───
