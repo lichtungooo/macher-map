@@ -1,5 +1,5 @@
 services:
-  app:
+  web:
     image: ghcr.io/lichtungooo/licht-fuer-frieden:latest
     network_mode: bridge
     labels:
@@ -7,3 +7,23 @@ services:
       - "traefik.http.routers.lichtung.rule=Host(`lichtung.ooo`)"
       - "traefik.http.routers.lichtung.entrypoints=websecure"
       - "traefik.http.routers.lichtung.tls.certresolver=letsencrypt"
+
+  api:
+    image: ghcr.io/lichtungooo/licht-fuer-frieden-api:latest
+    network_mode: bridge
+    volumes:
+      - lichtung-data:/data
+    environment:
+      - SMTP_USER=frieden@lichtung.ooo
+      - SMTP_PASS=${SMTP_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - BASE_URL=https://lichtung.ooo
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lichtung-api.rule=Host(`lichtung.ooo`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.lichtung-api.entrypoints=websecure"
+      - "traefik.http.routers.lichtung-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.lichtung-api.loadbalancer.server.port=3001"
+
+volumes:
+  lichtung-data:
