@@ -39,8 +39,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       zoom={5}
       zoomControl={false}
       attributionControl={false}
-      className="h-full w-full"
-      style={{ cursor: placingLight ? 'crosshair' : undefined }}
+      className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
     >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"

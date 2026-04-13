@@ -8,7 +8,7 @@ interface QRCodeDialogProps {
 }
 
 export function QRCodeDialog({ userId, userName, onClose }: QRCodeDialogProps) {
-  const inviteUrl = `${window.location.origin}/app?invite=${userId}`
+  const inviteUrl = `${window.location.origin}/invite?id=${userId}&name=${encodeURIComponent(userName || 'Ein Freund')}`
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
@@ -24,8 +24,7 @@ export function QRCodeDialog({ userId, userName, onClose }: QRCodeDialogProps) {
           Zeige diesen QR-Code, damit sich andere mit deinem Licht verbinden.
         </p>
 
-        {/* QR Code */}
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-5">
           <div className="p-4 rounded-xl" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
             <QRCodeSVG
               value={inviteUrl}
@@ -37,11 +36,11 @@ export function QRCodeDialog({ userId, userName, onClose }: QRCodeDialogProps) {
           </div>
         </div>
 
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '0.3rem' }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A' }}>
           {userName || 'Anonym'}
         </p>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: 'rgba(10,10,10,0.3)', wordBreak: 'break-all' }}>
-          {inviteUrl}
+        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.85rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.35)', marginTop: '4px' }}>
+          laedt ein, ein Licht zu entzuenden.
         </p>
       </div>
     </div>
