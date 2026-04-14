@@ -117,6 +117,9 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       zoom={5}
       zoomControl={false}
       attributionControl={false}
+      zoomSnap={0}
+      zoomDelta={0.5}
+      wheelDebounceTime={80}
       className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
     >
       <TileLayer
