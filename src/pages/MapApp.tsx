@@ -113,13 +113,9 @@ function MapAppInner() {
     }
   }
 
-  // Pruefen ob User schon ein Licht hat
-  const userHasLight = user ? lights.some(l => l.name === user.name) : false
-
   const handleSetLight = () => {
     if (!user) { setDialog('auth'); return }
     if (!user.name) { setDialog('profile'); return }
-    if (userHasLight) { alert('Dein Licht leuchtet bereits auf der Karte.'); return }
     setMode('place-light')
   }
 
