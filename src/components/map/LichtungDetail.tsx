@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock } from 'lucide-react'
-import { SlotManager } from './SlotManager'
 import { FullCalendar } from './FullCalendar'
 import * as api from '../../api/client'
 
@@ -23,7 +22,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'info' | 'kalender' | 'community' | 'slots'>('info')
+  const [tab, setTab] = useState<'info' | 'kalender' | 'community'>('info')
   const [copied, setCopied] = useState(false)
   const [members, setMembers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
@@ -98,26 +97,15 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
       {/* Tabs */}
       <div className="flex px-5 pt-3 gap-0.5 overflow-x-auto" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        {['info', 'kalender', 'community', ...((myRole === 'owner' || myRole === 'admin') ? ['slots'] : [])].map(key => (
+        {['info', 'kalender', 'community'].map(key => (
           <button key={key} onClick={() => setTab(key as any)} className="pb-2 px-2.5 shrink-0"
             style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.35)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#7BAE5E' : 'transparent'}`, cursor: 'pointer' }}>
-            {key === 'info' ? 'Info' : key === 'kalender' ? 'Kalender' : key === 'community' ? `Community (${members.length})` : 'Slots'}
+            {key === 'info' ? 'Info' : key === 'kalender' ? 'Kalender' : `Community (${members.length})`}
           </button>
         ))}
       </div>
 
       <div className="overflow-y-auto p-5" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-        {tab === 'slots' && (myRole === 'owner' || myRole === 'admin') && (
-          <>
-            <button onClick={() => setShowFullCalendar(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
-              style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
-              <CalendarDays size={16} />
-              Grosser Kalender
-            </button>
-            <SlotManager lichtungId={lichtungId} myRole={myRole} />
-          </>
-        )}
         {tab === 'info' && (
           <>
             {/* Bild */}
@@ -299,16 +287,26 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
               </div>
             )}
 
-            {/* Termin erstellen */}
-            {onCreateEvent && (
-              <button
-                onClick={() => onCreateEvent(lichtungId, lichtung.name, [lichtung.lat, lichtung.lng])}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-4"
-                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
-                <Plus size={16} />
-                Termin an diesem Ort erstellen
-              </button>
-            )}
+            {/* Aktionen */}
+            <div className="space-y-2 mt-4">
+              {(myRole === 'owner' || myRole === 'admin') && (
+                <button onClick={() => setShowFullCalendar(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
+                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
+                  <CalendarDays size={16} />
+                  Kalender verwalten
+                </button>
+              )}
+              {onCreateEvent && (myRole === 'owner' || myRole === 'admin') && (
+                <button
+                  onClick={() => onCreateEvent(lichtungId, lichtung.name, [lichtung.lat, lichtung.lng])}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
+                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                  <Plus size={16} />
+                  Termin erstellen
+                </button>
+              )}
+            </div>
           </>
         )}
         {tab === 'community' && (

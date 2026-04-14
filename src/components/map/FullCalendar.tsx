@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, X, Plus, Trash2, Lock, Unlock, CalendarDays, List } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Plus, Trash2, Lock, Unlock, List } from 'lucide-react'
 import * as api from '../../api/client'
 
 const MONTHS = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
@@ -15,7 +15,8 @@ interface FullCalendarProps {
 }
 
 export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: FullCalendarProps) {
-  const [view, setView] = useState<'month' | 'day' | 'list'>('month')
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'list'>('week')
+  const [weekOffset, setWeekOffset] = useState(0)
   const [monthOffset, setMonthOffset] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [monthSlots, setMonthSlots] = useState<any[]>([])
@@ -35,10 +36,42 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
   const from = `${y}-${String(m + 1).padStart(2, '0')}-01`
   const to = `${y}-${String(m + 2 > 12 ? 1 : m + 2).padStart(2, '0')}-01`
 
+  // Wochenansicht: Mo-So der aktuellen Woche
+  const weekDays = useMemo(() => {
+    const today = new Date()
+    today.setDate(today.getDate() + weekOffset * 7)
+    const dow = (today.getDay() + 6) % 7 // Mo=0
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - dow)
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday)
+      d.setDate(monday.getDate() + i)
+      return { date: d.toISOString().slice(0, 10), day: d.getDate(), month: d.getMonth(), label: DAYS_SHORT[i] }
+    })
+  }, [weekOffset])
+
+  // Slots fuer die ganze Woche
+  const [weekSlotsByDate, setWeekSlotsByDate] = useState<Record<string, any[]>>({})
+
   useEffect(() => {
     api.getLichtungSlots(lichtungId, from, to).then(setMonthSlots).catch(() => {})
     api.getLichtungEvents(lichtungId).then(setAllEvents).catch(() => {})
   }, [lichtungId, monthOffset])
+
+  useEffect(() => {
+    if (view !== 'week') return
+    const weekFrom = weekDays[0]?.date
+    const weekTo = weekDays[6]?.date
+    if (!weekFrom || !weekTo) return
+    api.getLichtungSlots(lichtungId, weekFrom, weekTo).then((all: any[]) => {
+      const map: Record<string, any[]> = {}
+      for (const s of all) {
+        if (!map[s.date]) map[s.date] = []
+        map[s.date].push(s)
+      }
+      setWeekSlotsByDate(map)
+    }).catch(() => {})
+  }, [lichtungId, weekOffset, view])
 
   useEffect(() => {
     if (selectedDate) {
@@ -128,11 +161,11 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         <div className="flex items-center gap-2">
           {/* View-Umschalter */}
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
-            {(['month', 'day', 'list'] as const).map(v => (
+            {(['month', 'week', 'day', 'list'] as const).map(v => (
               <button key={v} onClick={() => { if (v === 'day' && !selectedDate) setSelectedDate(now.toISOString().slice(0, 10)); setView(v) }}
                 className="px-3 py-1.5 flex items-center gap-1"
                 style={{ ...font, fontSize: '0.72rem', fontWeight: 500, background: view === v ? 'rgba(123,174,94,0.1)' : '#fff', color: view === v ? '#7BAE5E' : 'rgba(10,10,10,0.4)', border: 'none', cursor: 'pointer' }}>
-                {v === 'month' ? <><CalendarDays size={13}/>Monat</> : v === 'day' ? 'Tag' : <><List size={13}/>Liste</>}
+                {v === 'month' ? 'Monat' : v === 'week' ? 'Woche' : v === 'day' ? 'Tag' : <><List size={13}/>Liste</>}
               </button>
             ))}
           </div>
@@ -230,6 +263,133 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                   <div className="w-4 h-4 rounded" style={{ background: 'rgba(200,60,60,0.06)', border: '1px solid rgba(200,60,60,0.15)' }} />
                   <span style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)' }}>Ruhetag</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'week' && (
+          <div className="flex-1 p-6 overflow-y-auto">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <button onClick={() => setWeekOffset(weekOffset - 1)} className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
+                  <ChevronLeft size={18} />
+                </button>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A' }}>
+                  {weekDays[0]?.day}. {MONTHS[weekDays[0]?.month]?.slice(0, 3)} - {weekDays[6]?.day}. {MONTHS[weekDays[6]?.month]?.slice(0, 3)} {y}
+                </h3>
+                <button onClick={() => setWeekOffset(weekOffset + 1)} className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              {/* Wochen-Grid: Stunden-Spalte + 7 Tag-Spalten */}
+              <div className="rounded-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+                {/* Tag-Header */}
+                <div className="grid" style={{ gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.08)' }}>
+                  <div style={{ background: '#FAFAF8' }} />
+                  {weekDays.map(d => {
+                    const isToday = d.date === now.toISOString().slice(0, 10)
+                    const dayInfoFromMonth = daySlotMap[d.date]
+                    const isClosed = dayInfoFromMonth?.status === 'closed' || (weekSlotsByDate[d.date]?.find(s => s.start_hour === null && s.status === 'closed'))
+                    return (
+                      <button key={d.date} onClick={() => { setSelectedDate(d.date); setView('day') }}
+                        className="text-center py-3 transition-colors hover:bg-gray-50"
+                        style={{ borderLeft: '1px solid rgba(10,10,10,0.06)', background: isToday ? 'rgba(212,168,67,0.06)' : isClosed ? 'rgba(200,60,60,0.04)' : '#fff', cursor: 'pointer', border: 'none', borderLeftWidth: '1px', borderLeftStyle: 'solid', borderLeftColor: 'rgba(10,10,10,0.06)' }}>
+                        <div style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{d.label}</div>
+                        <div style={{ ...font, fontSize: '1.1rem', fontWeight: isToday ? 700 : 500, color: isClosed ? '#c44' : isToday ? '#D4A843' : '#0A0A0A' }}>
+                          {d.day}
+                        </div>
+                        {isClosed && <Lock size={10} style={{ color: '#c44', margin: '2px auto 0' }} />}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Stunden-Grid */}
+                {HOURS.map(h => (
+                  <div key={h} className="grid" style={{ gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.04)', minHeight: '50px' }}>
+                    <div className="px-3 py-2" style={{ background: '#FAFAF8', borderRight: '1px solid rgba(10,10,10,0.06)' }}>
+                      <span style={{ ...font, fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)' }}>
+                        {String(h).padStart(2, '0')}:00
+                      </span>
+                    </div>
+                    {weekDays.map(d => {
+                      const dSlots = weekSlotsByDate[d.date] || []
+                      const dayInfoFromMonth = daySlotMap[d.date]
+                      const dayClosed = dayInfoFromMonth?.status === 'closed'
+                      const slot = dSlots.find(s => s.start_hour !== null && h >= s.start_hour && h < s.end_hour)
+                      const isFirstHour = slot && slot.start_hour === h
+                      const eventsInHour = allEvents.filter((e: any) => e.start_time.startsWith(d.date) && new Date(e.start_time).getHours() === h)
+                      const slotFull = slot && eventsInHour.length >= slot.parallel_slots
+
+                      let bg = '#fff'
+                      if (dayClosed) bg = 'rgba(200,60,60,0.03)'
+                      else if (slot) {
+                        bg = slotFull ? 'rgba(212,168,67,0.08)' : 'rgba(123,174,94,0.06)'
+                      }
+
+                      const handleCellClick = () => {
+                        if (dayClosed) return
+                        if (!slot && isHueter) {
+                          // Hueter: Zeit-Slot oeffnen
+                          setSelectedDate(d.date)
+                          setNewSlot({ startHour: h, endHour: h + 2, parallelSlots: 1, note: '' })
+                          setShowNewSlot(true)
+                          setView('day')
+                        } else {
+                          // Tag-Detail oeffnen
+                          setSelectedDate(d.date)
+                          setView('day')
+                        }
+                      }
+
+                      return (
+                        <button key={d.date + h} onClick={handleCellClick}
+                          className="relative p-1 text-left transition-all"
+                          style={{ background: bg, borderLeft: '1px solid rgba(10,10,10,0.04)', cursor: dayClosed ? 'default' : 'pointer', border: 'none', borderLeftWidth: '1px', borderLeftStyle: 'solid', borderLeftColor: 'rgba(10,10,10,0.04)' }}>
+                          {slot && isFirstHour && (
+                            <div className="rounded px-1.5 py-0.5 mb-0.5" style={{ background: slotFull ? 'rgba(212,168,67,0.2)' : 'rgba(123,174,94,0.18)' }}>
+                              <div style={{ ...font, fontSize: '0.55rem', fontWeight: 600, color: slotFull ? '#D4A843' : '#5A8A3C' }}>
+                                {slot.note || `${String(slot.start_hour).padStart(2, '0')}-${String(slot.end_hour).padStart(2, '0')}`}
+                              </div>
+                              <div style={{ ...font, fontSize: '0.5rem', color: slotFull ? '#D4A843' : '#7BAE5E' }}>
+                                {eventsInHour.length}/{slot.parallel_slots}
+                              </div>
+                            </div>
+                          )}
+                          {eventsInHour.map((e: any) => (
+                            <div key={e.id} className="rounded px-1.5 py-0.5 mb-0.5 truncate" style={{ background: 'rgba(212,168,67,0.25)' }}>
+                              <span style={{ ...font, fontSize: '0.58rem', fontWeight: 500, color: '#0A0A0A' }}>{e.title}</span>
+                            </div>
+                          ))}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'rgba(123,174,94,0.06)', border: '1px solid rgba(123,174,94,0.2)' }} />
+                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>Offener Slot</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>Belegt</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'rgba(200,60,60,0.06)', border: '1px solid rgba(200,60,60,0.15)' }} />
+                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>Ruhetag</span>
+                </div>
+                {isHueter && (
+                  <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', marginLeft: '12px' }}>
+                    Klick auf leere Zelle = neuen Slot oeffnen
+                  </span>
+                )}
               </div>
             </div>
           </div>
