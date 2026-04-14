@@ -171,6 +171,15 @@ export async function setLichtungSlot(id: string, date: string, status: string, 
 export async function checkSlotAvailable(id: string, date: string) {
   return request(`/lichtungen/${id}/available/${date}`)
 }
+export async function getSlotsForDate(id: string, date: string) {
+  return request(`/lichtungen/${id}/slots/${date}`)
+}
+export async function createTimeSlot(id: string, date: string, data: { startHour?: number; endHour?: number; status?: string; parallelSlots?: number; note?: string }) {
+  return request(`/lichtungen/${id}/slots/${date}`, { method: 'POST', body: JSON.stringify(data) })
+}
+export async function deleteTimeSlot(lichtungId: string, slotId: string) {
+  return request(`/lichtungen/${lichtungId}/slot/${slotId}`, { method: 'DELETE' })
+}
 
 // ─── Lichtung Mitglieder ───
 

@@ -16,7 +16,7 @@ import {
   getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
   addLichtungMember, removeLichtungMember, setLichtungRole, getLichtungMembers, getLichtungMemberRole, getLichtungMemberCount,
   getLichtungCode, findLichtungByCode,
-  getSlots, setSlot, deleteSlot, isSlotAvailable,
+  getSlots, setSlot, deleteSlot, isSlotAvailable, getSlotsForDate, createTimeSlot, deleteSlotById,
   createConnection, getConnections, getConnectionCount, getFullChain,
   getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink,
   getEventMaxParticipants,
@@ -434,9 +434,29 @@ app.get('/api/lichtungen/:id/available/:date', (req, res) => {
 
 app.put('/api/lichtungen/:id/slots/:date', auth, (req, res) => {
   const role = getLichtungMemberRole(req.params.id, req.userId)
-  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins koennen Slots verwalten.' })
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Hueter/Gaertner koennen Slots verwalten.' })
   const { status, max_events, note } = req.body
   setSlot(req.params.id, req.params.date, status || 'open', max_events, note, req.userId)
+  res.json({ ok: true })
+})
+
+// Stunden-Slots fuer einen Tag abrufen
+app.get('/api/lichtungen/:id/slots/:date', (req, res) => {
+  res.json(getSlotsForDate(req.params.id, req.params.date))
+})
+
+// Neuen Zeit-Slot anlegen (Hueter)
+app.post('/api/lichtungen/:id/slots/:date', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner') return res.status(403).json({ error: 'Nur der Hueter kann Slots oeffnen.' })
+  res.json(createTimeSlot(req.params.id, req.params.date, req.body, req.userId))
+})
+
+// Zeit-Slot loeschen
+app.delete('/api/lichtungen/:id/slot/:slotId', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner') return res.status(403).json({ error: 'Nur der Hueter.' })
+  deleteSlotById(req.params.slotId)
   res.json({ ok: true })
 })
 

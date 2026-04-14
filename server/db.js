@@ -84,7 +84,10 @@ db.exec(`
     status TEXT DEFAULT 'open',
     max_events INTEGER DEFAULT 1,
     note TEXT DEFAULT '',
-    created_by TEXT
+    created_by TEXT,
+    start_hour INTEGER,
+    end_hour INTEGER,
+    parallel_slots INTEGER DEFAULT 1
   );
 
   CREATE TABLE IF NOT EXISTS lichtung_codes (
@@ -133,6 +136,9 @@ try { db.exec('ALTER TABLE event_participants ADD COLUMN status TEXT DEFAULT "jo
 try { db.exec('ALTER TABLE events ADD COLUMN lichtung_id TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN max_participants INTEGER') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN telegram TEXT') } catch {}
+try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN start_hour INTEGER') } catch {}
+try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN end_hour INTEGER') } catch {}
+try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN parallel_slots INTEGER DEFAULT 1') } catch {}
 
 // Migration: bestehende Lichtungen ohne Owner-Member -> Ersteller als Owner setzen
 try {
@@ -512,22 +518,41 @@ export function getSlots(lichtungId, from, to) {
   return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date >= ? AND date <= ? ORDER BY date').all(lichtungId, from, to)
 }
 
+export function getSlotsForDate(lichtungId, date) {
+  return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date = ? ORDER BY start_hour').all(lichtungId, date)
+}
+
+// Ganztags-Slot oder Stunden-Slot anlegen
+export function createTimeSlot(lichtungId, date, { startHour, endHour, status, parallelSlots, note }, createdBy) {
+  const id = randomUUID()
+  db.prepare(`
+    INSERT INTO lichtung_slots (id, lichtung_id, date, status, max_events, note, created_by, start_hour, end_hour, parallel_slots)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, lichtungId, date, status || 'open', parallelSlots || 1, note || '', createdBy, startHour ?? null, endHour ?? null, parallelSlots || 1)
+  return { id }
+}
+
+export function deleteSlotById(slotId) {
+  db.prepare('DELETE FROM lichtung_slots WHERE id = ?').run(slotId)
+}
+
+export function deleteSlot(lichtungId, date) {
+  db.prepare('DELETE FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').run(lichtungId, date)
+}
+
 export function getSlot(lichtungId, date) {
-  return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').get(lichtungId, date)
+  // Prioritaet: Ganztags-Slot (kein start_hour)
+  return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date = ? AND start_hour IS NULL').get(lichtungId, date)
 }
 
 export function setSlot(lichtungId, date, status, maxEvents, note, createdBy) {
-  const existing = db.prepare('SELECT id FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').get(lichtungId, date)
+  const existing = db.prepare('SELECT id FROM lichtung_slots WHERE lichtung_id = ? AND date = ? AND start_hour IS NULL').get(lichtungId, date)
   if (existing) {
     db.prepare('UPDATE lichtung_slots SET status = ?, max_events = ?, note = ? WHERE id = ?').run(status, maxEvents || 1, note || '', existing.id)
   } else {
     const id = randomUUID()
     db.prepare('INSERT INTO lichtung_slots (id, lichtung_id, date, status, max_events, note, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, lichtungId, date, status, maxEvents || 1, note || '', createdBy)
   }
-}
-
-export function deleteSlot(lichtungId, date) {
-  db.prepare('DELETE FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').run(lichtungId, date)
 }
 
 export function getEventsForDate(lichtungId, date) {

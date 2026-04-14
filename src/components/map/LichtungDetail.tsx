@@ -100,7 +100,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
       <div className="overflow-y-auto p-5" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {tab === 'slots' && (myRole === 'owner' || myRole === 'admin') && (
-          <SlotManager lichtungId={lichtungId} />
+          <SlotManager lichtungId={lichtungId} myRole={myRole} />
         )}
         {tab === 'info' && (
           <>
@@ -283,8 +283,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                   <div className="flex-1 min-w-0">
                     <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{m.name}</span>
                     <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.62rem', color: m.role === 'owner' ? '#7BAE5E' : m.role === 'admin' ? '#D4A843' : 'rgba(10,10,10,0.35)' }}>
-                      {m.role === 'owner' && <><Shield size={9} /> Eigentuemer</>}
-                      {m.role === 'admin' && <><Shield size={9} /> Admin</>}
+                      {m.role === 'owner' && <><Shield size={9} /> Hueter</>}
+                      {m.role === 'admin' && <><Shield size={9} /> Gaertner</>}
                       {m.role === 'member' && 'Mitglied'}
                     </span>
                   </div>
@@ -296,7 +296,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                         api.setMemberRole(lichtungId, m.id, newRole).then(() => api.getLichtungMembers(lichtungId).then(setMembers))
                       }}
                       style={{ ...font, fontSize: '0.6rem', color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer' }}>
-                      {m.role === 'admin' ? '→ Mitglied' : '→ Admin'}
+                      {m.role === 'admin' ? '→ Mitglied' : '→ Gaertner'}
                     </button>
                   )}
                 </div>
