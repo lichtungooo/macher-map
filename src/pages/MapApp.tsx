@@ -13,6 +13,7 @@ import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { EventCalendar } from '../components/events/EventCalendar'
 import { Logo } from '../components/Logo'
 import { WandCursor } from '../components/map/WandCursor'
+import { InfoPopup } from '../components/map/InfoPopup'
 import * as api from '../api/client'
 
 const BTN_SIZE = 46
@@ -381,6 +382,7 @@ function MapAppInner() {
         </div>
       )}
 
+      <InfoPopup />
       <WandCursor active={mode === 'place-light'} />
     </div>
   )
