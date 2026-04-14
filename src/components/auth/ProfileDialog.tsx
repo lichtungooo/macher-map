@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { MarkdownToolbar } from './MarkdownToolbar'
 import * as api from '../../api/client'
@@ -15,6 +15,7 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   const [imagePreview, setImagePreview] = useState<string | undefined>(user?.imageUrl)
   const [showSettings, setShowSettings] = useState(false)
   const [pwMsg, setPwMsg] = useState('')
+  const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -92,6 +93,31 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
                 Link zum Zuruecksetzen senden
               </button>
               {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('Fehler') ? '#c44' : '#D4A843', marginTop: '6px' }}>{pwMsg}</p>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Standort</label>
+              <label className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <button
+                  onClick={() => {
+                    const next = !autoLight
+                    setAutoLightState(next)
+                    localStorage.setItem('lichtung-auto-light', next ? '1' : '0')
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center shrink-0"
+                  style={{ border: autoLight ? 'none' : '1px solid rgba(10,10,10,0.15)', background: autoLight ? '#D4A843' : '#fff', cursor: 'pointer' }}
+                >
+                  {autoLight && <Check size={14} color="#fff" />}
+                </button>
+                <div>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', display: 'block' }}>
+                    Licht automatisch setzen
+                  </span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', display: 'block', marginTop: '2px' }}>
+                    Beim Oeffnen der Karte wird dein Licht an deinen Standort gesetzt.
+                  </span>
+                </div>
+              </label>
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
