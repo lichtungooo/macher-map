@@ -4,7 +4,6 @@ import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
 import { ZoomButtons } from './ZoomButtons'
-import { SmoothZoom } from './SmoothZoom'
 import type { LatLngExpression } from 'leaflet'
 
 interface PeaceMapProps {
@@ -124,8 +123,9 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       zoom={5}
       zoomControl={false}
       attributionControl={false}
-      zoomSnap={0}
-      scrollWheelZoom={false}
+      zoomSnap={0.25}
+      zoomDelta={0.25}
+      wheelPxPerZoomLevel={60}
       className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
     >
       <TileLayer
@@ -138,7 +138,6 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
       <FlyToHandler flyTo={flyTo} />
       <ZoomButtons />
-      <SmoothZoom />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
