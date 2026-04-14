@@ -126,6 +126,22 @@ try { db.exec('ALTER TABLE events ADD COLUMN lichtung_id TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN max_participants INTEGER') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN telegram TEXT') } catch {}
 
+// Migration: bestehende Lichtungen ohne Owner-Member -> Ersteller als Owner setzen
+try {
+  const lichtungen = db.prepare('SELECT id, user_id FROM lichtungen').all()
+  for (const l of lichtungen) {
+    const exists = db.prepare('SELECT 1 FROM lichtung_members WHERE lichtung_id = ? AND user_id = ?').get(l.id, l.user_id)
+    if (!exists) {
+      db.prepare('INSERT INTO lichtung_members (lichtung_id, user_id, role) VALUES (?, ?, ?)').run(l.id, l.user_id, 'owner')
+    }
+    const codeExists = db.prepare('SELECT 1 FROM lichtung_codes WHERE lichtung_id = ?').get(l.id)
+    if (!codeExists) {
+      const code = randomUUID().slice(0, 8)
+      db.prepare('INSERT INTO lichtung_codes (lichtung_id, code) VALUES (?, ?)').run(l.id, code)
+    }
+  }
+} catch (err) { console.error('Lichtung-Migration fehlgeschlagen:', err.message) }
+
 // ─── Users ───
 
 export function findUserByEmail(email) {
