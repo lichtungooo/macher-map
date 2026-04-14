@@ -43,6 +43,17 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS lichtungen (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    image_path TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS invite_tokens (
     token TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -81,6 +92,8 @@ try { db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0') } catch
 try { db.exec('ALTER TABLE users ADD COLUMN newsletter INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN is_global INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE event_participants ADD COLUMN status TEXT DEFAULT "joined"') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN lichtung_id TEXT') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN max_participants INTEGER') } catch {}
 
 // ─── Users ───
 
@@ -254,6 +267,11 @@ export function getEventParticipantCount(eventId) {
   return db.prepare('SELECT COUNT(*) as count FROM event_participants WHERE event_id = ?').get(eventId).count
 }
 
+export function getEventMaxParticipants(eventId) {
+  const row = db.prepare('SELECT max_participants FROM events WHERE id = ?').get(eventId)
+  return row?.max_participants || null
+}
+
 export function isUserParticipating(eventId, userId) {
   const row = db.prepare('SELECT status FROM event_participants WHERE event_id = ? AND user_id = ?').get(eventId, userId)
   return row ? row.status : null
@@ -268,6 +286,54 @@ export function getUserEvents(userId) {
     WHERE ep.user_id = ?
     ORDER BY e.start_time ASC
   `).all(userId)
+}
+
+// ─── Lichtungen (Orte) ───
+
+export function getAllLichtungen() {
+  return db.prepare(`
+    SELECT l.*, u.name as creator_name
+    FROM lichtungen l JOIN users u ON l.user_id = u.id
+    ORDER BY l.created_at DESC
+  `).all()
+}
+
+export function getLichtung(id) {
+  return db.prepare(`
+    SELECT l.*, u.name as creator_name
+    FROM lichtungen l JOIN users u ON l.user_id = u.id
+    WHERE l.id = ?
+  `).get(id)
+}
+
+export function createLichtung(userId, { name, description, lat, lng }) {
+  const id = randomUUID()
+  db.prepare('INSERT INTO lichtungen (id, user_id, name, description, lat, lng) VALUES (?, ?, ?, ?, ?, ?)').run(id, userId, name, description || '', lat, lng)
+  return { id }
+}
+
+export function updateLichtung(id, fields) {
+  const sets = []
+  const vals = []
+  for (const [key, val] of Object.entries(fields)) {
+    if (val !== undefined) { sets.push(`${key} = ?`); vals.push(val) }
+  }
+  if (sets.length === 0) return
+  vals.push(id)
+  db.prepare(`UPDATE lichtungen SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
+}
+
+export function deleteLichtung(id) {
+  db.prepare('DELETE FROM lichtungen WHERE id = ?').run(id)
+}
+
+export function getLichtungEvents(lichtungId) {
+  return db.prepare(`
+    SELECT e.*, u.name as creator_name
+    FROM events e JOIN users u ON e.user_id = u.id
+    WHERE e.lichtung_id = ?
+    ORDER BY e.start_time ASC
+  `).all(lichtungId)
 }
 
 // ─── Invite Tokens (temporaer, 60s) ───

@@ -14,12 +14,14 @@ import { EventCalendar } from '../components/events/EventCalendar'
 import { Logo } from '../components/Logo'
 import { WandCursor } from '../components/map/WandCursor'
 import { InfoPopup } from '../components/map/InfoPopup'
+import { LichtungDetail } from '../components/map/LichtungDetail'
+import { CreateLichtungDialog } from '../components/map/CreateLichtungDialog'
 import * as api from '../api/client'
 
 const BTN_SIZE = 46
 
-type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'qr-code'
-type Mode = 'browse' | 'place-light' | 'place-event'
+type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' | 'qr-code'
+type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung'
 
 function MapAppInner() {
   const { user, lights, setLights, setEvents, login: loginCtx } = useApp()
@@ -38,6 +40,9 @@ function MapAppInner() {
   const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const [flyTo, setFlyTo] = useState<[number, number, number] | null>(null)
   const [desiredZoomRadius, setDesiredZoomRadius] = useState<number | null>(null)
+  const [lichtungen, setLichtungen] = useState<any[]>([])
+  const [selectedLichtung, setSelectedLichtung] = useState<string | null>(null)
+  const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -67,6 +72,11 @@ function MapAppInner() {
       }))
       setEvents(mapped)
     }).catch(() => {})
+  }, [])
+
+  // Lichtungen laden
+  useEffect(() => {
+    api.getLichtungen().then(setLichtungen).catch(() => {})
   }, [])
 
   // Auto-login passiert jetzt im AppProvider
@@ -197,6 +207,11 @@ function MapAppInner() {
     setMode('place-event')
   }
 
+  const handleCreateLichtung = () => {
+    if (!user) { setDialog('auth'); return }
+    setMode('place-lichtung')
+  }
+
   const handleMapClick = async (position: [number, number]) => {
     if (mode === 'place-light') {
       try {
@@ -220,6 +235,10 @@ function MapAppInner() {
       setEventPosition(position)
       setDialog('create-event')
       setMode('browse')
+    } else if (mode === 'place-lichtung') {
+      setLichtungPosition(position)
+      setDialog('create-lichtung')
+      setMode('browse')
     }
   }
 
@@ -227,12 +246,14 @@ function MapAppInner() {
     <div className={`fixed inset-0 ${mode === 'place-light' ? 'cursor-wand' : ''}`} style={{ background: '#F5F4F0' }}>
       <PeaceMap
         onMapClick={handleMapClick}
-        placingLight={mode === 'place-light' || mode === 'place-event'}
+        placingLight={mode !== 'browse'}
         showLights={showLights}
         showEvents={showEvents}
         onRadiusChange={setMapRadius}
         flyTo={flyTo}
         zoomToRadius={desiredZoomRadius}
+        lichtungen={lichtungen}
+        onLichtungClick={id => setSelectedLichtung(id)}
       />
 
       {/* Top Bar */}
@@ -308,7 +329,7 @@ function MapAppInner() {
       {mode !== 'browse' && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A' }}>
-            {mode === 'place-light' ? 'Tippe auf die Karte, um dein Licht zu setzen' : 'Tippe auf die Karte, um den Ort zu waehlen'}
+            {mode === 'place-light' ? 'Tippe auf die Karte, um dein Licht zu setzen' : mode === 'place-lichtung' ? 'Tippe auf die Karte, um die Lichtung zu platzieren' : 'Tippe auf die Karte, um den Ort zu waehlen'}
           </p>
           <button onClick={() => setMode('browse')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
             Abbrechen
@@ -324,12 +345,13 @@ function MapAppInner() {
         onToggleEvents={() => setShowEvents(!showEvents)}
       />
 
-      <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} />
+      <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
       {dialog === 'auth' && <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />}
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
+      {dialog === 'create-lichtung' && <CreateLichtungDialog position={lichtungPosition} onClose={() => { setDialog('none'); setLichtungPosition(undefined) }} onCreated={() => api.getLichtungen().then(setLichtungen)} />}
       {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} />}
 
       {/* Standort-Dialog */}
@@ -384,6 +406,7 @@ function MapAppInner() {
         </div>
       )}
 
+      {selectedLichtung && <LichtungDetail lichtungId={selectedLichtung} onClose={() => setSelectedLichtung(null)} />}
       <InfoPopup />
       <WandCursor active={mode === 'place-light'} />
     </div>

@@ -13,6 +13,8 @@ import {
   getAllEvents, createEvent, getGlobalEvents, deleteEvent,
   joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
   createInviteToken, verifyInviteToken,
+  getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
+  getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
@@ -213,6 +215,13 @@ app.get('/api/events/:id/participants', (req, res) => {
 })
 
 app.post('/api/events/:id/join', auth, (req, res) => {
+  const max = getEventMaxParticipants(req.params.id)
+  if (max) {
+    const count = getEventParticipantCount(req.params.id)
+    if (count >= max) {
+      return res.status(400).json({ error: 'Leider ausgebucht. Alle Plaetze sind vergeben.' })
+    }
+  }
   joinEvent(req.params.id, req.userId)
   res.json({ ok: true, count: getEventParticipantCount(req.params.id) })
 })
@@ -282,6 +291,46 @@ app.get('/api/cal/:token.ics', (req, res) => {
   res.setHeader('Content-Type', 'text/calendar; charset=utf-8')
   res.setHeader('Content-Disposition', 'attachment; filename="lichtung-termine.ics"')
   res.send(lines.join('\r\n'))
+})
+
+// ─── Lichtungen (Orte) ───
+
+app.get('/api/lichtungen', (req, res) => res.json(getAllLichtungen()))
+
+app.get('/api/lichtungen/:id', (req, res) => {
+  const l = getLichtung(req.params.id)
+  if (!l) return res.status(404).json({ error: 'Nicht gefunden' })
+  res.json(l)
+})
+
+app.get('/api/lichtungen/:id/events', (req, res) => {
+  const events = getLichtungEvents(req.params.id)
+  const enriched = events.map(e => ({
+    ...e,
+    participant_count: getEventParticipantCount(e.id),
+  }))
+  res.json(enriched)
+})
+
+app.post('/api/lichtungen', auth, (req, res) => {
+  res.json(createLichtung(req.userId, req.body))
+})
+
+app.put('/api/lichtungen/:id', auth, (req, res) => {
+  updateLichtung(req.params.id, req.body)
+  res.json({ ok: true })
+})
+
+app.delete('/api/lichtungen/:id', auth, (req, res) => {
+  deleteLichtung(req.params.id)
+  res.json({ ok: true })
+})
+
+app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Kein Bild' })
+  const image_path = `/uploads/${req.file.filename}`
+  updateLichtung(req.params.id, { image_path })
+  res.json({ image_path })
 })
 
 // ─── Invite Token (60s gueltig) ───

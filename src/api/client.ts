@@ -127,6 +127,15 @@ export async function getCalToken() {
   return request('/my/cal-token')
 }
 
+// ─── Lichtungen ───
+
+export async function getLichtungen() { return request('/lichtungen') }
+export async function getLichtung(id: string) { return request(`/lichtungen/${id}`) }
+export async function getLichtungEvents(id: string) { return request(`/lichtungen/${id}/events`) }
+export async function createLichtung(data: { name: string; description: string; lat: number; lng: number }) {
+  return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
+}
+
 // ─── Invite ───
 
 export async function createInvite() {

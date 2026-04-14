@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
+import { LichtungMarker } from './LichtungMarker'
 import { ZoomButtons } from './ZoomButtons'
 import { TrackpadFix } from './TrackpadFix'
 import type { LatLngExpression } from 'leaflet'
@@ -17,6 +18,8 @@ interface PeaceMapProps {
   onRadiusChange?: (radiusKm: number) => void
   flyTo?: [number, number, number] | null // [lat, lng, zoom]
   zoomToRadius?: number | null // Radius in km -> Karte zoomt
+  lichtungen?: any[]
+  onLichtungClick?: (id: string) => void
 }
 
 function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
@@ -118,7 +121,7 @@ function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -151,6 +154,10 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
 
       {showEvents && events.map(event => (
         <EventMarker key={event.id} event={event} />
+      ))}
+
+      {lichtungen.map(l => (
+        <LichtungMarker key={l.id} lichtung={l} onClick={onLichtungClick || (() => {})} />
       ))}
     </MapContainer>
   )

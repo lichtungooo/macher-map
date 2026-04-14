@@ -271,6 +271,17 @@ body {
   filter: drop-shadow(0 0 5px rgba(160, 124, 192, 0.3));
 }
 
+/* Lichtung-Marker */
+.lichtung-marker {
+  animation: lichtung-glow 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(123, 174, 94, 0.4));
+}
+
+@keyframes lichtung-glow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(123, 174, 94, 0.4)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 14px rgba(123, 174, 94, 0.6)); }
+}
+
 @keyframes event-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
