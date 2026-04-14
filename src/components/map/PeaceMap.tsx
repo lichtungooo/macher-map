@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
 import { ZoomButtons } from './ZoomButtons'
+import { TrackpadFix } from './TrackpadFix'
 import type { LatLngExpression } from 'leaflet'
 
 interface PeaceMapProps {
@@ -138,6 +139,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
       <FlyToHandler flyTo={flyTo} />
       <ZoomButtons />
+      <TrackpadFix />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
