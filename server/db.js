@@ -139,6 +139,7 @@ try { db.exec('ALTER TABLE users ADD COLUMN telegram TEXT') } catch {}
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN start_hour INTEGER') } catch {}
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN end_hour INTEGER') } catch {}
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN parallel_slots INTEGER DEFAULT 1') } catch {}
+try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER DEFAULT 0') } catch {}
 
 // Migration: bestehende Lichtungen ohne Owner-Member -> Ersteller als Owner setzen
 try {
@@ -444,9 +445,9 @@ export function getLichtungTelegramLinks(lichtungId) {
   return db.prepare('SELECT * FROM lichtung_telegram_links WHERE lichtung_id = ? ORDER BY created_at').all(lichtungId)
 }
 
-export function addLichtungTelegramLink(lichtungId, label, url) {
+export function addLichtungTelegramLink(lichtungId, label, url, isPrivate = false) {
   const id = randomUUID()
-  db.prepare('INSERT INTO lichtung_telegram_links (id, lichtung_id, label, url) VALUES (?, ?, ?, ?)').run(id, lichtungId, label, url)
+  db.prepare('INSERT INTO lichtung_telegram_links (id, lichtung_id, label, url, is_private) VALUES (?, ?, ?, ?, ?)').run(id, lichtungId, label, url, isPrivate ? 1 : 0)
   return { id }
 }
 

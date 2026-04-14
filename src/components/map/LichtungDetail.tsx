@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2 } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock } from 'lucide-react'
 import { SlotManager } from './SlotManager'
+import { FullCalendar } from './FullCalendar'
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -29,8 +30,10 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [qrUrl, setQrUrl] = useState('')
   const [qrCopied, setQrCopied] = useState(false)
   const [tgLinks, setTgLinks] = useState<any[]>([])
+  const [showFullCalendar, setShowFullCalendar] = useState(false)
   const [newTgLabel, setNewTgLabel] = useState('')
   const [newTgUrl, setNewTgUrl] = useState('')
+  const [newTgPrivate, setNewTgPrivate] = useState(false)
   const [showAddTg, setShowAddTg] = useState(false)
   const calUrl = `${window.location.origin}/api/lichtungen/${lichtungId}/cal.ics`
 
@@ -45,10 +48,11 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
   const handleAddTg = async () => {
     if (!newTgLabel.trim() || !newTgUrl.trim()) return
-    await api.addLichtungTelegramLink(lichtungId, newTgLabel, newTgUrl)
+    await api.addLichtungTelegramLink(lichtungId, newTgLabel, newTgUrl, newTgPrivate)
     api.getLichtungTelegramLinks(lichtungId).then(setTgLinks)
     setNewTgLabel('')
     setNewTgUrl('')
+    setNewTgPrivate(false)
     setShowAddTg(false)
   }
 
@@ -75,6 +79,10 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
   if (!lichtung) return null
 
+  if (showFullCalendar) {
+    return <FullCalendar lichtungId={lichtungId} lichtungName={lichtung.name} myRole={myRole} onClose={() => setShowFullCalendar(false)} />
+  }
+
   return (
     <div className="fixed z-[1500] rounded-2xl shadow-xl overflow-hidden" style={{ top: '70px', right: '16px', width: '360px', maxHeight: 'calc(100vh - 90px)', background: '#fff', border: '1px solid rgba(10,10,10,0.06)', animation: 'fade-in-up 0.2s ease-out' }}>
       {/* Header */}
@@ -100,7 +108,15 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
       <div className="overflow-y-auto p-5" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {tab === 'slots' && (myRole === 'owner' || myRole === 'admin') && (
-          <SlotManager lichtungId={lichtungId} myRole={myRole} />
+          <>
+            <button onClick={() => setShowFullCalendar(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
+              style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+              <CalendarDays size={16} />
+              Grosser Kalender
+            </button>
+            <SlotManager lichtungId={lichtungId} myRole={myRole} />
+          </>
         )}
         {tab === 'info' && (
           <>
@@ -154,21 +170,36 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                   </p>
                 )}
 
-                {tgLinks.map((link: any) => (
-                  <div key={link.id} className="flex items-center gap-2 mb-1.5">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer"
-                      className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg"
-                      style={{ background: '#fff', border: '1px solid rgba(80,120,200,0.12)', textDecoration: 'none' }}>
-                      <MessageCircle size={12} style={{ color: '#5078C8' }} />
-                      <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A' }}>{link.label}</span>
-                    </a>
-                    {(myRole === 'owner' || myRole === 'admin') && (
-                      <button onClick={() => handleDeleteTg(link.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '4px' }}>
-                        <Trash2 size={12} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {tgLinks.map((link: any) => {
+                  const locked = link.locked // Private Gruppe, User kein Mitglied
+                  return (
+                    <div key={link.id} className="flex items-center gap-2 mb-1.5">
+                      {locked ? (
+                        <div className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg"
+                          style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)' }}>
+                          <Lock size={12} style={{ color: 'rgba(10,10,10,0.3)' }} />
+                          <span style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.45)' }}>{link.label}</span>
+                          <span style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.3)', marginLeft: 'auto' }}>
+                            Nur fuer Mitglieder
+                          </span>
+                        </div>
+                      ) : (
+                        <a href={link.url} target="_blank" rel="noopener noreferrer"
+                          className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg"
+                          style={{ background: '#fff', border: '1px solid rgba(80,120,200,0.12)', textDecoration: 'none' }}>
+                          <MessageCircle size={12} style={{ color: '#5078C8' }} />
+                          <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A' }}>{link.label}</span>
+                          {link.is_private && <Lock size={10} style={{ color: '#D4A843', marginLeft: 'auto' }} />}
+                        </a>
+                      )}
+                      {(myRole === 'owner' || myRole === 'admin') && (
+                        <button onClick={() => handleDeleteTg(link.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '4px' }}>
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
 
                 {showAddTg && (
                   <div className="mt-2 space-y-2">
@@ -177,9 +208,22 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                       className="w-full px-3 py-2 rounded-lg outline-none"
                       style={{ border: '1px solid rgba(10,10,10,0.08)', ...font, fontSize: '0.78rem', background: '#fff' }} />
                     <input type="url" value={newTgUrl} onChange={e => setNewTgUrl(e.target.value)}
-                      placeholder="https://t.me/gruppenname"
+                      placeholder="https://t.me/+abc oder https://t.me/gruppe"
                       className="w-full px-3 py-2 rounded-lg outline-none"
                       style={{ border: '1px solid rgba(10,10,10,0.08)', ...font, fontSize: '0.72rem', background: '#fff', fontFamily: 'monospace' }} />
+                    <label className="flex items-start gap-2 cursor-pointer p-2 rounded-lg" style={{ background: newTgPrivate ? 'rgba(212,168,67,0.06)' : '#fff' }}>
+                      <button type="button" onClick={() => setNewTgPrivate(!newTgPrivate)}
+                        className="w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ border: newTgPrivate ? 'none' : '1px solid rgba(10,10,10,0.15)', background: newTgPrivate ? '#D4A843' : '#fff', cursor: 'pointer' }}>
+                        {newTgPrivate && <Check size={11} color="#fff" />}
+                      </button>
+                      <div>
+                        <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: '#0A0A0A', display: 'block' }}>Private Gruppe</span>
+                        <span style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.4)', display: 'block' }}>
+                          Link nur fuer Lichtung-Mitglieder sichtbar.
+                        </span>
+                      </div>
+                    </label>
                     <div className="flex gap-2">
                       <button onClick={handleAddTg} className="flex-1 py-2 rounded-lg"
                         style={{ background: '#5078C8', border: 'none', ...font, fontSize: '0.72rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>

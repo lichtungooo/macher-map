@@ -381,15 +381,33 @@ app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) =
 // ─── Lichtung Telegram Links ───
 
 app.get('/api/lichtungen/:id/telegram', (req, res) => {
-  res.json(getLichtungTelegramLinks(req.params.id))
+  const links = getLichtungTelegramLinks(req.params.id)
+  // Pruefen ob User Mitglied ist
+  let isMember = false
+  const authHeader = req.headers.authorization
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const payload = jwt.verify(authHeader.slice(7), JWT_SECRET)
+      const role = getLichtungMemberRole(req.params.id, payload.userId)
+      if (role) isMember = true
+    } catch {}
+  }
+  // Private Gruppen nur fuer Mitglieder sichtbar — URL wird fuer Nicht-Mitglieder entfernt
+  const filtered = links.map(l => {
+    if (l.is_private && !isMember) {
+      return { ...l, url: null, locked: true }
+    }
+    return l
+  })
+  res.json(filtered)
 })
 
 app.post('/api/lichtungen/:id/telegram', auth, (req, res) => {
   const role = getLichtungMemberRole(req.params.id, req.userId)
-  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
-  const { label, url } = req.body
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Hueter/Gaertner.' })
+  const { label, url, is_private } = req.body
   if (!label || !url) return res.status(400).json({ error: 'Name und URL noetig.' })
-  res.json(addLichtungTelegramLink(req.params.id, label, url))
+  res.json(addLichtungTelegramLink(req.params.id, label, url, is_private))
 })
 
 app.delete('/api/lichtungen/:id/telegram/:linkId', auth, (req, res) => {
