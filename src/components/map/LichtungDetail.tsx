@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { FullCalendar } from './FullCalendar'
 import * as api from '../../api/client'
 
@@ -27,9 +28,9 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [members, setMembers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
   const [qrUrl, setQrUrl] = useState('')
-  const [qrCopied, setQrCopied] = useState(false)
   const [tgLinks, setTgLinks] = useState<any[]>([])
   const [showFullCalendar, setShowFullCalendar] = useState(false)
+  const [showFullQR, setShowFullQR] = useState(false)
   const [newTgLabel, setNewTgLabel] = useState('')
   const [newTgUrl, setNewTgUrl] = useState('')
   const [newTgPrivate, setNewTgPrivate] = useState(false)
@@ -80,6 +81,44 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
   if (showFullCalendar) {
     return <FullCalendar lichtungId={lichtungId} lichtungName={lichtung.name} myRole={myRole} onClose={() => setShowFullCalendar(false)} />
+  }
+
+  // Vollbild-QR
+  if (showFullQR && qrUrl) {
+    return (
+      <div className="fixed inset-0 z-[2500] flex flex-col items-center justify-center p-6" style={{ background: '#FDFCF9' }}>
+        <button onClick={() => setShowFullQR(false)} className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
+          <X size={20} />
+        </button>
+
+        <div className="text-center mb-6">
+          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+            {lichtung.name}
+          </h2>
+          <p style={{ ...font, fontSize: '0.85rem', color: 'rgba(10,10,10,0.45)' }}>
+            Scanne den Code, um Mitglied zu werden
+          </p>
+        </div>
+
+        <div className="rounded-2xl p-8 shadow-xl" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+          <QRCodeSVG value={qrUrl} size={Math.min(380, window.innerWidth - 80)} bgColor="#fff" fgColor="#0A0A0A" level="H"
+            imageSettings={{
+              src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#FDFCF9"/><circle cx="18" cy="18" r="14" fill="#7BAE5E" opacity="0.7"/><circle cx="18" cy="18" r="8" fill="#D4E8C0" opacity="0.9"/><circle cx="18" cy="18" r="4" fill="#FFFFF0"/></svg>'),
+              height: 50, width: 50, excavate: true,
+            }} />
+        </div>
+
+        <div className="mt-6 text-center max-w-md">
+          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
+            "Wer durch dich beitritt, ist mit dir verbunden. Du buergst fuer ihn."
+          </p>
+          <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', marginTop: '12px' }}>
+            Vorstufe zum Web of Trust — echte Vernetzung durch echte Begegnung.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -227,6 +266,38 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                 )}
               </div>
             )}
+
+            {/* QR-Code (alle Mitglieder) */}
+            {qrUrl && myRole && (
+              <div className="rounded-xl p-4 mt-4" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <QrCode size={13} style={{ color: '#7BAE5E' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#0A0A0A' }}>Einladung zur Lichtung</span>
+                </div>
+
+                <button onClick={() => setShowFullQR(true)}
+                  className="w-full flex items-center justify-center p-3 rounded-lg transition-all"
+                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                  <div className="flex items-center gap-3">
+                    <QRCodeSVG value={qrUrl} size={70} bgColor="#fff" fgColor="#0A0A0A" level="M" />
+                    <div className="text-left">
+                      <div style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#0A0A0A' }}>Tippe zum Vergroessern</div>
+                      <div style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.4)', marginTop: '2px' }}>
+                        Wer ihn scannt, wird Mitglied
+                      </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Maximize2 size={10} style={{ color: '#7BAE5E' }} />
+                        <span style={{ ...font, fontSize: '0.6rem', color: '#7BAE5E' }}>Vollbild</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                <p style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.35)', marginTop: '8px', lineHeight: 1.5 }}>
+                  Wer durch dich beitritt, ist mit dir verbunden. Du buergst fuer ihn.
+                </p>
+              </div>
+            )}
           </>
         )}
         {tab === 'kalender' && (
@@ -349,28 +420,6 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                 </p>
               )}
             </div>
-
-            {/* QR-Code fuer den Ort (nur Owner/Admin) */}
-            {qrUrl && (myRole === 'owner' || myRole === 'admin') && (
-              <div className="rounded-xl p-4" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <QrCode size={13} style={{ color: '#7BAE5E' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#0A0A0A' }}>Permanenter QR-Code</span>
-                </div>
-                <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', marginBottom: '8px' }}>
-                  Menschen scannen diesen Code um Mitglied zu werden.
-                </p>
-                <div className="flex items-center gap-2">
-                  <input readOnly value={qrUrl} className="flex-1 px-2 py-1.5 rounded text-xs outline-none"
-                    style={{ border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'monospace', fontSize: '0.58rem', color: 'rgba(10,10,10,0.4)', background: '#fff' }}
-                    onClick={e => (e.target as HTMLInputElement).select()} />
-                  <button onClick={() => { navigator.clipboard.writeText(qrUrl); setQrCopied(true); setTimeout(() => setQrCopied(false), 2000) }}
-                    className="shrink-0 rounded px-2 py-1.5" style={{ background: qrCopied ? 'rgba(123,174,94,0.1)' : '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                    {qrCopied ? <Check size={12} style={{ color: '#7BAE5E' }} /> : <Copy size={12} style={{ color: 'rgba(10,10,10,0.35)' }} />}
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Beitreten Button (wenn nicht Mitglied) */}
             {!myRole && api.getToken() && (

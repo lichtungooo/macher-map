@@ -185,7 +185,9 @@ export async function deleteTimeSlot(lichtungId: string, slotId: string) {
 
 export async function getLichtungMembers(id: string) { return request(`/lichtungen/${id}/members`) }
 export async function getMyLichtungRole(id: string) { return request(`/lichtungen/${id}/my-role`) }
-export async function joinLichtungByCode(code: string) { return request(`/lichtungen/join/${code}`, { method: 'POST' }) }
+export async function joinLichtungByCode(code: string, invitedBy?: string) {
+  return request(`/lichtungen/join/${code}`, { method: 'POST', body: JSON.stringify({ invitedBy }) })
+}
 export async function getLichtungQRCode(id: string) { return request(`/lichtungen/${id}/code`) }
 export async function setMemberRole(lichtungId: string, userId: string, role: string) {
   return request(`/lichtungen/${lichtungId}/members/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) })

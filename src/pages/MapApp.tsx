@@ -91,19 +91,20 @@ function MapAppInner() {
     }
   }, [user])
 
-  // Ort-QR-Code: ?place=CODE
+  // Ort-QR-Code: ?place=CODE&by=USER_ID (Bringer)
   useEffect(() => {
     const placeCode = searchParams.get('place')
+    const broughtBy = searchParams.get('by')
     if (!placeCode) return
     setSearchParams({})
     if (api.getToken()) {
-      api.joinLichtungByCode(placeCode).then(data => {
+      api.joinLichtungByCode(placeCode, broughtBy || undefined).then(data => {
         setSelectedLichtung(data.lichtung_id)
         api.getLichtungen().then(setLichtungen)
       }).catch(() => {})
     } else {
-      // Noch nicht eingeloggt — Code merken, nach Login beitreten
       sessionStorage.setItem('lichtung-join-code', placeCode)
+      if (broughtBy) sessionStorage.setItem('lichtung-join-by', broughtBy)
       setDialog('auth')
     }
   }, [])

@@ -495,22 +495,31 @@ app.get('/api/lichtungen/:id/my-role', auth, (req, res) => {
   res.json({ role: getLichtungMemberRole(req.params.id, req.userId) })
 })
 
-// Per QR-Code beitreten
+// Per QR-Code beitreten — mit optionalem Bringer (Buergschaft)
 app.post('/api/lichtungen/join/:code', auth, (req, res) => {
   const lichtungId = findLichtungByCode(req.params.code)
   if (!lichtungId) return res.status(404).json({ error: 'Unbekannter Code.' })
   const existing = getLichtungMemberRole(lichtungId, req.userId)
-  if (!existing) addLichtungMember(lichtungId, req.userId, 'member')
+  if (!existing) {
+    addLichtungMember(lichtungId, req.userId, 'member')
+    // Buergschaft: wer den Link geteilt hat -> Verbindung Mensch-zu-Mensch
+    const inviter = req.body?.invitedBy
+    if (inviter && inviter !== req.userId) {
+      createConnection(req.userId, inviter)
+    }
+  }
   const l = getLichtung(lichtungId)
   res.json({ lichtung_id: lichtungId, name: l?.name, role: existing || 'member' })
 })
 
-// QR-Code abrufen (nur Owner/Admin)
+// QR-Code abrufen — fuer alle Mitglieder, mit eigenem Bringer-Tag
 app.get('/api/lichtungen/:id/code', auth, (req, res) => {
   const role = getLichtungMemberRole(req.params.id, req.userId)
-  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
+  if (!role) return res.status(403).json({ error: 'Nur Mitglieder.' })
   const code = getLichtungCode(req.params.id)
-  res.json({ code, url: `${process.env.BASE_URL || 'https://lichtung.ooo'}/app?place=${code}` })
+  // URL mit Bringer-Info — wer einlaedt, wird Buerge
+  const url = `${process.env.BASE_URL || 'https://lichtung.ooo'}/app?place=${code}&by=${req.userId}`
+  res.json({ code, url, role })
 })
 
 // Rolle aendern (nur Owner)
