@@ -20,6 +20,7 @@ interface PeaceMapProps {
   zoomToRadius?: number | null // Radius in km -> Karte zoomt
   lichtungen?: any[]
   onLichtungClick?: (id: string) => void
+  onShowProfile?: (light: any) => void
 }
 
 function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
@@ -121,7 +122,7 @@ function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -149,7 +150,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <TrackpadFix />
 
       {showLights && lights.map(light => (
-        <LightMarker key={light.id} light={light} />
+        <LightMarker key={light.id} light={light} onShowProfile={onShowProfile} />
       ))}
 
       {showEvents && events.map(event => (

@@ -16,6 +16,7 @@ import { WandCursor } from '../components/map/WandCursor'
 import { InfoPopup } from '../components/map/InfoPopup'
 import { LichtungDetail } from '../components/map/LichtungDetail'
 import { CreateLichtungDialog } from '../components/map/CreateLichtungDialog'
+import { ProfileDetail } from '../components/map/ProfileDetail'
 import * as api from '../api/client'
 
 const BTN_SIZE = 46
@@ -43,6 +44,7 @@ function MapAppInner() {
   const [lichtungen, setLichtungen] = useState<any[]>([])
   const [selectedLichtung, setSelectedLichtung] = useState<string | null>(null)
   const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
+  const [selectedProfile, setSelectedProfile] = useState<any>(null)
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -254,6 +256,7 @@ function MapAppInner() {
         zoomToRadius={desiredZoomRadius}
         lichtungen={lichtungen}
         onLichtungClick={id => setSelectedLichtung(id)}
+        onShowProfile={light => setSelectedProfile(light)}
       />
 
       {/* Top Bar */}
@@ -407,6 +410,7 @@ function MapAppInner() {
       )}
 
       {selectedLichtung && <LichtungDetail lichtungId={selectedLichtung} onClose={() => setSelectedLichtung(null)} />}
+      {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
       <InfoPopup />
       <WandCursor active={mode === 'place-light'} />
     </div>

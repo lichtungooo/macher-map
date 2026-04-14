@@ -33,6 +33,7 @@ export function CreateEventDialog({ position, onClose }: CreateEventDialogProps)
   const [recurring, setRecurring] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('18:00')
+  const [maxParticipants, setMaxParticipants] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +50,7 @@ export function CreateEventDialog({ position, onClose }: CreateEventDialogProps)
         start_time: `${date}T${time}:00`,
         type,
         recurring: recurring || undefined,
+        max_participants: maxParticipants ? Number(maxParticipants) : undefined,
       })
       // Reload events from backend
       const updated = await api.getEvents()
@@ -131,6 +133,15 @@ export function CreateEventDialog({ position, onClose }: CreateEventDialogProps)
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Teilnehmerlimit (optional)</label>
+            <input type="number" min="1" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} placeholder="z.B. 10"
+              className="w-full px-4 py-3 rounded-lg outline-none" style={inputStyle} />
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '3px' }}>
+              Leer lassen fuer unbegrenzt.
+            </p>
           </div>
 
           <div>
