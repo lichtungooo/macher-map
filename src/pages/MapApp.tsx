@@ -35,6 +35,7 @@ function MapAppInner() {
   const [showLocateDialog, setShowLocateDialog] = useState(false)
   const [locatedPos, setLocatedPos] = useState<[number, number] | null>(null)
   const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
+  const [flyTo, setFlyTo] = useState<[number, number, number] | null>(null)
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -123,14 +124,20 @@ function MapAppInner() {
       pos => {
         const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
         setLocatedPos(p)
+        // Karte zum Standort fliegen (~1 km Zoom = Stufe 14)
+        setFlyTo([p[0], p[1], 14])
+        // Nach dem Fliegen den flyTo zuruecksetzen
+        setTimeout(() => setFlyTo(null), 2000)
+
         if (autoLight && user && api.getToken()) {
-          // Auto-Licht: direkt setzen
+          // Auto-Licht: direkt setzen ohne Dialog
           api.createLight(p[0], p[1]).then(() => api.getLights()).then(setLights).catch(() => {})
         } else {
           setShowLocateDialog(true)
         }
       },
-      () => alert('Standort konnte nicht ermittelt werden.')
+      () => alert('Standort konnte nicht ermittelt werden.'),
+      { enableHighAccuracy: true, timeout: 10000 }
     )
   }
 
@@ -195,6 +202,7 @@ function MapAppInner() {
         showLights={showLights}
         showEvents={showEvents}
         onRadiusChange={setMapRadius}
+        flyTo={flyTo}
       />
 
       {/* Top Bar */}

@@ -13,6 +13,7 @@ interface PeaceMapProps {
   onZoomChange?: (zoom: number) => void
   onCenterChange?: (center: [number, number]) => void
   onRadiusChange?: (radiusKm: number) => void
+  flyTo?: [number, number, number] | null // [lat, lng, zoom]
 }
 
 function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
@@ -98,7 +99,15 @@ function MapEventBridge({ onZoomChange, onCenterChange, onRadiusChange }: { onZo
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange }: PeaceMapProps) {
+function FlyToHandler({ flyTo }: { flyTo?: [number, number, number] | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (flyTo) map.flyTo([flyTo[0], flyTo[1]], flyTo[2], { duration: 1.5 })
+  }, [flyTo, map])
+  return null
+}
+
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -118,6 +127,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <LocateUser />
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
+      <FlyToHandler flyTo={flyTo} />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
