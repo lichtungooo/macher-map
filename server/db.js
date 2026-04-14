@@ -54,6 +54,7 @@ db.exec(`
     end_time TEXT,
     type TEXT DEFAULT 'meditation',
     recurring TEXT,
+    is_global INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
 `)
@@ -63,6 +64,7 @@ try { db.exec('ALTER TABLE users ADD COLUMN password_hash TEXT DEFAULT ""') } ca
 try { db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN newsletter INTEGER DEFAULT 0') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN is_global INTEGER DEFAULT 0') } catch {}
 
 // ─── Users ───
 
@@ -167,6 +169,8 @@ export function getUserLight(userId) {
 }
 
 export function createLight(userId, lat, lng, invitedBy) {
+  // Jeder Mensch hat genau ein Licht — altes loeschen, neues setzen
+  db.prepare('DELETE FROM lights WHERE user_id = ?').run(userId)
   const id = randomUUID()
   db.prepare('INSERT INTO lights (id, user_id, lat, lng, invited_by) VALUES (?, ?, ?, ?, ?)').run(id, userId, lat, lng, invitedBy || null)
   return { id, lat, lng }
@@ -186,13 +190,26 @@ export function getAllEvents() {
   `).all()
 }
 
-export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring }) {
+export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global }) {
   const id = randomUUID()
   db.prepare(`
-    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null)
+    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0)
   return { id }
+}
+
+export function getGlobalEvents() {
+  return db.prepare(`
+    SELECT e.*, u.name as creator_name
+    FROM events e JOIN users u ON e.user_id = u.id
+    WHERE e.is_global = 1
+    ORDER BY e.start_time ASC
+  `).all()
+}
+
+export function deleteEvent(eventId) {
+  db.prepare('DELETE FROM events WHERE id = ?').run(eventId)
 }
 
 export default db

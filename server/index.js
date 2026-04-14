@@ -10,7 +10,7 @@ import {
   createResetToken, verifyResetToken,
   createVerifyToken, verifyEmailToken,
   getAllLights, getUserLight, createLight, getLightCount,
-  getAllEvents, createEvent,
+  getAllEvents, createEvent, getGlobalEvents, deleteEvent,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
@@ -194,8 +194,15 @@ app.post('/api/lights', auth, (req, res) => {
 
 app.get('/api/events', (req, res) => res.json(getAllEvents()))
 
+app.get('/api/events/global', (req, res) => res.json(getGlobalEvents()))
+
 app.post('/api/events', auth, (req, res) => {
   res.json(createEvent(req.userId, req.body))
+})
+
+app.delete('/api/events/:id', auth, (req, res) => {
+  deleteEvent(req.params.id)
+  res.json({ ok: true })
 })
 
 // ─── Admin: Dashboard ───

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Link2, QrCode } from 'lucide-react'
+import { User, Link2, QrCode, CalendarDays } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
@@ -10,6 +10,7 @@ import { AuthDialog } from '../components/auth/AuthDialog'
 import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { QRCodeDialog } from '../components/auth/QRCodeDialog'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
+import { EventCalendar } from '../components/events/EventCalendar'
 import { Logo } from '../components/Logo'
 import { WandCursor } from '../components/map/WandCursor'
 import * as api from '../api/client'
@@ -29,6 +30,7 @@ function MapAppInner() {
   const [isNewUser, setIsNewUser] = useState(false)
   const [showLights, setShowLights] = useState(true)
   const [showEvents, setShowEvents] = useState(true)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -175,6 +177,15 @@ function MapAppInner() {
             </span>
           </button>
 
+          {/* Kalender */}
+          <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="rounded-full flex items-center justify-center shadow-sm"
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showCalendar ? 'rgba(212,168,67,0.1)' : '#fff', border: showCalendar ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
+          >
+            <CalendarDays size={18} style={{ color: showCalendar ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+          </button>
+
           {/* Profil — mit QR-Code-Overlay */}
           <div className="relative">
             <button
@@ -233,6 +244,7 @@ function MapAppInner() {
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
+      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} />}
 
       {/* Zauberstab — nur Desktop, versteckt den echten Cursor */}
       <WandCursor active={mode === 'place-light'} />
