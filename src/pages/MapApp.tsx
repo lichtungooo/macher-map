@@ -126,8 +126,6 @@ function MapAppInner() {
         setLocatedPos(p)
         // Karte zum Standort fliegen (~100m Zoom = Stufe 16)
         setFlyTo([p[0], p[1], 16])
-        // Nach dem Fliegen den flyTo zuruecksetzen
-        setTimeout(() => setFlyTo(null), 2000)
 
         if (autoLight && user && api.getToken()) {
           // Auto-Licht: direkt setzen ohne Dialog

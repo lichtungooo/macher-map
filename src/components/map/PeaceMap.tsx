@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
 import { ZoomButtons } from './ZoomButtons'
+import { SmoothZoom } from './SmoothZoom'
 import type { LatLngExpression } from 'leaflet'
 
 interface PeaceMapProps {
@@ -102,8 +103,13 @@ function MapEventBridge({ onZoomChange, onCenterChange, onRadiusChange }: { onZo
 
 function FlyToHandler({ flyTo }: { flyTo?: [number, number, number] | null }) {
   const map = useMap()
+  const lastRef = { current: '' }
   useEffect(() => {
-    if (flyTo) map.flyTo([flyTo[0], flyTo[1]], flyTo[2], { duration: 1.5 })
+    if (!flyTo) return
+    const key = flyTo.join(',')
+    if (key === lastRef.current) return
+    lastRef.current = key
+    map.flyTo([flyTo[0], flyTo[1]], flyTo[2], { duration: 1.2 })
   }, [flyTo, map])
   return null
 }
@@ -119,9 +125,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       zoomControl={false}
       attributionControl={false}
       zoomSnap={0}
-      zoomDelta={1}
-      wheelDebounceTime={0}
-      wheelPxPerZoomLevel={80}
+      scrollWheelZoom={false}
       className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
     >
       <TileLayer
@@ -134,6 +138,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
       <FlyToHandler flyTo={flyTo} />
       <ZoomButtons />
+      <SmoothZoom />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
