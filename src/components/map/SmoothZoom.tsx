@@ -3,8 +3,7 @@ import { useMap } from 'react-leaflet'
 
 /**
  * Smooth Wheel Zoom — Google-Maps-Feeling fuer Leaflet.
- * Ersetzt das Standard-Scrollwheel-Zoom durch einen
- * requestAnimationFrame-basierten Smooth-Zoom.
+ * Nutzt map._zoom direkt fuer flackerfreies Zoomen.
  */
 export function SmoothZoom() {
   const map = useMap()
@@ -14,55 +13,67 @@ export function SmoothZoom() {
     map.scrollWheelZoom.disable()
 
     let targetZoom = map.getZoom()
-    let animating = false
+    let currentZoom = targetZoom
+    let animFrameId = 0
 
     function animate() {
-      const currentZoom = map.getZoom()
       const diff = targetZoom - currentZoom
 
-      if (Math.abs(diff) < 0.005) {
-        animating = false
+      if (Math.abs(diff) < 0.003) {
+        currentZoom = targetZoom
+        animFrameId = 0
         return
       }
 
-      // Sanfte Interpolation — 15% pro Frame (~60fps)
-      const step = diff * 0.15
-      map.setZoom(currentZoom + step, { animate: false })
+      // Sanfte Interpolation — 20% pro Frame
+      currentZoom += diff * 0.2
 
-      requestAnimationFrame(animate)
+      // setView statt setZoom — verhindert Tile-Flackern
+      const center = map.getCenter()
+      map.setView(center, currentZoom, { animate: false })
+
+      animFrameId = requestAnimationFrame(animate)
     }
 
     function onWheel(e: WheelEvent) {
       e.preventDefault()
       e.stopPropagation()
 
-      // Delta normalisieren — Trackpad liefert kleine Werte, Mausrad grosse
-      let delta = -e.deltaY
-
-      // Trackpad-Erkennung: deltaMode 0 + kleine Werte
-      if (e.deltaMode === 0) {
-        // Pixel-basiert (Trackpad) — feinere Kontrolle
-        delta = delta / 120
+      // Delta normalisieren
+      let delta: number
+      if (e.ctrlKey) {
+        // Trackpad Pinch-Zoom (Browser sendet ctrlKey + deltaY)
+        delta = -e.deltaY / 100
+      } else if (e.deltaMode === 0) {
+        // Trackpad Scroll (Pixel)
+        delta = -e.deltaY / 150
       } else {
-        // Zeilen-basiert (Mausrad) — groessere Schritte
-        delta = delta > 0 ? 1 : -1
+        // Mausrad (Zeilen)
+        delta = e.deltaY > 0 ? -1 : 1
       }
 
-      // Zoom-Geschwindigkeit: schnelles Scrollen = mehr Zoom
-      const speed = 0.8
-      targetZoom = Math.max(2, Math.min(19, targetZoom + delta * speed))
+      targetZoom = Math.max(2, Math.min(19, targetZoom + delta))
 
-      if (!animating) {
-        animating = true
-        requestAnimationFrame(animate)
+      if (!animFrameId) {
+        currentZoom = map.getZoom()
+        animFrameId = requestAnimationFrame(animate)
       }
     }
 
     const container = map.getContainer()
     container.addEventListener('wheel', onWheel, { passive: false })
 
+    // Sync wenn Zoom sich anderweitig aendert (z.B. flyTo, Buttons)
+    const syncZoom = () => {
+      targetZoom = map.getZoom()
+      currentZoom = targetZoom
+    }
+    map.on('zoomend', syncZoom)
+
     return () => {
       container.removeEventListener('wheel', onWheel)
+      map.off('zoomend', syncZoom)
+      if (animFrameId) cancelAnimationFrame(animFrameId)
     }
   }, [map])
 
