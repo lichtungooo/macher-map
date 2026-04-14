@@ -205,7 +205,16 @@ function MapAppInner() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-3" style={{ pointerEvents: 'auto' }}>
+        <div className="flex items-center gap-2.5" style={{ pointerEvents: 'auto' }}>
+          {/* Standort-Pointer */}
+          <button
+            onClick={handleLocateMe}
+            className="rounded-full flex items-center justify-center shadow-sm"
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
+          >
+            <LocateFixed size={18} style={{ color: '#D4A843' }} />
+          </button>
+
           {/* Lichterkette */}
           <button
             className="rounded-full flex flex-col items-center justify-center shadow-sm"
@@ -244,7 +253,6 @@ function MapAppInner() {
                 <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
               )}
             </button>
-            {/* QR-Code mini button */}
             {user && (
               <button
                 onClick={() => setDialog('qr-code')}
@@ -277,15 +285,6 @@ function MapAppInner() {
         onToggleLights={() => setShowLights(!showLights)}
         onToggleEvents={() => setShowEvents(!showEvents)}
       />
-
-      {/* Standort-Button links unten */}
-      <button
-        onClick={handleLocateMe}
-        className="fixed bottom-6 left-6 z-[1000] rounded-full flex items-center justify-center shadow-lg"
-        style={{ width: 46, height: 46, background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
-      >
-        <LocateFixed size={20} style={{ color: '#D4A843' }} />
-      </button>
 
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
