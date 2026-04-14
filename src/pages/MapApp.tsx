@@ -46,6 +46,9 @@ function MapAppInner() {
   const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
   const [eventLichtung, setEventLichtung] = useState<{ id: string; name: string } | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
+  const [connectionCount, setConnectionCount] = useState(0)
+  const [showChain, setShowChain] = useState(false)
+  const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -77,10 +80,16 @@ function MapAppInner() {
     }).catch(() => {})
   }, [])
 
-  // Lichtungen laden
+  // Lichtungen + Verbindungen laden
   useEffect(() => {
     api.getLichtungen().then(setLichtungen).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (user && api.getToken()) {
+      api.getConnectionCount().then(setConnectionCount).catch(() => {})
+    }
+  }, [user])
 
   // Ort-QR-Code: ?place=CODE
   useEffect(() => {
@@ -275,6 +284,8 @@ function MapAppInner() {
         lichtungen={lichtungen}
         onLichtungClick={id => setSelectedLichtung(id)}
         onShowProfile={light => setSelectedProfile(light)}
+        chainData={chainData}
+        showChain={showChain}
       />
 
       {/* Top Bar */}
@@ -297,12 +308,18 @@ function MapAppInner() {
 
           {/* Lichterkette */}
           <button
+            onClick={() => {
+              if (!showChain && user && api.getToken()) {
+                api.getChain().then(setChainData).catch(() => {})
+              }
+              setShowChain(!showChain)
+            }}
             className="rounded-full flex flex-col items-center justify-center shadow-sm"
-            style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showChain ? 'rgba(212,168,67,0.1)' : '#fff', border: showChain ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
           >
             <Link2 size={16} style={{ color: '#D4A843' }} />
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', marginTop: '1px' }}>
-              {lights.length}
+              {connectionCount || lights.length}
             </span>
           </button>
 

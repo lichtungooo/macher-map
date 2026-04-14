@@ -17,6 +17,7 @@ import {
   addLichtungMember, removeLichtungMember, setLichtungRole, getLichtungMembers, getLichtungMemberRole, getLichtungMemberCount,
   getLichtungCode, findLichtungByCode,
   getSlots, setSlot, deleteSlot, isSlotAvailable,
+  createConnection, getConnections, getConnectionCount, getFullChain,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
@@ -374,6 +375,27 @@ app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) =
   const image_path = `/uploads/${req.file.filename}`
   updateLichtung(req.params.id, { image_path })
   res.json({ image_path })
+})
+
+// ─── Verbindungen ───
+
+app.get('/api/connections', auth, (req, res) => {
+  res.json(getConnections(req.userId))
+})
+
+app.get('/api/connections/count', auth, (req, res) => {
+  res.json({ count: getConnectionCount(req.userId) })
+})
+
+app.get('/api/chain', auth, (req, res) => {
+  res.json(getFullChain(req.userId))
+})
+
+// Telegram-Kontakt setzen
+app.put('/api/profile/telegram', auth, (req, res) => {
+  const { telegram } = req.body
+  updateUser(req.userId, { telegram: telegram || '' })
+  res.json({ ok: true })
 })
 
 // ─── Lichtung Verfuegbarkeit ───

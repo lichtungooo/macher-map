@@ -136,6 +136,15 @@ export async function createLichtung(data: { name: string; description: string; 
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
 
+// ─── Verbindungen ───
+
+export async function getConnections() { return request('/connections') }
+export async function getConnectionCount() { return (await request('/connections/count')).count as number }
+export async function getChain() { return request('/chain') }
+export async function setTelegram(telegram: string) {
+  return request('/profile/telegram', { method: 'PUT', body: JSON.stringify({ telegram }) })
+}
+
 // ─── Lichtung Verfuegbarkeit ───
 
 export async function getLichtungSlots(id: string, from?: string, to?: string) {

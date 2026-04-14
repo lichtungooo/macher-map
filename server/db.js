@@ -62,6 +62,13 @@ db.exec(`
     PRIMARY KEY (lichtung_id, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS connections (
+    user_a TEXT NOT NULL,
+    user_b TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (user_a, user_b)
+  );
+
   CREATE TABLE IF NOT EXISTS lichtung_slots (
     id TEXT PRIMARY KEY,
     lichtung_id TEXT NOT NULL,
@@ -117,6 +124,7 @@ try { db.exec('ALTER TABLE events ADD COLUMN is_global INTEGER DEFAULT 0') } cat
 try { db.exec('ALTER TABLE event_participants ADD COLUMN status TEXT DEFAULT "joined"') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN lichtung_id TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN max_participants INTEGER') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN telegram TEXT') } catch {}
 
 // ─── Users ───
 
@@ -221,10 +229,14 @@ export function getUserLight(userId) {
 }
 
 export function createLight(userId, lat, lng, invitedBy) {
-  // Jeder Mensch hat genau ein Licht — altes loeschen, neues setzen
   db.prepare('DELETE FROM lights WHERE user_id = ?').run(userId)
   const id = randomUUID()
   db.prepare('INSERT INTO lights (id, user_id, lat, lng, invited_by) VALUES (?, ?, ?, ?, ?)').run(id, userId, lat, lng, invitedBy || null)
+  // Verbindung erstellen wenn eingeladen
+  if (invitedBy && invitedBy !== userId) {
+    const [a, b] = [userId, invitedBy].sort()
+    db.prepare('INSERT OR IGNORE INTO connections (user_a, user_b) VALUES (?, ?)').run(a, b)
+  }
   return { id, lat, lng }
 }
 
@@ -394,6 +406,64 @@ export function getLichtungMemberRole(lichtungId, userId) {
 
 export function getLichtungMemberCount(lichtungId) {
   return db.prepare('SELECT COUNT(*) as c FROM lichtung_members WHERE lichtung_id = ?').get(lichtungId).c
+}
+
+// ─── Verbindungen (Mensch-zu-Mensch) ───
+
+export function createConnection(userA, userB) {
+  // Sortieren damit A<B, so verhindern wir Duplikate
+  const [a, b] = [userA, userB].sort()
+  db.prepare('INSERT OR IGNORE INTO connections (user_a, user_b) VALUES (?, ?)').run(a, b)
+}
+
+export function getConnections(userId) {
+  return db.prepare(`
+    SELECT
+      CASE WHEN c.user_a = ? THEN c.user_b ELSE c.user_a END as connected_id,
+      u.name, u.image_path, u.statement, u.telegram,
+      l.lat, l.lng,
+      c.created_at
+    FROM connections c
+    JOIN users u ON u.id = CASE WHEN c.user_a = ? THEN c.user_b ELSE c.user_a END
+    LEFT JOIN lights l ON l.user_id = u.id
+    WHERE c.user_a = ? OR c.user_b = ?
+    ORDER BY c.created_at DESC
+  `).all(userId, userId, userId, userId)
+}
+
+export function getConnectionCount(userId) {
+  return db.prepare('SELECT COUNT(*) as c FROM connections WHERE user_a = ? OR user_b = ?').get(userId, userId).c
+}
+
+export function isConnected(userA, userB) {
+  const [a, b] = [userA, userB].sort()
+  return !!db.prepare('SELECT 1 FROM connections WHERE user_a = ? AND user_b = ?').get(a, b)
+}
+
+// Lichterkette: Alle die durch mich eingeladen wurden (invite chain)
+export function getInviteChain(userId) {
+  return db.prepare(`
+    SELECT l.id, l.lat, l.lng, l.invited_by, u.name, u.image_path
+    FROM lights l JOIN users u ON l.user_id = u.id
+    WHERE l.invited_by = ?
+  `).all(userId)
+}
+
+// Gesamte Kette rekursiv (bis 5 Ebenen)
+export function getFullChain(userId, depth = 5) {
+  const result = []
+  const visited = new Set()
+  function walk(uid, level) {
+    if (level > depth || visited.has(uid)) return
+    visited.add(uid)
+    const children = db.prepare('SELECT l.user_id, l.lat, l.lng, u.name FROM lights l JOIN users u ON l.user_id = u.id WHERE l.invited_by = ?').all(uid)
+    for (const c of children) {
+      result.push({ ...c, level, parent: uid })
+      walk(c.user_id, level + 1)
+    }
+  }
+  walk(userId, 1)
+  return result
 }
 
 // ─── Lichtung Verfuegbarkeit (Slots) ───

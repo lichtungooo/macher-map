@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, useMap, useMapEvents, Polyline } from 'react-leaflet'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
@@ -21,6 +21,8 @@ interface PeaceMapProps {
   lichtungen?: any[]
   onLichtungClick?: (id: string) => void
   onShowProfile?: (light: any) => void
+  chainData?: any[]
+  showChain?: boolean
 }
 
 function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
@@ -122,7 +124,7 @@ function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile, chainData = [], showChain }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -146,6 +148,20 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
       <FlyToHandler flyTo={flyTo} />
       <ZoomToRadiusHandler radiusKm={zoomToRadius} />
+      {/* Lichterkette — Verbindungslinien */}
+      {showChain && chainData.length > 0 && lights.length > 0 && (() => {
+        const userLight = lights[0] // Eigenes Licht
+        return chainData.map((c: any, i: number) => {
+          if (!c.lat || !c.lng) return null
+          // Linie vom Parent (oder eigenem Licht) zum Kind
+          const parentLight = c.parent ? lights.find((l: any) => (l as any).user_id === c.parent) || chainData.find((x: any) => x.user_id === c.parent) : null
+          const from: [number, number] = parentLight ? [parentLight.lat ?? parentLight.position?.[0], parentLight.lng ?? parentLight.position?.[1]] : userLight.position
+          const to: [number, number] = [c.lat, c.lng]
+          if (!from[0] || !to[0]) return null
+          return <Polyline key={i} positions={[from, to]} pathOptions={{ color: '#D4A843', weight: 2, opacity: 0.4, dashArray: '6 4' }} />
+        })
+      })()}
+
       <ZoomButtons />
       <TrackpadFix />
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle } from 'lucide-react'
 import { MyEvents } from '../events/MyEvents'
+import { MyConnections } from './MyConnections'
 import { useApp } from '../../context/AppContext'
 import { MarkdownToolbar } from './MarkdownToolbar'
 import * as api from '../../api/client'
@@ -14,7 +15,8 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   const [name, setName] = useState(user?.name || '')
   const [statement, setStatement] = useState(user?.statement || '')
   const [imagePreview, setImagePreview] = useState<string | undefined>(user?.imageUrl)
-  const [view, setView] = useState<'profile' | 'events' | 'settings'>('profile')
+  const [view, setView] = useState<'profile' | 'events' | 'connections' | 'settings'>('profile')
+  const [telegram, setTelegram] = useState('')
   const [pwMsg, setPwMsg] = useState('')
   const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const [pushEnabled, setPushEnabled] = useState(false)
@@ -72,13 +74,17 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
         {/* Header with tabs */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1">
-            {([['profile', 'Profil'], ['events', 'Termine'], ['settings', '']] as const).map(([key, label]) => (
+            {([
+              ['profile', 'Profil', null],
+              ['events', 'Termine', CalendarDays],
+              ['connections', 'Netz', Users],
+              ['settings', '', Settings],
+            ] as [string, string, any][]).map(([key, label, Icon]) => (
               <button key={key} onClick={() => setView(key as any)}
-                className="rounded-full flex items-center justify-center gap-1 px-3 py-1.5"
+                className="rounded-full flex items-center justify-center gap-1 px-2.5 py-1.5"
                 style={{ background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                {key === 'settings' ? <Settings size={14} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.3)' }} /> :
-                 key === 'events' ? <CalendarDays size={14} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.3)' }} /> : null}
-                {label && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', fontWeight: 500, color: view === key ? '#D4A843' : 'rgba(10,10,10,0.35)' }}>{label}</span>}
+                {Icon && <Icon size={13} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.3)' }} />}
+                {label && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', fontWeight: 500, color: view === key ? '#D4A843' : 'rgba(10,10,10,0.35)' }}>{label}</span>}
               </button>
             ))}
           </div>
@@ -88,8 +94,9 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
         </div>
 
         {view === 'events' ? (
-          /* ─── Events View ─── */
           <MyEvents />
+        ) : view === 'connections' ? (
+          <MyConnections />
         ) : view === 'settings' ? (
           /* ─── Settings View ─── */
           <div className="space-y-4">
@@ -174,6 +181,26 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
                 </div>
               </label>
               {pushStatus && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#D4A843', marginTop: '4px' }}>{pushStatus}</p>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Telegram (optional)</label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <MessageCircle size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(10,10,10,0.25)' }} />
+                  <input type="text" value={telegram} onChange={e => setTelegram(e.target.value)}
+                    placeholder="@deinname"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none"
+                    style={{ border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }} />
+                </div>
+                <button onClick={() => api.setTelegram(telegram)}
+                  className="px-3 py-2.5 rounded-lg" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#0A0A0A', cursor: 'pointer' }}>
+                  OK
+                </button>
+              </div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '4px' }}>
+                Sichtbar fuer deine Verbindungen.
+              </p>
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
