@@ -132,9 +132,13 @@ function MapAppInner() {
         const updated = await api.getLights()
         setLights(updated)
         setInvitedBy(null)
-      } catch (err) {
+      } catch (err: any) {
         console.error('Licht setzen fehlgeschlagen:', err)
-        // Kein lokaler Fallback — ohne Backend kein Licht
+        if (err?.message?.includes('angemeldet') || err?.message?.includes('ungueltig')) {
+          // Token abgelaufen — neu einloggen
+          api.clearToken()
+          setDialog('auth')
+        }
       }
       setMode('browse')
       const seen = localStorage.getItem('lichtung-tutorial-seen')
