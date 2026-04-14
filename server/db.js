@@ -43,6 +43,13 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS event_participants (
+    event_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (event_id, user_id)
+  );
+
   CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
@@ -210,6 +217,32 @@ export function getGlobalEvents() {
 
 export function deleteEvent(eventId) {
   db.prepare('DELETE FROM events WHERE id = ?').run(eventId)
+}
+
+// ─── Event Teilnahme ───
+
+export function joinEvent(eventId, userId) {
+  db.prepare('INSERT OR IGNORE INTO event_participants (event_id, user_id) VALUES (?, ?)').run(eventId, userId)
+}
+
+export function leaveEvent(eventId, userId) {
+  db.prepare('DELETE FROM event_participants WHERE event_id = ? AND user_id = ?').run(eventId, userId)
+}
+
+export function getEventParticipants(eventId) {
+  return db.prepare(`
+    SELECT u.id, u.name, u.image_path
+    FROM event_participants ep JOIN users u ON ep.user_id = u.id
+    WHERE ep.event_id = ?
+  `).all(eventId)
+}
+
+export function getEventParticipantCount(eventId) {
+  return db.prepare('SELECT COUNT(*) as count FROM event_participants WHERE event_id = ?').get(eventId).count
+}
+
+export function isUserParticipating(eventId, userId) {
+  return !!db.prepare('SELECT 1 FROM event_participants WHERE event_id = ? AND user_id = ?').get(eventId, userId)
 }
 
 export default db

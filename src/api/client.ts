@@ -99,5 +99,23 @@ export async function getEvents() { return request('/events') }
 export async function createEvent(event: Record<string, unknown>) {
   return request('/events', { method: 'POST', body: JSON.stringify(event) })
 }
+export async function deleteEvent(id: string) {
+  return request(`/events/${id}`, { method: 'DELETE' })
+}
+
+// ─── Event Teilnahme ───
+
+export async function joinEvent(eventId: string) {
+  return request(`/events/${eventId}/join`, { method: 'POST' })
+}
+export async function leaveEvent(eventId: string) {
+  return request(`/events/${eventId}/leave`, { method: 'POST' })
+}
+export async function getEventStatus(eventId: string) {
+  return request(`/events/${eventId}/status`)
+}
+export async function getEventParticipants(eventId: string) {
+  return request(`/events/${eventId}/participants`)
+}
 
 export { getToken, setToken, clearToken }

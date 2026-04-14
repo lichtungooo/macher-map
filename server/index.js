@@ -11,6 +11,7 @@ import {
   createVerifyToken, verifyEmailToken,
   getAllLights, getUserLight, createLight, getLightCount,
   getAllEvents, createEvent, getGlobalEvents, deleteEvent,
+  joinEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
@@ -192,7 +193,14 @@ app.post('/api/lights', auth, (req, res) => {
 
 // ─── Events ───
 
-app.get('/api/events', (req, res) => res.json(getAllEvents()))
+app.get('/api/events', (req, res) => {
+  const events = getAllEvents()
+  const enriched = events.map(e => ({
+    ...e,
+    participant_count: getEventParticipantCount(e.id),
+  }))
+  res.json(enriched)
+})
 
 app.get('/api/events/global', (req, res) => res.json(getGlobalEvents()))
 
@@ -203,6 +211,27 @@ app.post('/api/events', auth, (req, res) => {
 app.delete('/api/events/:id', auth, (req, res) => {
   deleteEvent(req.params.id)
   res.json({ ok: true })
+})
+
+app.get('/api/events/:id/participants', (req, res) => {
+  res.json(getEventParticipants(req.params.id))
+})
+
+app.post('/api/events/:id/join', auth, (req, res) => {
+  joinEvent(req.params.id, req.userId)
+  res.json({ ok: true, count: getEventParticipantCount(req.params.id) })
+})
+
+app.post('/api/events/:id/leave', auth, (req, res) => {
+  leaveEvent(req.params.id, req.userId)
+  res.json({ ok: true, count: getEventParticipantCount(req.params.id) })
+})
+
+app.get('/api/events/:id/status', auth, (req, res) => {
+  res.json({
+    participating: isUserParticipating(req.params.id, req.userId),
+    count: getEventParticipantCount(req.params.id),
+  })
 })
 
 // ─── Admin: Dashboard ───
