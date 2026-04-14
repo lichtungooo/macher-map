@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Link2, QrCode, CalendarDays } from 'lucide-react'
+import { User, Link2, QrCode, CalendarDays, LocateFixed, Check, X as XIcon } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
@@ -31,7 +31,10 @@ function MapAppInner() {
   const [showLights, setShowLights] = useState(true)
   const [showEvents, setShowEvents] = useState(true)
   const [showCalendar, setShowCalendar] = useState(false)
-  const [mapZoom, setMapZoom] = useState(5)
+  const [mapRadius, setMapRadius] = useState(500)
+  const [showLocateDialog, setShowLocateDialog] = useState(false)
+  const [locatedPos, setLocatedPos] = useState<[number, number] | null>(null)
+  const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -114,6 +117,39 @@ function MapAppInner() {
     }
   }
 
+  const handleLocateMe = () => {
+    if (!('geolocation' in navigator)) return
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        setLocatedPos(p)
+        if (autoLight && user && api.getToken()) {
+          // Auto-Licht: direkt setzen
+          api.createLight(p[0], p[1]).then(() => api.getLights()).then(setLights).catch(() => {})
+        } else {
+          setShowLocateDialog(true)
+        }
+      },
+      () => alert('Standort konnte nicht ermittelt werden.')
+    )
+  }
+
+  const handleSetLightAtLocation = async () => {
+    if (!locatedPos || !user) return
+    try {
+      await api.createLight(locatedPos[0], locatedPos[1])
+      const updated = await api.getLights()
+      setLights(updated)
+    } catch {}
+    setShowLocateDialog(false)
+  }
+
+  const toggleAutoLight = () => {
+    const next = !autoLight
+    setAutoLight(next)
+    localStorage.setItem('lichtung-auto-light', next ? '1' : '0')
+  }
+
   const handleSetLight = () => {
     if (!user) { setDialog('auth'); return }
     if (!user.name) { setDialog('profile'); return }
@@ -158,7 +194,7 @@ function MapAppInner() {
         placingLight={mode === 'place-light' || mode === 'place-event'}
         showLights={showLights}
         showEvents={showEvents}
-        onZoomChange={setMapZoom}
+        onRadiusChange={setMapRadius}
       />
 
       {/* Top Bar */}
@@ -242,15 +278,75 @@ function MapAppInner() {
         onToggleEvents={() => setShowEvents(!showEvents)}
       />
 
+      {/* Standort-Button links unten */}
+      <button
+        onClick={handleLocateMe}
+        className="fixed bottom-6 left-6 z-[1000] rounded-full flex items-center justify-center shadow-lg"
+        style={{ width: 46, height: 46, background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+      >
+        <LocateFixed size={20} style={{ color: '#D4A843' }} />
+      </button>
+
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
       {dialog === 'auth' && <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />}
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
-      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapZoom={mapZoom} />}
+      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} />}
 
-      {/* Zauberstab — nur Desktop, versteckt den echten Cursor */}
+      {/* Standort-Dialog */}
+      {showLocateDialog && locatedPos && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.2)' }}>
+          <div className="rounded-2xl p-6 shadow-xl w-full max-w-xs" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '8px' }}>
+              Dein Standort
+            </h3>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(10,10,10,0.5)', marginBottom: '16px', lineHeight: 1.6 }}>
+              Moechtest du dein Licht an deinen aktuellen Standort setzen?
+            </p>
+
+            {user ? (
+              <>
+                <button
+                  onClick={handleSetLightAtLocation}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-2"
+                  style={{ background: '#0A0A0A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}
+                >
+                  <LocateFixed size={16} />
+                  Licht hier setzen
+                </button>
+
+                <label className="flex items-center gap-2 cursor-pointer mt-3">
+                  <button
+                    onClick={toggleAutoLight}
+                    className="w-5 h-5 rounded flex items-center justify-center shrink-0"
+                    style={{ border: autoLight ? 'none' : '1px solid rgba(10,10,10,0.15)', background: autoLight ? '#D4A843' : '#fff', cursor: 'pointer' }}
+                  >
+                    {autoLight && <Check size={14} color="#fff" />}
+                  </button>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.45)' }}>
+                    Licht automatisch setzen
+                  </span>
+                </label>
+              </>
+            ) : (
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(10,10,10,0.4)' }}>
+                Melde dich an, um dein Licht zu setzen.
+              </p>
+            )}
+
+            <button
+              onClick={() => setShowLocateDialog(false)}
+              className="w-full flex items-center justify-center gap-1 py-2 mt-2"
+              style={{ background: 'none', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.35)', cursor: 'pointer' }}
+            >
+              <XIcon size={14} /> Schliessen
+            </button>
+          </div>
+        </div>
+      )}
+
       <WandCursor active={mode === 'place-light'} />
     </div>
   )

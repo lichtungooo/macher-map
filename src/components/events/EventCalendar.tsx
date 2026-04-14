@@ -11,14 +11,6 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-// Zoom-Level zu ungefaehrem Radius in km
-function zoomToRadius(zoom: number): number {
-  const table: Record<number, number> = { 4: 500, 5: 300, 6: 150, 7: 100, 8: 50, 9: 25, 10: 15, 11: 10, 12: 5, 13: 3, 14: 1, 15: 0.5 }
-  if (zoom <= 4) return 500
-  if (zoom >= 15) return 1
-  return table[Math.round(zoom)] || 100
-}
-
 const TYPE_COLORS: Record<string, string> = {
   meditation: '#D4A843', gebet: '#A07CC0', stille: '#6BA3BE',
   begegnung: '#7BAE5E', tanz: '#D4766E', fest: '#E0A050',
@@ -43,10 +35,10 @@ function formatDist(km: number): string {
 
 interface EventCalendarProps {
   onClose: () => void
-  mapZoom?: number
+  mapRadius?: number
 }
 
-export function EventCalendar({ onClose, mapZoom }: EventCalendarProps) {
+export function EventCalendar({ onClose, mapRadius }: EventCalendarProps) {
   const { events } = useApp()
   const [view, setView] = useState<'list' | 'month'>('list')
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
@@ -63,12 +55,12 @@ export function EventCalendar({ onClose, mapZoom }: EventCalendarProps) {
     }
   }, [])
 
-  // Zoom-Sync: Wenn sich der Karten-Zoom aendert, passe den Slider an
+  // Zoom-Sync: exakter Radius aus der sichtbaren Kartenflaeche
   useEffect(() => {
-    if (mapZoom != null) {
-      setRadiusKm(zoomToRadius(mapZoom))
+    if (mapRadius != null && mapRadius > 0) {
+      setRadiusKm(Math.min(mapRadius, 500))
     }
-  }, [mapZoom])
+  }, [mapRadius])
 
   const now = new Date()
   const viewMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)

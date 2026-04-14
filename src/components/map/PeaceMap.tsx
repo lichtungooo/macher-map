@@ -12,6 +12,7 @@ interface PeaceMapProps {
   showEvents?: boolean
   onZoomChange?: (zoom: number) => void
   onCenterChange?: (center: [number, number]) => void
+  onRadiusChange?: (radiusKm: number) => void
 }
 
 function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
@@ -65,7 +66,7 @@ function LocateUser() {
   return null
 }
 
-function MapEventBridge({ onZoomChange, onCenterChange }: { onZoomChange?: (z: number) => void; onCenterChange?: (c: [number, number]) => void }) {
+function MapEventBridge({ onZoomChange, onCenterChange, onRadiusChange }: { onZoomChange?: (z: number) => void; onCenterChange?: (c: [number, number]) => void; onRadiusChange?: (r: number) => void }) {
   const map = useMap()
   useEffect(() => {
     const handler = () => {
@@ -74,15 +75,30 @@ function MapEventBridge({ onZoomChange, onCenterChange }: { onZoomChange?: (z: n
         const c = map.getCenter()
         onCenterChange([c.lat, c.lng])
       }
+      if (onRadiusChange) {
+        // Exakten Radius aus der sichtbaren Kartenflaeche berechnen
+        const bounds = map.getBounds()
+        const center = map.getCenter()
+        const ne = bounds.getNorthEast()
+        // Distanz vom Zentrum zum Rand in km
+        const R = 6371
+        const dLat = (ne.lat - center.lat) * Math.PI / 180
+        const dLng = (ne.lng - center.lng) * Math.PI / 180
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(center.lat * Math.PI / 180) * Math.cos(ne.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        onRadiusChange(Math.round(dist))
+      }
     }
     map.on('zoomend', handler)
     map.on('moveend', handler)
+    // Initial call
+    handler()
     return () => { map.off('zoomend', handler); map.off('moveend', handler) }
-  }, [map, onZoomChange, onCenterChange])
+  }, [map, onZoomChange, onCenterChange, onRadiusChange])
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -101,7 +117,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
 
       <LocateUser />
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
-      <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} />
+      <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
