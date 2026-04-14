@@ -63,11 +63,7 @@ function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [num
   return null
 }
 
-function LocateUser() {
-  const map = useMap()
-  useEffect(() => { map.locate({ setView: true, maxZoom: 10 }) }, [map])
-  return null
-}
+// Kein automatisches Locate beim Laden — nur ueber Pointer-Button
 
 function MapEventBridge({ onZoomChange, onCenterChange, onRadiusChange }: { onZoomChange?: (z: number) => void; onCenterChange?: (c: [number, number]) => void; onRadiusChange?: (r: number) => void }) {
   const map = useMap()
@@ -103,13 +99,9 @@ function MapEventBridge({ onZoomChange, onCenterChange, onRadiusChange }: { onZo
 
 function FlyToHandler({ flyTo }: { flyTo?: [number, number, number] | null }) {
   const map = useMap()
-  const lastRef = { current: '' }
   useEffect(() => {
     if (!flyTo) return
-    const key = flyTo.join(',')
-    if (key === lastRef.current) return
-    lastRef.current = key
-    map.flyTo([flyTo[0], flyTo[1]], flyTo[2], { duration: 1.2 })
+    map.flyTo([flyTo[0], flyTo[1]], Math.round(flyTo[2]), { duration: 1.2 })
   }, [flyTo, map])
   return null
 }
@@ -134,7 +126,6 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
         attribution='&copy; OpenStreetMap &copy; CARTO'
       />
 
-      <LocateUser />
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
       <FlyToHandler flyTo={flyTo} />

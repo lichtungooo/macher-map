@@ -87,11 +87,11 @@ function MapAppInner() {
     navigator.geolocation.getCurrentPosition(
       pos => {
         const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
-        setFlyTo([p[0], p[1], 16])
+        setFlyTo([p[0], p[1], 16 + Math.random() * 0.001])
         api.createLight(p[0], p[1]).then(() => api.getLights()).then(setLights).catch(() => {})
       },
       () => {},
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     )
   }, [user])
 
@@ -141,18 +141,20 @@ function MapAppInner() {
       pos => {
         const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
         setLocatedPos(p)
-        // Karte zum Standort fliegen (~100m Zoom = Stufe 16)
-        setFlyTo([p[0], p[1], 16])
+        // Karte zum Standort fliegen — mit Timestamp fuer einzigartigen Trigger
+        setFlyTo([p[0], p[1], 16 + Math.random() * 0.001])
 
         if (autoLight && user && api.getToken()) {
-          // Auto-Licht: direkt setzen ohne Dialog
           api.createLight(p[0], p[1]).then(() => api.getLights()).then(setLights).catch(() => {})
         } else {
           setShowLocateDialog(true)
         }
       },
-      () => alert('Standort konnte nicht ermittelt werden.'),
-      { enableHighAccuracy: true, timeout: 10000 }
+      (err) => {
+        console.error('Standort-Fehler:', err.message)
+        alert('Standort konnte nicht ermittelt werden. Bitte Standort-Berechtigung pruefen.')
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     )
   }
 
