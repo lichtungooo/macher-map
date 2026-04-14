@@ -5,6 +5,8 @@ import * as api from '../../api/client'
 
 interface CreateEventDialogProps {
   position?: [number, number]
+  lichtungId?: string
+  lichtungName?: string
   onClose: () => void
 }
 
@@ -25,7 +27,7 @@ const RECURRING_OPTIONS = [
   { value: 'monatlich', label: 'Monatlich' },
 ]
 
-export function CreateEventDialog({ position, onClose }: CreateEventDialogProps) {
+export function CreateEventDialog({ position, lichtungId, lichtungName, onClose }: CreateEventDialogProps) {
   const { setEvents } = useApp()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -51,6 +53,7 @@ export function CreateEventDialog({ position, onClose }: CreateEventDialogProps)
         type,
         recurring: recurring || undefined,
         max_participants: maxParticipants ? Number(maxParticipants) : undefined,
+        lichtung_id: lichtungId || undefined,
       })
       // Reload events from backend
       const updated = await api.getEvents()
@@ -88,7 +91,15 @@ export function CreateEventDialog({ position, onClose }: CreateEventDialogProps)
           Veranstaltung erstellen
         </h2>
 
-        {position && (
+        {lichtungName && (
+          <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg" style={{ background: 'rgba(123,174,94,0.06)' }}>
+            <div className="w-2 h-2 rounded-full" style={{ background: '#7BAE5E' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 500, color: '#7BAE5E' }}>
+              {lichtungName}
+            </span>
+          </div>
+        )}
+        {position && !lichtungName && (
           <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg" style={{ background: 'rgba(212,168,67,0.06)' }}>
             <MapPin size={14} style={{ color: '#D4A843' }} />
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)' }}>

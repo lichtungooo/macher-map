@@ -312,6 +312,30 @@ app.get('/api/lichtungen/:id/events', (req, res) => {
   res.json(enriched)
 })
 
+// iCal fuer Lichtung — oeffentlich, kein Auth noetig
+app.get('/api/lichtungen/:id/cal.ics', (req, res) => {
+  const l = getLichtung(req.params.id)
+  if (!l) return res.status(404).send('Nicht gefunden')
+  const events = getLichtungEvents(req.params.id)
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0',
+    `PRODID:-//Lichtung//${l.name}//DE`,
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    `X-WR-CALNAME:${l.name}`,
+  ]
+  for (const e of events) {
+    const start = e.start_time.replace(/[-:]/g, '').split('.')[0] + 'Z'
+    lines.push('BEGIN:VEVENT', `UID:${e.id}@lichtung.ooo`, `DTSTART:${start}`)
+    if (e.end_time) lines.push(`DTEND:${e.end_time.replace(/[-:]/g, '').split('.')[0]}Z`)
+    lines.push(`SUMMARY:${e.title}`)
+    if (e.description) lines.push(`DESCRIPTION:${e.description.replace(/\n/g, '\\n')}`)
+    lines.push(`LOCATION:${l.name}`, `URL:https://lichtung.ooo/app`, 'END:VEVENT')
+  }
+  lines.push('END:VCALENDAR')
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8')
+  res.send(lines.join('\r\n'))
+})
+
 app.post('/api/lichtungen', auth, (req, res) => {
   res.json(createLichtung(req.userId, req.body))
 })

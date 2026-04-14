@@ -44,6 +44,7 @@ function MapAppInner() {
   const [lichtungen, setLichtungen] = useState<any[]>([])
   const [selectedLichtung, setSelectedLichtung] = useState<string | null>(null)
   const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
+  const [eventLichtung, setEventLichtung] = useState<{ id: string; name: string } | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
@@ -353,7 +354,7 @@ function MapAppInner() {
       {dialog === 'auth' && <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />}
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
-      {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
+      {dialog === 'create-event' && <CreateEventDialog position={eventPosition} lichtungId={eventLichtung?.id} lichtungName={eventLichtung?.name} onClose={() => { setDialog('none'); setEventPosition(undefined); setEventLichtung(null) }} />}
       {dialog === 'create-lichtung' && <CreateLichtungDialog position={lichtungPosition} onClose={() => { setDialog('none'); setLichtungPosition(undefined) }} onCreated={() => api.getLichtungen().then(setLichtungen)} />}
       {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} />}
 
@@ -409,7 +410,13 @@ function MapAppInner() {
         </div>
       )}
 
-      {selectedLichtung && <LichtungDetail lichtungId={selectedLichtung} onClose={() => setSelectedLichtung(null)} />}
+      {selectedLichtung && <LichtungDetail lichtungId={selectedLichtung} onClose={() => setSelectedLichtung(null)}
+        onCreateEvent={(lid, lname, pos) => {
+          setSelectedLichtung(null)
+          setEventPosition(pos)
+          setEventLichtung({ id: lid, name: lname })
+          setDialog('create-event')
+        }} />}
       {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
       <InfoPopup />
       <WandCursor active={mode === 'place-light'} />

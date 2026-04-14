@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, MapPin } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, MapPin, Camera } from 'lucide-react'
 import * as api from '../../api/client'
 
 interface CreateLichtungDialogProps {
@@ -11,7 +11,10 @@ interface CreateLichtungDialogProps {
 export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLichtungDialogProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
   const [loading, setLoading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', background: '#fff' }
   const labelStyle = { fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', fontWeight: 400 as const, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.4)', display: 'block', marginBottom: '6px' }
@@ -21,7 +24,17 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
     if (!name.trim() || !position) return
     setLoading(true)
     try {
-      await api.createLichtung({ name, description, lat: position[0], lng: position[1] })
+      const result = await api.createLichtung({ name, description, lat: position[0], lng: position[1] })
+      // Bild hochladen wenn vorhanden
+      if (imageFile && result.id) {
+        const formData = new FormData()
+        formData.append('image', imageFile)
+        await fetch(`/api/lichtungen/${result.id}/image`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${api.getToken()}` },
+          body: formData,
+        })
+      }
       onCreated()
       onClose()
     } catch {
@@ -57,6 +70,31 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Bild */}
+          <div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (!f) return
+                setImageFile(f)
+                const reader = new FileReader()
+                reader.onload = ev => setImagePreview(ev.target?.result as string)
+                reader.readAsDataURL(f)
+              }} />
+            <button type="button" onClick={() => fileRef.current?.click()}
+              className="w-full h-32 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ background: imagePreview ? 'transparent' : 'rgba(123,174,94,0.04)', border: imagePreview ? 'none' : '2px dashed rgba(123,174,94,0.2)', cursor: 'pointer' }}>
+              {imagePreview ? (
+                <img src={imagePreview} alt="" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <div className="text-center">
+                  <Camera size={24} style={{ color: 'rgba(123,174,94,0.4)', margin: '0 auto 6px' }} />
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.3)' }}>Foto vom Ort (optional)</p>
+                </div>
+              )}
+            </button>
+          </div>
+
           <div>
             <label style={labelStyle}>Name der Lichtung</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="z.B. Die Waldlichtung Kassel"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check } from 'lucide-react'
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -14,13 +14,16 @@ function renderMd(t: string) { return t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</s
 interface LichtungDetailProps {
   lichtungId: string
   onClose: () => void
+  onCreateEvent?: (lichtungId: string, lichtungName: string, position: [number, number]) => void
 }
 
-export function LichtungDetail({ lichtungId, onClose }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungDetailProps) {
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'info' | 'kalender'>('info')
+  const [copied, setCopied] = useState(false)
+  const calUrl = `${window.location.origin}/api/lichtungen/${lichtungId}/cal.ics`
 
   useEffect(() => {
     Promise.all([
@@ -132,6 +135,36 @@ export function LichtungDetail({ lichtungId, onClose }: LichtungDetailProps) {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* Kalender abonnieren */}
+            {events.length > 0 && (
+              <div className="rounded-xl p-3 mt-3" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Link2 size={12} style={{ color: '#7BAE5E' }} />
+                  <span style={{ ...font, fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)' }}>Kalender abonnieren</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input readOnly value={calUrl} className="flex-1 px-2 py-1.5 rounded text-xs outline-none"
+                    style={{ border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'monospace', fontSize: '0.58rem', color: 'rgba(10,10,10,0.4)', background: '#fff' }}
+                    onClick={e => (e.target as HTMLInputElement).select()} />
+                  <button onClick={() => { navigator.clipboard.writeText(calUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+                    className="shrink-0 rounded px-2 py-1.5" style={{ background: copied ? 'rgba(123,174,94,0.1)' : '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                    {copied ? <Check size={12} style={{ color: '#7BAE5E' }} /> : <Copy size={12} style={{ color: 'rgba(10,10,10,0.35)' }} />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Termin erstellen */}
+            {onCreateEvent && (
+              <button
+                onClick={() => onCreateEvent(lichtungId, lichtung.name, [lichtung.lat, lichtung.lng])}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-4"
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                <Plus size={16} />
+                Termin an diesem Ort erstellen
+              </button>
             )}
           </>
         )}
