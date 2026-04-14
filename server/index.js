@@ -14,6 +14,8 @@ import {
   joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
   createInviteToken, verifyInviteToken,
   getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
+  addLichtungMember, removeLichtungMember, setLichtungRole, getLichtungMembers, getLichtungMemberRole, getLichtungMemberCount,
+  getLichtungCode, findLichtungByCode,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
@@ -295,7 +297,10 @@ app.get('/api/cal/:token.ics', (req, res) => {
 
 // ─── Lichtungen (Orte) ───
 
-app.get('/api/lichtungen', (req, res) => res.json(getAllLichtungen()))
+app.get('/api/lichtungen', (req, res) => {
+  const all = getAllLichtungen()
+  res.json(all.map(l => ({ ...l, member_count: getLichtungMemberCount(l.id) })))
+})
 
 app.get('/api/lichtungen/:id', (req, res) => {
   const l = getLichtung(req.params.id)
@@ -355,6 +360,52 @@ app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) =
   const image_path = `/uploads/${req.file.filename}`
   updateLichtung(req.params.id, { image_path })
   res.json({ image_path })
+})
+
+// ─── Lichtung Mitglieder + Rollen ───
+
+app.get('/api/lichtungen/:id/members', (req, res) => {
+  res.json(getLichtungMembers(req.params.id))
+})
+
+app.get('/api/lichtungen/:id/my-role', auth, (req, res) => {
+  res.json({ role: getLichtungMemberRole(req.params.id, req.userId) })
+})
+
+// Per QR-Code beitreten
+app.post('/api/lichtungen/join/:code', auth, (req, res) => {
+  const lichtungId = findLichtungByCode(req.params.code)
+  if (!lichtungId) return res.status(404).json({ error: 'Unbekannter Code.' })
+  const existing = getLichtungMemberRole(lichtungId, req.userId)
+  if (!existing) addLichtungMember(lichtungId, req.userId, 'member')
+  const l = getLichtung(lichtungId)
+  res.json({ lichtung_id: lichtungId, name: l?.name, role: existing || 'member' })
+})
+
+// QR-Code abrufen (nur Owner/Admin)
+app.get('/api/lichtungen/:id/code', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
+  const code = getLichtungCode(req.params.id)
+  res.json({ code, url: `${process.env.BASE_URL || 'https://lichtung.ooo'}/app?place=${code}` })
+})
+
+// Rolle aendern (nur Owner)
+app.put('/api/lichtungen/:id/members/:userId/role', auth, (req, res) => {
+  const myRole = getLichtungMemberRole(req.params.id, req.userId)
+  if (myRole !== 'owner') return res.status(403).json({ error: 'Nur der Eigentuemer.' })
+  const { role } = req.body
+  if (!['admin', 'member'].includes(role)) return res.status(400).json({ error: 'Ungueltige Rolle.' })
+  setLichtungRole(req.params.id, req.params.userId, role)
+  res.json({ ok: true })
+})
+
+// Mitglied entfernen (nur Owner/Admin)
+app.delete('/api/lichtungen/:id/members/:userId', auth, (req, res) => {
+  const myRole = getLichtungMemberRole(req.params.id, req.userId)
+  if (myRole !== 'owner' && myRole !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
+  removeLichtungMember(req.params.id, req.params.userId)
+  res.json({ ok: true })
 })
 
 // ─── Invite Token (60s gueltig) ───

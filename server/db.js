@@ -54,6 +54,19 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS lichtung_members (
+    lichtung_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role TEXT DEFAULT 'member',
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (lichtung_id, user_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS lichtung_codes (
+    lichtung_id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS invite_tokens (
     token TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -309,7 +322,12 @@ export function getLichtung(id) {
 export function createLichtung(userId, { name, description, lat, lng }) {
   const id = randomUUID()
   db.prepare('INSERT INTO lichtungen (id, user_id, name, description, lat, lng) VALUES (?, ?, ?, ?, ?, ?)').run(id, userId, name, description || '', lat, lng)
-  return { id }
+  // Ersteller wird automatisch Owner
+  db.prepare('INSERT INTO lichtung_members (lichtung_id, user_id, role) VALUES (?, ?, ?)').run(id, userId, 'owner')
+  // Permanenten Code generieren
+  const code = randomUUID().slice(0, 8)
+  db.prepare('INSERT INTO lichtung_codes (lichtung_id, code) VALUES (?, ?)').run(id, code)
+  return { id, code }
 }
 
 export function updateLichtung(id, fields) {
@@ -334,6 +352,53 @@ export function getLichtungEvents(lichtungId) {
     WHERE e.lichtung_id = ?
     ORDER BY e.start_time ASC
   `).all(lichtungId)
+}
+
+// ─── Lichtung Mitglieder + Rollen ───
+
+export function addLichtungMember(lichtungId, userId, role = 'member') {
+  db.prepare('INSERT OR REPLACE INTO lichtung_members (lichtung_id, user_id, role) VALUES (?, ?, ?)').run(lichtungId, userId, role)
+}
+
+export function removeLichtungMember(lichtungId, userId) {
+  db.prepare('DELETE FROM lichtung_members WHERE lichtung_id = ? AND user_id = ?').run(lichtungId, userId)
+}
+
+export function setLichtungRole(lichtungId, userId, role) {
+  db.prepare('UPDATE lichtung_members SET role = ? WHERE lichtung_id = ? AND user_id = ?').run(role, lichtungId, userId)
+}
+
+export function getLichtungMembers(lichtungId) {
+  return db.prepare(`
+    SELECT lm.role, lm.created_at, u.id, u.name, u.image_path, u.email
+    FROM lichtung_members lm JOIN users u ON lm.user_id = u.id
+    WHERE lm.lichtung_id = ?
+    ORDER BY CASE lm.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, lm.created_at
+  `).all(lichtungId)
+}
+
+export function getLichtungMemberRole(lichtungId, userId) {
+  const row = db.prepare('SELECT role FROM lichtung_members WHERE lichtung_id = ? AND user_id = ?').get(lichtungId, userId)
+  return row ? row.role : null
+}
+
+export function getLichtungMemberCount(lichtungId) {
+  return db.prepare('SELECT COUNT(*) as c FROM lichtung_members WHERE lichtung_id = ?').get(lichtungId).c
+}
+
+// ─── Lichtung Permanente QR-Codes ───
+
+export function getLichtungCode(lichtungId) {
+  const row = db.prepare('SELECT code FROM lichtung_codes WHERE lichtung_id = ?').get(lichtungId)
+  if (row) return row.code
+  const code = randomUUID().slice(0, 8)
+  db.prepare('INSERT INTO lichtung_codes (lichtung_id, code) VALUES (?, ?)').run(lichtungId, code)
+  return code
+}
+
+export function findLichtungByCode(code) {
+  const row = db.prepare('SELECT lichtung_id FROM lichtung_codes WHERE code = ?').get(code)
+  return row ? row.lichtung_id : null
 }
 
 // ─── Invite Tokens (temporaer, 60s) ───

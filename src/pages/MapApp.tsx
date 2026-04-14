@@ -82,6 +82,23 @@ function MapAppInner() {
     api.getLichtungen().then(setLichtungen).catch(() => {})
   }, [])
 
+  // Ort-QR-Code: ?place=CODE
+  useEffect(() => {
+    const placeCode = searchParams.get('place')
+    if (!placeCode) return
+    setSearchParams({})
+    if (api.getToken()) {
+      api.joinLichtungByCode(placeCode).then(data => {
+        setSelectedLichtung(data.lichtung_id)
+        api.getLichtungen().then(setLichtungen)
+      }).catch(() => {})
+    } else {
+      // Noch nicht eingeloggt — Code merken, nach Login beitreten
+      sessionStorage.setItem('lichtung-join-code', placeCode)
+      setDialog('auth')
+    }
+  }, [])
+
   // Auto-login passiert jetzt im AppProvider
 
   // Handle email verification

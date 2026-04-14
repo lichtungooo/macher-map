@@ -136,6 +136,16 @@ export async function createLichtung(data: { name: string; description: string; 
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
 
+// ─── Lichtung Mitglieder ───
+
+export async function getLichtungMembers(id: string) { return request(`/lichtungen/${id}/members`) }
+export async function getMyLichtungRole(id: string) { return request(`/lichtungen/${id}/my-role`) }
+export async function joinLichtungByCode(code: string) { return request(`/lichtungen/join/${code}`, { method: 'POST' }) }
+export async function getLichtungQRCode(id: string) { return request(`/lichtungen/${id}/code`) }
+export async function setMemberRole(lichtungId: string, userId: string, role: string) {
+  return request(`/lichtungen/${lichtungId}/members/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) })
+}
+
 // ─── Invite ───
 
 export async function createInvite() {
