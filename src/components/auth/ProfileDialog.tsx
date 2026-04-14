@@ -17,6 +17,7 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   const [imagePreview, setImagePreview] = useState<string | undefined>(user?.imageUrl)
   const [view, setView] = useState<'profile' | 'events' | 'connections' | 'settings'>('profile')
   const [telegram, setTelegram] = useState('')
+  const [telegramStatus, setTelegramStatus] = useState('')
   const [pwMsg, setPwMsg] = useState('')
   const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const [pushEnabled, setPushEnabled] = useState(false)
@@ -27,6 +28,14 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
     if ('Notification' in window) {
       setPushEnabled(Notification.permission === 'granted')
     }
+  }, [])
+
+  // Telegram aus Profil laden
+  useEffect(() => {
+    if (!api.getToken()) return
+    api.getProfile().then((p: any) => {
+      if (p.telegram) setTelegram(p.telegram)
+    }).catch(() => {})
   }, [])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -193,14 +202,23 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
                     className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none"
                     style={{ border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }} />
                 </div>
-                <button onClick={() => api.setTelegram(telegram)}
-                  className="px-3 py-2.5 rounded-lg" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#0A0A0A', cursor: 'pointer' }}>
-                  OK
+                <button onClick={async () => {
+                  try {
+                    await api.setTelegram(telegram)
+                    setTelegramStatus('Gespeichert.')
+                    setTimeout(() => setTelegramStatus(''), 2000)
+                  } catch {
+                    setTelegramStatus('Fehler.')
+                  }
+                }}
+                  className="px-3 py-2.5 rounded-lg" style={{ background: telegramStatus === 'Gespeichert.' ? 'rgba(123,174,94,0.1)' : '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: telegramStatus === 'Gespeichert.' ? '#7BAE5E' : '#0A0A0A', cursor: 'pointer' }}>
+                  {telegramStatus === 'Gespeichert.' ? '✓' : 'OK'}
                 </button>
               </div>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '4px' }}>
-                Sichtbar fuer deine Verbindungen.
+                Sichtbar fuer deine Verbindungen. Format: @deinname
               </p>
+              {telegramStatus && telegramStatus !== 'Gespeichert.' && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#c44', marginTop: '4px' }}>{telegramStatus}</p>}
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
