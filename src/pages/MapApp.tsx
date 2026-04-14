@@ -21,7 +21,7 @@ type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'qr-code'
 type Mode = 'browse' | 'place-light' | 'place-event'
 
 function MapAppInner() {
-  const { user, lights, setLights, setEvents, addLight, login: loginCtx } = useApp()
+  const { user, lights, setLights, setEvents, login: loginCtx } = useApp()
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
@@ -128,11 +128,13 @@ function MapAppInner() {
     if (mode === 'place-light') {
       try {
         await api.createLight(position[0], position[1], invitedBy || undefined)
+        // Lichter vom Server neu laden — dort ist nur eins pro User
         const updated = await api.getLights()
         setLights(updated)
         setInvitedBy(null)
-      } catch {
-        addLight(position)
+      } catch (err) {
+        console.error('Licht setzen fehlgeschlagen:', err)
+        // Kein lokaler Fallback — ohne Backend kein Licht
       }
       setMode('browse')
       const seen = localStorage.getItem('lichtung-tutorial-seen')
