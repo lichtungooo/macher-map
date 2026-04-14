@@ -11,7 +11,7 @@ import {
   createVerifyToken, verifyEmailToken,
   getAllLights, getUserLight, createLight, getLightCount,
   getAllEvents, createEvent, getGlobalEvents, deleteEvent,
-  joinEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating,
+  joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
@@ -221,11 +221,53 @@ app.post('/api/events/:id/leave', auth, (req, res) => {
   res.json({ ok: true, count: getEventParticipantCount(req.params.id) })
 })
 
+app.post('/api/events/:id/watch', auth, (req, res) => {
+  watchEvent(req.params.id, req.userId)
+  res.json({ ok: true, count: getEventParticipantCount(req.params.id) })
+})
+
 app.get('/api/events/:id/status', auth, (req, res) => {
   res.json({
-    participating: isUserParticipating(req.params.id, req.userId),
+    status: isUserParticipating(req.params.id, req.userId), // 'joined', 'watching', or null
     count: getEventParticipantCount(req.params.id),
   })
+})
+
+// Persoenliche Events
+app.get('/api/my/events', auth, (req, res) => {
+  res.json(getUserEvents(req.userId))
+})
+
+// iCal-Export fuer persoenliche Termine
+app.get('/api/my/events.ics', auth, (req, res) => {
+  const events = getUserEvents(req.userId)
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Lichtung//Licht fuer Frieden//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:Licht fuer Frieden',
+  ]
+  for (const e of events) {
+    const start = e.start_time.replace(/[-:]/g, '').replace('T', 'T').split('.')[0] + 'Z'
+    lines.push('BEGIN:VEVENT')
+    lines.push(`UID:${e.id}@lichtung.ooo`)
+    lines.push(`DTSTART:${start}`)
+    if (e.end_time) {
+      const end = e.end_time.replace(/[-:]/g, '').replace('T', 'T').split('.')[0] + 'Z'
+      lines.push(`DTEND:${end}`)
+    }
+    lines.push(`SUMMARY:${e.title}`)
+    if (e.description) lines.push(`DESCRIPTION:${e.description.replace(/\n/g, '\\n')}`)
+    lines.push(`LOCATION:${e.lat},${e.lng}`)
+    lines.push(`URL:https://lichtung.ooo/app`)
+    lines.push('END:VEVENT')
+  }
+  lines.push('END:VCALENDAR')
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8')
+  res.setHeader('Content-Disposition', 'attachment; filename="lichtung-termine.ics"')
+  res.send(lines.join('\r\n'))
 })
 
 // ─── Admin: Dashboard ───

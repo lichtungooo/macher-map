@@ -36,9 +36,10 @@ function formatDist(km: number): string {
 interface EventCalendarProps {
   onClose: () => void
   mapRadius?: number
+  onRadiusSlide?: (radiusKm: number) => void
 }
 
-export function EventCalendar({ onClose, mapRadius }: EventCalendarProps) {
+export function EventCalendar({ onClose, mapRadius, onRadiusSlide }: EventCalendarProps) {
   const { events } = useApp()
   const [view, setView] = useState<'list' | 'month'>('list')
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
@@ -148,7 +149,11 @@ export function EventCalendar({ onClose, mapRadius }: EventCalendarProps) {
           min="1"
           max="500"
           value={radiusKm}
-          onChange={e => setRadiusKm(Number(e.target.value))}
+          onChange={e => {
+            const v = Number(e.target.value)
+            setRadiusKm(v)
+            if (onRadiusSlide) onRadiusSlide(v)
+          }}
           className="w-full"
           style={{ accentColor: '#D4A843', height: '4px' }}
         />

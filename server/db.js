@@ -46,6 +46,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS event_participants (
     event_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
+    status TEXT DEFAULT 'joined',
     created_at TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (event_id, user_id)
   );
@@ -72,6 +73,7 @@ try { db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0') }
 try { db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN newsletter INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN is_global INTEGER DEFAULT 0') } catch {}
+try { db.exec('ALTER TABLE event_participants ADD COLUMN status TEXT DEFAULT "joined"') } catch {}
 
 // ─── Users ───
 
@@ -222,7 +224,11 @@ export function deleteEvent(eventId) {
 // ─── Event Teilnahme ───
 
 export function joinEvent(eventId, userId) {
-  db.prepare('INSERT OR IGNORE INTO event_participants (event_id, user_id) VALUES (?, ?)').run(eventId, userId)
+  db.prepare('INSERT OR REPLACE INTO event_participants (event_id, user_id, status) VALUES (?, ?, ?)').run(eventId, userId, 'joined')
+}
+
+export function watchEvent(eventId, userId) {
+  db.prepare('INSERT OR REPLACE INTO event_participants (event_id, user_id, status) VALUES (?, ?, ?)').run(eventId, userId, 'watching')
 }
 
 export function leaveEvent(eventId, userId) {
@@ -242,7 +248,19 @@ export function getEventParticipantCount(eventId) {
 }
 
 export function isUserParticipating(eventId, userId) {
-  return !!db.prepare('SELECT 1 FROM event_participants WHERE event_id = ? AND user_id = ?').get(eventId, userId)
+  const row = db.prepare('SELECT status FROM event_participants WHERE event_id = ? AND user_id = ?').get(eventId, userId)
+  return row ? row.status : null
+}
+
+export function getUserEvents(userId) {
+  return db.prepare(`
+    SELECT e.*, ep.status, u.name as creator_name
+    FROM event_participants ep
+    JOIN events e ON ep.event_id = e.id
+    JOIN users u ON e.user_id = u.id
+    WHERE ep.user_id = ?
+    ORDER BY e.start_time ASC
+  `).all(userId)
 }
 
 export default db

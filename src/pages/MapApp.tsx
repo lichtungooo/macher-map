@@ -37,6 +37,7 @@ function MapAppInner() {
   const [locatedPos, setLocatedPos] = useState<[number, number] | null>(null)
   const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const [flyTo, setFlyTo] = useState<[number, number, number] | null>(null)
+  const [desiredZoomRadius, setDesiredZoomRadius] = useState<number | null>(null)
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -231,6 +232,7 @@ function MapAppInner() {
         showEvents={showEvents}
         onRadiusChange={setMapRadius}
         flyTo={flyTo}
+        zoomToRadius={desiredZoomRadius}
       />
 
       {/* Top Bar */}
@@ -328,7 +330,7 @@ function MapAppInner() {
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
-      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} />}
+      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} />}
 
       {/* Standort-Dialog */}
       {showLocateDialog && locatedPos && (

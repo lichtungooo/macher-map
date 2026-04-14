@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound, Check } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays } from 'lucide-react'
+import { MyEvents } from '../events/MyEvents'
 import { useApp } from '../../context/AppContext'
 import { MarkdownToolbar } from './MarkdownToolbar'
 import * as api from '../../api/client'
@@ -13,7 +14,7 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   const [name, setName] = useState(user?.name || '')
   const [statement, setStatement] = useState(user?.statement || '')
   const [imagePreview, setImagePreview] = useState<string | undefined>(user?.imageUrl)
-  const [showSettings, setShowSettings] = useState(false)
+  const [view, setView] = useState<'profile' | 'events' | 'settings'>('profile')
   const [pwMsg, setPwMsg] = useState('')
   const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -59,20 +60,28 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   return (
     <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
       <div className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-        {/* Header with settings and close */}
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setShowSettings(!showSettings)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: showSettings ? '#D4A843' : 'rgba(10,10,10,0.3)' }}>
-            <Settings size={18} />
-          </button>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', fontWeight: 500, color: '#0A0A0A' }}>
-            {showSettings ? 'Einstellungen' : 'Dein Profil'}
-          </h2>
+        {/* Header with tabs */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1">
+            {([['profile', 'Profil'], ['events', 'Termine'], ['settings', '']] as const).map(([key, label]) => (
+              <button key={key} onClick={() => setView(key as any)}
+                className="rounded-full flex items-center justify-center gap-1 px-3 py-1.5"
+                style={{ background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                {key === 'settings' ? <Settings size={14} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.3)' }} /> :
+                 key === 'events' ? <CalendarDays size={14} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.3)' }} /> : null}
+                {label && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', fontWeight: 500, color: view === key ? '#D4A843' : 'rgba(10,10,10,0.35)' }}>{label}</span>}
+              </button>
+            ))}
+          </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
             <X size={18} />
           </button>
         </div>
 
-        {showSettings ? (
+        {view === 'events' ? (
+          /* ─── Events View ─── */
+          <MyEvents />
+        ) : view === 'settings' ? (
           /* ─── Settings View ─── */
           <div className="space-y-4">
             <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Navigation } from 'lucide-react'
+import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import * as api from '../../api/client'
 
@@ -59,30 +59,34 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
   const dist = userPos ? distanceKm(userPos[0], userPos[1], event.position[0], event.position[1]) : null
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${event.position[0]},${event.position[1]}`
   const { user } = useApp()
-  const [participating, setParticipating] = useState(false)
+  const [status, setStatus] = useState<string | null>(null) // 'joined', 'watching', null
   const [participantCount, setParticipantCount] = useState((event as any).participantCount || 0)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (user && api.getToken()) {
       api.getEventStatus(event.id).then(data => {
-        setParticipating(data.participating)
+        setStatus(data.status)
         setParticipantCount(data.count)
       }).catch(() => {})
     }
   }, [event.id, user])
 
-  const handleToggleParticipation = async () => {
+  const handleAction = async (action: 'join' | 'watch' | 'leave') => {
     if (!user || !api.getToken()) return
     setLoading(true)
     try {
-      if (participating) {
-        const data = await api.leaveEvent(event.id)
-        setParticipating(false)
+      if (action === 'join') {
+        const data = await api.joinEvent(event.id)
+        setStatus('joined')
+        setParticipantCount(data.count)
+      } else if (action === 'watch') {
+        const data = await api.watchEvent(event.id)
+        setStatus('watching')
         setParticipantCount(data.count)
       } else {
-        const data = await api.joinEvent(event.id)
-        setParticipating(true)
+        const data = await api.leaveEvent(event.id)
+        setStatus(null)
         setParticipantCount(data.count)
       }
     } catch {} finally { setLoading(false) }
@@ -182,23 +186,39 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
           </div>
         )}
 
-        {/* Join Button */}
+        {/* Teilnehmen / Beobachten */}
         {user && (
-          <button
-            onClick={handleToggleParticipation}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all"
-            style={{
-              background: participating ? 'rgba(212,168,67,0.1)' : '#0A0A0A',
-              border: participating ? '1px solid rgba(212,168,67,0.3)' : 'none',
-              color: participating ? '#D4A843' : '#fff',
-              ...font, fontSize: '0.82rem', fontWeight: 500,
-              cursor: loading ? 'wait' : 'pointer',
-            }}
-          >
-            <Heart size={16} fill={participating ? '#D4A843' : 'none'} />
-            {participating ? 'Du nimmst teil' : 'Teilnehmen'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleAction(status === 'joined' ? 'leave' : 'join')}
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all"
+              style={{
+                background: status === 'joined' ? 'rgba(212,168,67,0.1)' : '#0A0A0A',
+                border: status === 'joined' ? '1px solid rgba(212,168,67,0.3)' : 'none',
+                color: status === 'joined' ? '#D4A843' : '#fff',
+                ...font, fontSize: '0.78rem', fontWeight: 500,
+                cursor: loading ? 'wait' : 'pointer',
+              }}
+            >
+              <Heart size={15} fill={status === 'joined' ? '#D4A843' : 'none'} />
+              {status === 'joined' ? 'Dabei' : 'Teilnehmen'}
+            </button>
+            <button
+              onClick={() => handleAction(status === 'watching' ? 'leave' : 'watch')}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all"
+              style={{
+                background: status === 'watching' ? 'rgba(10,10,10,0.06)' : 'transparent',
+                border: status === 'watching' ? '1px solid rgba(10,10,10,0.15)' : '1px solid rgba(10,10,10,0.08)',
+                color: status === 'watching' ? '#0A0A0A' : 'rgba(10,10,10,0.4)',
+                ...font, fontSize: '0.78rem', fontWeight: 500,
+                cursor: loading ? 'wait' : 'pointer',
+              }}
+            >
+              <Eye size={15} />
+            </button>
+          </div>
         )}
 
         {!user && (

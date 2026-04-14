@@ -114,8 +114,14 @@ export async function leaveEvent(eventId: string) {
 export async function getEventStatus(eventId: string) {
   return request(`/events/${eventId}/status`)
 }
+export async function watchEvent(eventId: string) {
+  return request(`/events/${eventId}/watch`, { method: 'POST' })
+}
 export async function getEventParticipants(eventId: string) {
   return request(`/events/${eventId}/participants`)
+}
+export async function getMyEvents() {
+  return request('/my/events')
 }
 
 export { getToken, setToken, clearToken }
