@@ -243,6 +243,11 @@ body {
   background: #F5F4F0 !important;
   font-family: var(--font-sans);
   cursor: default !important;
+  touch-action: none;
+}
+
+.leaflet-container * {
+  touch-action: none;
 }
 
 .leaflet-container .leaflet-grab {
