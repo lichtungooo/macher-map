@@ -1,7 +1,18 @@
-import { useState, useMemo } from 'react'
-import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat, Navigation } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import { EventDetail } from './EventDetail'
+
+// Haversine distance in km
+function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+const RADIUS_OPTIONS = [5, 10, 15, 20, 25, 50, 100, 0] // 0 = alle
 
 const TYPE_COLORS: Record<string, string> = {
   meditation: '#D4A843', gebet: '#A07CC0', stille: '#6BA3BE',
@@ -28,21 +39,39 @@ export function EventCalendar({ onClose }: EventCalendarProps) {
   const [view, setView] = useState<'list' | 'month'>('list')
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
   const [monthOffset, setMonthOffset] = useState(0)
+  const [radiusKm, setRadiusKm] = useState(0) // 0 = alle
+  const [userPos, setUserPos] = useState<[number, number] | null>(null)
+
+  // Standort ermitteln
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setUserPos([pos.coords.latitude, pos.coords.longitude]),
+        () => {} // Stille Fehlerbehandlung
+      )
+    }
+  }, [])
 
   const now = new Date()
   const viewMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
 
+  // Events nach Radius filtern
+  const filteredEvents = useMemo(() => {
+    if (radiusKm === 0 || !userPos) return events
+    return events.filter(e => distanceKm(userPos[0], userPos[1], e.position[0], e.position[1]) <= radiusKm)
+  }, [events, radiusKm, userPos])
+
   const sortedEvents = useMemo(() =>
-    [...events]
+    [...filteredEvents]
       .filter(e => new Date(e.start) >= new Date(now.toDateString()))
       .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()),
-    [events]
+    [filteredEvents]
   )
 
   const monthEvents = useMemo(() => {
     const y = viewMonth.getFullYear(), m = viewMonth.getMonth()
-    return events.filter(e => { const d = new Date(e.start); return d.getFullYear() === y && d.getMonth() === m })
-  }, [events, monthOffset])
+    return filteredEvents.filter(e => { const d = new Date(e.start); return d.getFullYear() === y && d.getMonth() === m })
+  }, [filteredEvents, monthOffset])
 
   const calendarDays = useMemo(() => {
     const y = viewMonth.getFullYear(), m = viewMonth.getMonth()
@@ -92,8 +121,32 @@ export function EventCalendar({ onClose }: EventCalendarProps) {
         </div>
       </div>
 
+      {/* Umkreissuche */}
+      <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(10,10,10,0.03)' }}>
+        <Navigation size={12} style={{ color: userPos ? '#D4A843' : 'rgba(10,10,10,0.2)', flexShrink: 0 }} />
+        <div className="flex items-center gap-1 flex-wrap flex-1">
+          {RADIUS_OPTIONS.map(r => (
+            <button
+              key={r}
+              onClick={() => setRadiusKm(r)}
+              className="rounded-full transition-all"
+              style={{
+                ...font, fontSize: '0.58rem', fontWeight: 500,
+                padding: '2px 8px',
+                background: radiusKm === r ? 'rgba(212,168,67,0.12)' : 'transparent',
+                color: radiusKm === r ? '#D4A843' : 'rgba(10,10,10,0.3)',
+                border: radiusKm === r ? '1px solid rgba(212,168,67,0.25)' : '1px solid rgba(10,10,10,0.06)',
+                cursor: 'pointer',
+              }}
+            >
+              {r === 0 ? 'Alle' : `${r} km`}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Content */}
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {view === 'list' ? (
           <div className="p-4 space-y-2">
             {sortedEvents.length === 0 ? (
