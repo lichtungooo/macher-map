@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2 } from 'lucide-react'
 import { SlotManager } from './SlotManager'
 import * as api from '../../api/client'
 
@@ -28,15 +28,34 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [myRole, setMyRole] = useState<string | null>(null)
   const [qrUrl, setQrUrl] = useState('')
   const [qrCopied, setQrCopied] = useState(false)
+  const [tgLinks, setTgLinks] = useState<any[]>([])
+  const [newTgLabel, setNewTgLabel] = useState('')
+  const [newTgUrl, setNewTgUrl] = useState('')
+  const [showAddTg, setShowAddTg] = useState(false)
   const calUrl = `${window.location.origin}/api/lichtungen/${lichtungId}/cal.ics`
 
   useEffect(() => {
     api.getLichtungMembers(lichtungId).then(setMembers).catch(() => {})
+    api.getLichtungTelegramLinks(lichtungId).then(setTgLinks).catch(() => {})
     if (api.getToken()) {
       api.getMyLichtungRole(lichtungId).then(d => setMyRole(d.role)).catch(() => {})
       api.getLichtungQRCode(lichtungId).then(d => setQrUrl(d.url)).catch(() => {})
     }
   }, [lichtungId])
+
+  const handleAddTg = async () => {
+    if (!newTgLabel.trim() || !newTgUrl.trim()) return
+    await api.addLichtungTelegramLink(lichtungId, newTgLabel, newTgUrl)
+    api.getLichtungTelegramLinks(lichtungId).then(setTgLinks)
+    setNewTgLabel('')
+    setNewTgUrl('')
+    setShowAddTg(false)
+  }
+
+  const handleDeleteTg = async (linkId: string) => {
+    await api.deleteLichtungTelegramLink(lichtungId, linkId)
+    api.getLichtungTelegramLinks(lichtungId).then(setTgLinks)
+  }
 
   useEffect(() => {
     Promise.all([
@@ -108,11 +127,74 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
             {/* Navigation */}
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl mb-4"
               style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
               <Navigation size={15} style={{ color: '#7BAE5E' }} />
               Zum Standort navigieren
             </a>
+
+            {/* Telegram-Gruppen */}
+            {(tgLinks.length > 0 || (myRole === 'owner' || myRole === 'admin')) && (
+              <div className="rounded-xl p-3" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle size={13} style={{ color: '#5078C8' }} />
+                    <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#0A0A0A' }}>Telegram-Gruppen</span>
+                  </div>
+                  {(myRole === 'owner' || myRole === 'admin') && !showAddTg && (
+                    <button onClick={() => setShowAddTg(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.4)', padding: '2px' }}>
+                      <Plus size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {tgLinks.length === 0 && !showAddTg && (
+                  <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.35)' }}>
+                    Noch keine Gruppen verlinkt.
+                  </p>
+                )}
+
+                {tgLinks.map((link: any) => (
+                  <div key={link.id} className="flex items-center gap-2 mb-1.5">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg"
+                      style={{ background: '#fff', border: '1px solid rgba(80,120,200,0.12)', textDecoration: 'none' }}>
+                      <MessageCircle size={12} style={{ color: '#5078C8' }} />
+                      <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A' }}>{link.label}</span>
+                    </a>
+                    {(myRole === 'owner' || myRole === 'admin') && (
+                      <button onClick={() => handleDeleteTg(link.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '4px' }}>
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {showAddTg && (
+                  <div className="mt-2 space-y-2">
+                    <input type="text" value={newTgLabel} onChange={e => setNewTgLabel(e.target.value)}
+                      placeholder="Name (z.B. Yoga-Kreis)"
+                      className="w-full px-3 py-2 rounded-lg outline-none"
+                      style={{ border: '1px solid rgba(10,10,10,0.08)', ...font, fontSize: '0.78rem', background: '#fff' }} />
+                    <input type="url" value={newTgUrl} onChange={e => setNewTgUrl(e.target.value)}
+                      placeholder="https://t.me/gruppenname"
+                      className="w-full px-3 py-2 rounded-lg outline-none"
+                      style={{ border: '1px solid rgba(10,10,10,0.08)', ...font, fontSize: '0.72rem', background: '#fff', fontFamily: 'monospace' }} />
+                    <div className="flex gap-2">
+                      <button onClick={handleAddTg} className="flex-1 py-2 rounded-lg"
+                        style={{ background: '#5078C8', border: 'none', ...font, fontSize: '0.72rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
+                        Hinzufuegen
+                      </button>
+                      <button onClick={() => { setShowAddTg(false); setNewTgLabel(''); setNewTgUrl('') }}
+                        className="px-3 py-2 rounded-lg"
+                        style={{ background: 'none', border: '1px solid rgba(10,10,10,0.08)', ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', cursor: 'pointer' }}>
+                        Abbrechen
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
         {tab === 'kalender' && (

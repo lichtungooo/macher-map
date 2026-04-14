@@ -18,6 +18,7 @@ import {
   getLichtungCode, findLichtungByCode,
   getSlots, setSlot, deleteSlot, isSlotAvailable,
   createConnection, getConnections, getConnectionCount, getFullChain,
+  getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
@@ -375,6 +376,27 @@ app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) =
   const image_path = `/uploads/${req.file.filename}`
   updateLichtung(req.params.id, { image_path })
   res.json({ image_path })
+})
+
+// ─── Lichtung Telegram Links ───
+
+app.get('/api/lichtungen/:id/telegram', (req, res) => {
+  res.json(getLichtungTelegramLinks(req.params.id))
+})
+
+app.post('/api/lichtungen/:id/telegram', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
+  const { label, url } = req.body
+  if (!label || !url) return res.status(400).json({ error: 'Name und URL noetig.' })
+  res.json(addLichtungTelegramLink(req.params.id, label, url))
+})
+
+app.delete('/api/lichtungen/:id/telegram/:linkId', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
+  deleteLichtungTelegramLink(req.params.linkId)
+  res.json({ ok: true })
 })
 
 // ─── Verbindungen ───

@@ -136,6 +136,18 @@ export async function createLichtung(data: { name: string; description: string; 
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
 
+// ─── Lichtung Telegram Links ───
+
+export async function getLichtungTelegramLinks(id: string) {
+  return request(`/lichtungen/${id}/telegram`)
+}
+export async function addLichtungTelegramLink(id: string, label: string, url: string) {
+  return request(`/lichtungen/${id}/telegram`, { method: 'POST', body: JSON.stringify({ label, url }) })
+}
+export async function deleteLichtungTelegramLink(lichtungId: string, linkId: string) {
+  return request(`/lichtungen/${lichtungId}/telegram/${linkId}`, { method: 'DELETE' })
+}
+
 // ─── Verbindungen ───
 
 export async function getConnections() { return request('/connections') }

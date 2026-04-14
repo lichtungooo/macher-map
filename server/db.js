@@ -62,6 +62,14 @@ db.exec(`
     PRIMARY KEY (lichtung_id, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS lichtung_telegram_links (
+    id TEXT PRIMARY KEY,
+    lichtung_id TEXT NOT NULL,
+    label TEXT NOT NULL,
+    url TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS connections (
     user_a TEXT NOT NULL,
     user_b TEXT NOT NULL,
@@ -422,6 +430,22 @@ export function getLichtungMemberRole(lichtungId, userId) {
 
 export function getLichtungMemberCount(lichtungId) {
   return db.prepare('SELECT COUNT(*) as c FROM lichtung_members WHERE lichtung_id = ?').get(lichtungId).c
+}
+
+// ─── Lichtung Telegram Links ───
+
+export function getLichtungTelegramLinks(lichtungId) {
+  return db.prepare('SELECT * FROM lichtung_telegram_links WHERE lichtung_id = ? ORDER BY created_at').all(lichtungId)
+}
+
+export function addLichtungTelegramLink(lichtungId, label, url) {
+  const id = randomUUID()
+  db.prepare('INSERT INTO lichtung_telegram_links (id, lichtung_id, label, url) VALUES (?, ?, ?, ?)').run(id, lichtungId, label, url)
+  return { id }
+}
+
+export function deleteLichtungTelegramLink(id) {
+  db.prepare('DELETE FROM lichtung_telegram_links WHERE id = ?').run(id)
 }
 
 // ─── Verbindungen (Mensch-zu-Mensch) ───
