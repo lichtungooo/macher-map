@@ -136,12 +136,16 @@ function MapAppInner() {
   }
 
   const handleLocateMe = () => {
-    if (!('geolocation' in navigator)) return
+    if (!('geolocation' in navigator)) {
+      alert('Geolocation nicht verfuegbar in diesem Browser.')
+      return
+    }
+    // Visuelles Feedback: Button kurz gold faerben
     navigator.geolocation.getCurrentPosition(
       pos => {
         const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        console.log('GPS Position:', p[0], p[1], 'Genauigkeit:', pos.coords.accuracy, 'm')
         setLocatedPos(p)
-        // Karte zum Standort fliegen — mit Timestamp fuer einzigartigen Trigger
         setFlyTo([p[0], p[1], 16 + Math.random() * 0.001])
 
         if (autoLight && user && api.getToken()) {
@@ -151,8 +155,14 @@ function MapAppInner() {
         }
       },
       (err) => {
-        console.error('Standort-Fehler:', err.message)
-        alert('Standort konnte nicht ermittelt werden. Bitte Standort-Berechtigung pruefen.')
+        console.error('Standort-Fehler:', err.code, err.message)
+        if (err.code === 1) {
+          alert('Standort-Berechtigung verweigert. Bitte in den Browser-Einstellungen erlauben.')
+        } else if (err.code === 2) {
+          alert('Standort nicht verfuegbar. GPS-Signal nicht empfangbar.')
+        } else {
+          alert('Standort-Abfrage abgelaufen. Bitte erneut versuchen.')
+        }
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     )
