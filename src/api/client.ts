@@ -123,5 +123,8 @@ export async function getEventParticipants(eventId: string) {
 export async function getMyEvents() {
   return request('/my/events')
 }
+export async function getCalToken() {
+  return request('/my/cal-token')
+}
 
 export { getToken, setToken, clearToken }

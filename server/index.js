@@ -238,9 +238,22 @@ app.get('/api/my/events', auth, (req, res) => {
   res.json(getUserEvents(req.userId))
 })
 
-// iCal-Export fuer persoenliche Termine
-app.get('/api/my/events.ics', auth, (req, res) => {
-  const events = getUserEvents(req.userId)
+// Kalender-Abo-Token (1 Jahr gueltig)
+app.get('/api/my/cal-token', auth, (req, res) => {
+  const calToken = jwt.sign({ userId: req.userId }, JWT_SECRET, { expiresIn: '365d' })
+  res.json({ url: `${process.env.BASE_URL || 'https://lichtung.ooo'}/api/cal/${calToken}.ics` })
+})
+
+// iCal-Abo-URL — Token in Query statt Header, damit Kalender-Apps es abonnieren koennen
+app.get('/api/cal/:token.ics', (req, res) => {
+  let userId
+  try {
+    const payload = jwt.verify(req.params.token, JWT_SECRET)
+    userId = payload.userId
+  } catch {
+    return res.status(401).send('Token ungueltig')
+  }
+  const events = getUserEvents(userId)
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',

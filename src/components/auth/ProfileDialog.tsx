@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays } from 'lucide-react'
 import { MyEvents } from '../events/MyEvents'
 import { useApp } from '../../context/AppContext'
@@ -17,6 +17,15 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   const [view, setView] = useState<'profile' | 'events' | 'settings'>('profile')
   const [pwMsg, setPwMsg] = useState('')
   const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushStatus, setPushStatus] = useState('')
+
+  // Check push permission
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushEnabled(Notification.permission === 'granted')
+    }
+  }, [])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -127,6 +136,44 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
                   </span>
                 </div>
               </label>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Benachrichtigungen</label>
+              <label className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <button
+                  onClick={async () => {
+                    if (!('Notification' in window)) { setPushStatus('Nicht verfuegbar.'); return }
+                    if (Notification.permission === 'granted') {
+                      setPushEnabled(false)
+                      setPushStatus('Deaktiviert. Zum Reaktivieren Browser-Einstellungen pruefen.')
+                      return
+                    }
+                    const perm = await Notification.requestPermission()
+                    if (perm === 'granted') {
+                      setPushEnabled(true)
+                      setPushStatus('Aktiviert.')
+                      // Test-Notification
+                      new Notification('Licht fuer Frieden', { body: 'Push-Nachrichten sind aktiv.', icon: '/favicon.svg' })
+                    } else {
+                      setPushStatus('Berechtigung verweigert.')
+                    }
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center shrink-0"
+                  style={{ border: pushEnabled ? 'none' : '1px solid rgba(10,10,10,0.15)', background: pushEnabled ? '#D4A843' : '#fff', cursor: 'pointer' }}
+                >
+                  {pushEnabled && <Check size={14} color="#fff" />}
+                </button>
+                <div>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', display: 'block' }}>
+                    Push-Nachrichten
+                  </span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', display: 'block', marginTop: '2px' }}>
+                    Erinnerungen an Termine und globale Meditationen.
+                  </span>
+                </div>
+              </label>
+              {pushStatus && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#D4A843', marginTop: '4px' }}>{pushStatus}</p>}
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
