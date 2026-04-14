@@ -43,6 +43,13 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS invite_tokens (
+    token TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0
+  );
+
   CREATE TABLE IF NOT EXISTS event_participants (
     event_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
@@ -261,6 +268,22 @@ export function getUserEvents(userId) {
     WHERE ep.user_id = ?
     ORDER BY e.start_time ASC
   `).all(userId)
+}
+
+// ─── Invite Tokens (temporaer, 60s) ───
+
+export function createInviteToken(userId) {
+  const token = randomUUID()
+  const expires_at = new Date(Date.now() + 60 * 1000).toISOString() // 60 Sekunden
+  db.prepare('INSERT INTO invite_tokens (token, user_id, expires_at) VALUES (?, ?, ?)').run(token, userId, expires_at)
+  return token
+}
+
+export function verifyInviteToken(token) {
+  const row = db.prepare('SELECT * FROM invite_tokens WHERE token = ? AND used = 0').get(token)
+  if (!row || new Date(row.expires_at) < new Date()) return null
+  db.prepare('UPDATE invite_tokens SET used = 1 WHERE token = ?').run(token)
+  return row.user_id
 }
 
 export default db

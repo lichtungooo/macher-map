@@ -12,6 +12,7 @@ import {
   getAllLights, getUserLight, createLight, getLightCount,
   getAllEvents, createEvent, getGlobalEvents, deleteEvent,
   joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
+  createInviteToken, verifyInviteToken,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
@@ -281,6 +282,20 @@ app.get('/api/cal/:token.ics', (req, res) => {
   res.setHeader('Content-Type', 'text/calendar; charset=utf-8')
   res.setHeader('Content-Disposition', 'attachment; filename="lichtung-termine.ics"')
   res.send(lines.join('\r\n'))
+})
+
+// ─── Invite Token (60s gueltig) ───
+
+app.post('/api/invite/create', auth, (req, res) => {
+  const token = createInviteToken(req.userId)
+  const url = `${process.env.BASE_URL || 'https://lichtung.ooo'}/app?invite=${token}`
+  res.json({ token, url, expires_in: 60 })
+})
+
+app.get('/api/invite/verify/:token', (req, res) => {
+  const userId = verifyInviteToken(req.params.token)
+  if (!userId) return res.status(400).json({ error: 'Link abgelaufen oder ungueltig.' })
+  res.json({ invited_by: userId })
 })
 
 // ─── Admin: Dashboard ───

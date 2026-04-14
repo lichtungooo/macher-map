@@ -127,4 +127,10 @@ export async function getCalToken() {
   return request('/my/cal-token')
 }
 
+// ─── Invite ───
+
+export async function createInvite() {
+  return request('/invite/create', { method: 'POST' })
+}
+
 export { getToken, setToken, clearToken }
