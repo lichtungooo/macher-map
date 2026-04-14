@@ -31,6 +31,7 @@ function MapAppInner() {
   const [showLights, setShowLights] = useState(true)
   const [showEvents, setShowEvents] = useState(true)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [mapZoom, setMapZoom] = useState(5)
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -157,6 +158,7 @@ function MapAppInner() {
         placingLight={mode === 'place-light' || mode === 'place-event'}
         showLights={showLights}
         showEvents={showEvents}
+        onZoomChange={setMapZoom}
       />
 
       {/* Top Bar */}
@@ -246,7 +248,7 @@ function MapAppInner() {
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} onClose={() => { setDialog('none'); setEventPosition(undefined) }} />}
-      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} />}
+      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapZoom={mapZoom} />}
 
       {/* Zauberstab — nur Desktop, versteckt den echten Cursor */}
       <WandCursor active={mode === 'place-light'} />

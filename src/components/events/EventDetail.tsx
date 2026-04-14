@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react'
-import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart } from 'lucide-react'
+import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Navigation } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import * as api from '../../api/client'
+
+function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function formatDist(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`
+  if (km < 10) return `${km.toFixed(1)} km`
+  return `${Math.round(km)} km`
+}
 
 const TYPE_LABELS: Record<string, string> = {
   meditation: 'Meditation', gebet: 'Gebet', stille: 'Stille',
@@ -36,11 +50,14 @@ function renderMarkdown(text: string) {
 
 interface EventDetailProps {
   event: EventItem
+  userPos?: [number, number] | null
   onClose: () => void
   onBack: () => void
 }
 
-export function EventDetail({ event, onClose, onBack }: EventDetailProps) {
+export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProps) {
+  const dist = userPos ? distanceKm(userPos[0], userPos[1], event.position[0], event.position[1]) : null
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${event.position[0]},${event.position[1]}`
   const { user } = useApp()
   const [participating, setParticipating] = useState(false)
   const [participantCount, setParticipantCount] = useState((event as any).participantCount || 0)
@@ -132,7 +149,7 @@ export function EventDetail({ event, onClose, onBack }: EventDetailProps) {
           <div className="flex items-center gap-2.5">
             <MapPin size={14} style={{ color: 'rgba(10,10,10,0.3)', flexShrink: 0 }} />
             <span style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.55)' }}>
-              {event.position[0].toFixed(4)}, {event.position[1].toFixed(4)}
+              {dist != null ? formatDist(dist) + ' entfernt' : `${event.position[0].toFixed(3)}, ${event.position[1].toFixed(3)}`}
             </span>
           </div>
           <div className="flex items-center gap-2.5">
@@ -142,6 +159,18 @@ export function EventDetail({ event, onClose, onBack }: EventDetailProps) {
             </span>
           </div>
         </div>
+
+        {/* Navigation zu Google Maps */}
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl mb-3 transition-all"
+          style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}
+        >
+          <Navigation size={15} style={{ color: '#D4A843' }} />
+          Zum Standort navigieren
+        </a>
 
         {/* Description */}
         {event.description && (

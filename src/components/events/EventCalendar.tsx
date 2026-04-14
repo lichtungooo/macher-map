@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
-import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat, Navigation } from 'lucide-react'
+import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat, Navigation as NavIcon } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import { EventDetail } from './EventDetail'
 
-// Haversine distance in km
 function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
@@ -12,7 +11,13 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-const RADIUS_OPTIONS = [5, 10, 15, 20, 25, 50, 100, 0] // 0 = alle
+// Zoom-Level zu ungefaehrem Radius in km
+function zoomToRadius(zoom: number): number {
+  const table: Record<number, number> = { 4: 500, 5: 300, 6: 150, 7: 100, 8: 50, 9: 25, 10: 15, 11: 10, 12: 5, 13: 3, 14: 1, 15: 0.5 }
+  if (zoom <= 4) return 500
+  if (zoom >= 15) return 1
+  return table[Math.round(zoom)] || 100
+}
 
 const TYPE_COLORS: Record<string, string> = {
   meditation: '#D4A843', gebet: '#A07CC0', stille: '#6BA3BE',
@@ -30,36 +35,56 @@ function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
-interface EventCalendarProps {
-  onClose: () => void
+function formatDist(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`
+  if (km < 10) return `${km.toFixed(1)} km`
+  return `${Math.round(km)} km`
 }
 
-export function EventCalendar({ onClose }: EventCalendarProps) {
+interface EventCalendarProps {
+  onClose: () => void
+  mapZoom?: number
+}
+
+export function EventCalendar({ onClose, mapZoom }: EventCalendarProps) {
   const { events } = useApp()
   const [view, setView] = useState<'list' | 'month'>('list')
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
   const [monthOffset, setMonthOffset] = useState(0)
-  const [radiusKm, setRadiusKm] = useState(0) // 0 = alle
+  const [radiusKm, setRadiusKm] = useState(100)
   const [userPos, setUserPos] = useState<[number, number] | null>(null)
 
-  // Standort ermitteln
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         pos => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-        () => {} // Stille Fehlerbehandlung
+        () => {}
       )
     }
   }, [])
 
+  // Zoom-Sync: Wenn sich der Karten-Zoom aendert, passe den Slider an
+  useEffect(() => {
+    if (mapZoom != null) {
+      setRadiusKm(zoomToRadius(mapZoom))
+    }
+  }, [mapZoom])
+
   const now = new Date()
   const viewMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
 
-  // Events nach Radius filtern
+  // Events + Distanz berechnen
+  const eventsWithDist = useMemo(() => {
+    return events.map(e => ({
+      ...e,
+      dist: userPos ? distanceKm(userPos[0], userPos[1], e.position[0], e.position[1]) : null,
+    }))
+  }, [events, userPos])
+
   const filteredEvents = useMemo(() => {
-    if (radiusKm === 0 || !userPos) return events
-    return events.filter(e => distanceKm(userPos[0], userPos[1], e.position[0], e.position[1]) <= radiusKm)
-  }, [events, radiusKm, userPos])
+    if (!userPos) return eventsWithDist
+    return eventsWithDist.filter(e => e.dist != null && e.dist <= radiusKm)
+  }, [eventsWithDist, radiusKm, userPos])
 
   const sortedEvents = useMemo(() =>
     [...filteredEvents]
@@ -89,28 +114,22 @@ export function EventCalendar({ onClose }: EventCalendarProps) {
   const font = { fontFamily: 'Inter, sans-serif' as const }
 
   if (selectedEvent) {
-    return <EventDetail event={selectedEvent} onClose={() => setSelectedEvent(null)} onBack={() => setSelectedEvent(null)} />
+    return <EventDetail event={selectedEvent} userPos={userPos} onClose={() => { setSelectedEvent(null); onClose() }} onBack={() => setSelectedEvent(null)} />
   }
 
   return (
     <div
       className="fixed z-[1500] rounded-2xl shadow-xl overflow-hidden"
-      style={{
-        top: '70px', right: '16px', width: '340px', maxHeight: 'calc(100vh - 90px)',
-        background: '#fff', border: '1px solid rgba(10,10,10,0.06)',
-        animation: 'fade-in-up 0.2s ease-out',
-      }}
+      style={{ top: '70px', right: '16px', width: '340px', maxHeight: 'calc(100vh - 90px)', background: '#fff', border: '1px solid rgba(10,10,10,0.06)', animation: 'fade-in-up 0.2s ease-out' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A' }}>
-          Kalender
-        </h2>
+      <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
+        <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A' }}>Kalender</h2>
         <div className="flex items-center gap-2">
           <div className="flex rounded-full overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
             {(['list', 'month'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '4px 12px', background: view === v ? 'rgba(212,168,67,0.1)' : 'transparent', color: view === v ? '#D4A843' : 'rgba(10,10,10,0.35)', border: 'none', cursor: 'pointer' }}>
+                style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '3px 10px', background: view === v ? 'rgba(212,168,67,0.1)' : 'transparent', color: view === v ? '#D4A843' : 'rgba(10,10,10,0.35)', border: 'none', cursor: 'pointer' }}>
                 {v === 'list' ? 'Liste' : 'Monat'}
               </button>
             ))}
@@ -121,52 +140,51 @@ export function EventCalendar({ onClose }: EventCalendarProps) {
         </div>
       </div>
 
-      {/* Umkreissuche */}
-      <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(10,10,10,0.03)' }}>
-        <Navigation size={12} style={{ color: userPos ? '#D4A843' : 'rgba(10,10,10,0.2)', flexShrink: 0 }} />
-        <div className="flex items-center gap-1 flex-wrap flex-1">
-          {RADIUS_OPTIONS.map(r => (
-            <button
-              key={r}
-              onClick={() => setRadiusKm(r)}
-              className="rounded-full transition-all"
-              style={{
-                ...font, fontSize: '0.58rem', fontWeight: 500,
-                padding: '2px 8px',
-                background: radiusKm === r ? 'rgba(212,168,67,0.12)' : 'transparent',
-                color: radiusKm === r ? '#D4A843' : 'rgba(10,10,10,0.3)',
-                border: radiusKm === r ? '1px solid rgba(212,168,67,0.25)' : '1px solid rgba(10,10,10,0.06)',
-                cursor: 'pointer',
-              }}
-            >
-              {r === 0 ? 'Alle' : `${r} km`}
-            </button>
-          ))}
+      {/* Umkreis-Slider */}
+      <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(10,10,10,0.03)' }}>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <NavIcon size={11} style={{ color: userPos ? '#D4A843' : 'rgba(10,10,10,0.2)' }} />
+            <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)' }}>Umkreis</span>
+          </div>
+          <span style={{ ...font, fontSize: '0.7rem', fontWeight: 600, color: '#D4A843' }}>
+            {radiusKm >= 500 ? 'Alle' : `${radiusKm} km`}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="500"
+          value={radiusKm}
+          onChange={e => setRadiusKm(Number(e.target.value))}
+          className="w-full"
+          style={{ accentColor: '#D4A843', height: '4px' }}
+        />
+        <div className="flex justify-between mt-0.5">
+          <span style={{ ...font, fontSize: '0.5rem', color: 'rgba(10,10,10,0.2)' }}>1 km</span>
+          <span style={{ ...font, fontSize: '0.5rem', color: 'rgba(10,10,10,0.2)' }}>500 km</span>
         </div>
       </div>
 
       {/* Content */}
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
         {view === 'list' ? (
           <div className="p-4 space-y-2">
             {sortedEvents.length === 0 ? (
               <div className="text-center py-10">
                 <CalendarDays size={28} style={{ color: 'rgba(10,10,10,0.08)', margin: '0 auto 8px' }} />
-                <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.35)' }}>Noch keine Veranstaltungen.</p>
+                <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.35)' }}>
+                  {userPos && radiusKm < 500 ? `Keine Veranstaltungen im Umkreis von ${radiusKm} km.` : 'Noch keine Veranstaltungen.'}
+                </p>
               </div>
             ) : sortedEvents.map(event => (
               <button key={event.id} onClick={() => setSelectedEvent(event)}
                 className="w-full text-left rounded-xl p-3.5 transition-all"
                 style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)', cursor: 'pointer' }}>
                 <div className="flex items-start gap-3">
-                  {/* Date block */}
                   <div className="shrink-0 w-11 h-11 rounded-lg flex flex-col items-center justify-center" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.05)' }}>
-                    <span style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>
-                      {new Date(event.start).getDate()}
-                    </span>
-                    <span style={{ ...font, fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.35)', textTransform: 'uppercase' }}>
-                      {MONTHS[new Date(event.start).getMonth()]?.slice(0, 3)}
-                    </span>
+                    <span style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>{new Date(event.start).getDate()}</span>
+                    <span style={{ ...font, fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.35)', textTransform: 'uppercase' }}>{MONTHS[new Date(event.start).getMonth()]?.slice(0, 3)}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -182,9 +200,10 @@ export function EventCalendar({ onClose }: EventCalendarProps) {
                           <Repeat size={9} /> {RECURRING_LABELS[event.recurring]}
                         </span>
                       )}
-                      {(event as any).participantCount > 0 && (
-                        <span style={{ ...font, fontSize: '0.6rem', color: '#D4A843' }}>
-                          {(event as any).participantCount} Teilnehmer
+                      {/* Entfernung */}
+                      {(event as any).dist != null && (
+                        <span style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: '#D4A843' }}>
+                          {formatDist((event as any).dist)}
                         </span>
                       )}
                     </div>
@@ -195,36 +214,24 @@ export function EventCalendar({ onClose }: EventCalendarProps) {
           </div>
         ) : (
           <div className="p-4">
-            {/* Month nav */}
             <div className="flex items-center justify-between mb-3">
-              <button onClick={() => setMonthOffset(monthOffset - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}>
-                <ChevronLeft size={16} />
-              </button>
-              <span style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#0A0A0A' }}>
-                {MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}
-              </span>
-              <button onClick={() => setMonthOffset(monthOffset + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}>
-                <ChevronRight size={16} />
-              </button>
+              <button onClick={() => setMonthOffset(monthOffset - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}><ChevronLeft size={16} /></button>
+              <span style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#0A0A0A' }}>{MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}</span>
+              <button onClick={() => setMonthOffset(monthOffset + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}><ChevronRight size={16} /></button>
             </div>
-            {/* Day headers */}
             <div className="grid grid-cols-7 mb-1">
               {DAYS_SHORT.map(d => (
                 <div key={d} className="text-center" style={{ ...font, fontSize: '0.55rem', fontWeight: 500, color: 'rgba(10,10,10,0.3)', textTransform: 'uppercase' }}>{d}</div>
               ))}
             </div>
-            {/* Grid */}
             <div className="grid grid-cols-7 gap-0.5">
               {calendarDays.map((day, i) => (
-                <div key={i}
-                  className="aspect-square rounded-lg flex flex-col items-center justify-start pt-1"
+                <div key={i} className="aspect-square rounded-lg flex flex-col items-center justify-start pt-1"
                   style={{ background: day.inMonth ? (day.events.length > 0 ? 'rgba(212,168,67,0.06)' : '#FAFAF8') : 'transparent', cursor: day.events.length > 0 ? 'pointer' : 'default' }}
                   onClick={() => day.events.length > 0 && setSelectedEvent(day.events[0])}>
                   {day.inMonth && (
                     <>
-                      <span style={{ ...font, fontSize: '0.68rem', fontWeight: day.date === now.getDate() && monthOffset === 0 ? 700 : 400, color: day.date === now.getDate() && monthOffset === 0 ? '#D4A843' : 'rgba(10,10,10,0.45)' }}>
-                        {day.date}
-                      </span>
+                      <span style={{ ...font, fontSize: '0.68rem', fontWeight: day.date === now.getDate() && monthOffset === 0 ? 700 : 400, color: day.date === now.getDate() && monthOffset === 0 ? '#D4A843' : 'rgba(10,10,10,0.45)' }}>{day.date}</span>
                       {day.events.length > 0 && (
                         <div className="flex gap-0.5 mt-0.5">
                           {day.events.slice(0, 3).map((e, j) => (

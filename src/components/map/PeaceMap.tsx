@@ -10,6 +10,8 @@ interface PeaceMapProps {
   placingLight?: boolean
   showLights?: boolean
   showEvents?: boolean
+  onZoomChange?: (zoom: number) => void
+  onCenterChange?: (center: [number, number]) => void
 }
 
 function MapClickHandler({ onMapClick, placingLight }: { onMapClick?: (pos: [number, number]) => void; placingLight?: boolean }) {
@@ -63,7 +65,24 @@ function LocateUser() {
   return null
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true }: PeaceMapProps) {
+function MapEventBridge({ onZoomChange, onCenterChange }: { onZoomChange?: (z: number) => void; onCenterChange?: (c: [number, number]) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    const handler = () => {
+      if (onZoomChange) onZoomChange(map.getZoom())
+      if (onCenterChange) {
+        const c = map.getCenter()
+        onCenterChange([c.lat, c.lng])
+      }
+    }
+    map.on('zoomend', handler)
+    map.on('moveend', handler)
+    return () => { map.off('zoomend', handler); map.off('moveend', handler) }
+  }, [map, onZoomChange, onCenterChange])
+  return null
+}
+
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
 
@@ -82,6 +101,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
 
       <LocateUser />
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
+      <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
