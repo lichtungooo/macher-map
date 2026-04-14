@@ -124,8 +124,8 @@ function MapAppInner() {
       pos => {
         const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
         setLocatedPos(p)
-        // Karte zum Standort fliegen (~1 km Zoom = Stufe 14)
-        setFlyTo([p[0], p[1], 14])
+        // Karte zum Standort fliegen (~100m Zoom = Stufe 16)
+        setFlyTo([p[0], p[1], 16])
         // Nach dem Fliegen den flyTo zuruecksetzen
         setTimeout(() => setFlyTo(null), 2000)
 

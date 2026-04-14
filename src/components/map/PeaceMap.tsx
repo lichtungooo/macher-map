@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
+import { ZoomButtons } from './ZoomButtons'
 import type { LatLngExpression } from 'leaflet'
 
 interface PeaceMapProps {
@@ -118,8 +119,9 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       zoomControl={false}
       attributionControl={false}
       zoomSnap={0}
-      zoomDelta={0.5}
-      wheelDebounceTime={80}
+      zoomDelta={1}
+      wheelDebounceTime={0}
+      wheelPxPerZoomLevel={80}
       className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
     >
       <TileLayer
@@ -131,6 +133,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
       <MapEventBridge onZoomChange={onZoomChange} onCenterChange={onCenterChange} onRadiusChange={onRadiusChange} />
       <FlyToHandler flyTo={flyTo} />
+      <ZoomButtons />
 
       {showLights && lights.map(light => (
         <LightMarker key={light.id} light={light} />
