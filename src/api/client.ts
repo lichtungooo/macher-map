@@ -136,6 +136,21 @@ export async function createLichtung(data: { name: string; description: string; 
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
 
+// ─── Lichtung Verfuegbarkeit ───
+
+export async function getLichtungSlots(id: string, from?: string, to?: string) {
+  const params = new URLSearchParams()
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  return request(`/lichtungen/${id}/slots?${params}`)
+}
+export async function setLichtungSlot(id: string, date: string, status: string, maxEvents?: number, note?: string) {
+  return request(`/lichtungen/${id}/slots/${date}`, { method: 'PUT', body: JSON.stringify({ status, max_events: maxEvents, note }) })
+}
+export async function checkSlotAvailable(id: string, date: string) {
+  return request(`/lichtungen/${id}/available/${date}`)
+}
+
 // ─── Lichtung Mitglieder ───
 
 export async function getLichtungMembers(id: string) { return request(`/lichtungen/${id}/members`) }

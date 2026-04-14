@@ -16,6 +16,7 @@ import {
   getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
   addLichtungMember, removeLichtungMember, setLichtungRole, getLichtungMembers, getLichtungMemberRole, getLichtungMemberCount,
   getLichtungCode, findLichtungByCode,
+  getSlots, setSlot, deleteSlot, isSlotAvailable,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
@@ -204,6 +205,19 @@ app.get('/api/events', (req, res) => {
 app.get('/api/events/global', (req, res) => res.json(getGlobalEvents()))
 
 app.post('/api/events', auth, (req, res) => {
+  // Slot-Verfuegbarkeit pruefen wenn an Lichtung gebunden
+  if (req.body.lichtung_id && req.body.start_time) {
+    const date = req.body.start_time.slice(0, 10)
+    const check = isSlotAvailable(req.body.lichtung_id, date)
+    if (!check.available) return res.status(400).json({ error: check.reason })
+  }
+  // Admin-Berechtigung pruefen wenn an Lichtung gebunden
+  if (req.body.lichtung_id) {
+    const role = getLichtungMemberRole(req.body.lichtung_id, req.userId)
+    if (role !== 'owner' && role !== 'admin') {
+      return res.status(403).json({ error: 'Nur Admins dieses Ortes koennen hier Termine erstellen.' })
+    }
+  }
   res.json(createEvent(req.userId, req.body))
 })
 
@@ -360,6 +374,33 @@ app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) =
   const image_path = `/uploads/${req.file.filename}`
   updateLichtung(req.params.id, { image_path })
   res.json({ image_path })
+})
+
+// ─── Lichtung Verfuegbarkeit ───
+
+app.get('/api/lichtungen/:id/slots', (req, res) => {
+  const from = req.query.from || new Date().toISOString().slice(0, 10)
+  const to = req.query.to || new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10)
+  res.json(getSlots(req.params.id, from, to))
+})
+
+app.get('/api/lichtungen/:id/available/:date', (req, res) => {
+  res.json(isSlotAvailable(req.params.id, req.params.date))
+})
+
+app.put('/api/lichtungen/:id/slots/:date', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins koennen Slots verwalten.' })
+  const { status, max_events, note } = req.body
+  setSlot(req.params.id, req.params.date, status || 'open', max_events, note, req.userId)
+  res.json({ ok: true })
+})
+
+app.delete('/api/lichtungen/:id/slots/:date', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Admins.' })
+  deleteSlot(req.params.id, req.params.date)
+  res.json({ ok: true })
 })
 
 // ─── Lichtung Mitglieder + Rollen ───

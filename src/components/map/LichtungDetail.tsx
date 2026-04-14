@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield } from 'lucide-react'
+import { SlotManager } from './SlotManager'
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -21,7 +22,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'info' | 'kalender' | 'community'>('info')
+  const [tab, setTab] = useState<'info' | 'kalender' | 'community' | 'slots'>('info')
   const [copied, setCopied] = useState(false)
   const [members, setMembers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
@@ -69,18 +70,20 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
       </div>
 
       {/* Tabs */}
-      <div className="flex px-5 pt-3 gap-1" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        {(['info', 'kalender', 'community'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className="pb-2 px-3"
-            style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: tab === t ? '#7BAE5E' : 'rgba(10,10,10,0.35)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t ? '#7BAE5E' : 'transparent'}`, cursor: 'pointer' }}>
-            {t === 'info' ? 'Info' : t === 'kalender' ? 'Kalender' : `Community (${members.length})`}
+      <div className="flex px-5 pt-3 gap-0.5 overflow-x-auto" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
+        {['info', 'kalender', 'community', ...((myRole === 'owner' || myRole === 'admin') ? ['slots'] : [])].map(key => (
+          <button key={key} onClick={() => setTab(key as any)} className="pb-2 px-2.5 shrink-0"
+            style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.35)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#7BAE5E' : 'transparent'}`, cursor: 'pointer' }}>
+            {key === 'info' ? 'Info' : key === 'kalender' ? 'Kalender' : key === 'community' ? `Community (${members.length})` : 'Slots'}
           </button>
         ))}
       </div>
 
       <div className="overflow-y-auto p-5" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-        {tab === 'info' ? (
-          // Info Tab
+        {tab === 'slots' && (myRole === 'owner' || myRole === 'admin') && (
+          <SlotManager lichtungId={lichtungId} />
+        )}
+        {tab === 'info' && (
           <>
             {/* Bild */}
             {lichtung.image_path && (
@@ -111,7 +114,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
               Zum Standort navigieren
             </a>
           </>
-        ) : tab === 'kalender' ? (
+        )}
+        {tab === 'kalender' && (
           <>
             {/* Termine */}
             {events.length === 0 ? (
@@ -180,8 +184,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
               </button>
             )}
           </>
-        ) : (
-          /* ─── Community Tab ─── */
+        )}
+        {tab === 'community' && (
           <>
             {/* Mitglieder */}
             <div className="space-y-2 mb-4">

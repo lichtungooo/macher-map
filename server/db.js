@@ -62,6 +62,16 @@ db.exec(`
     PRIMARY KEY (lichtung_id, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS lichtung_slots (
+    id TEXT PRIMARY KEY,
+    lichtung_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    status TEXT DEFAULT 'open',
+    max_events INTEGER DEFAULT 1,
+    note TEXT DEFAULT '',
+    created_by TEXT
+  );
+
   CREATE TABLE IF NOT EXISTS lichtung_codes (
     lichtung_id TEXT PRIMARY KEY,
     code TEXT UNIQUE NOT NULL
@@ -384,6 +394,43 @@ export function getLichtungMemberRole(lichtungId, userId) {
 
 export function getLichtungMemberCount(lichtungId) {
   return db.prepare('SELECT COUNT(*) as c FROM lichtung_members WHERE lichtung_id = ?').get(lichtungId).c
+}
+
+// ─── Lichtung Verfuegbarkeit (Slots) ───
+
+export function getSlots(lichtungId, from, to) {
+  return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date >= ? AND date <= ? ORDER BY date').all(lichtungId, from, to)
+}
+
+export function getSlot(lichtungId, date) {
+  return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').get(lichtungId, date)
+}
+
+export function setSlot(lichtungId, date, status, maxEvents, note, createdBy) {
+  const existing = db.prepare('SELECT id FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').get(lichtungId, date)
+  if (existing) {
+    db.prepare('UPDATE lichtung_slots SET status = ?, max_events = ?, note = ? WHERE id = ?').run(status, maxEvents || 1, note || '', existing.id)
+  } else {
+    const id = randomUUID()
+    db.prepare('INSERT INTO lichtung_slots (id, lichtung_id, date, status, max_events, note, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, lichtungId, date, status, maxEvents || 1, note || '', createdBy)
+  }
+}
+
+export function deleteSlot(lichtungId, date) {
+  db.prepare('DELETE FROM lichtung_slots WHERE lichtung_id = ? AND date = ?').run(lichtungId, date)
+}
+
+export function getEventsForDate(lichtungId, date) {
+  return db.prepare("SELECT COUNT(*) as c FROM events WHERE lichtung_id = ? AND start_time LIKE ?").get(lichtungId, date + '%').c
+}
+
+export function isSlotAvailable(lichtungId, date) {
+  const slot = getSlot(lichtungId, date)
+  if (!slot) return { available: true, reason: 'Kein Slot definiert — offen' }
+  if (slot.status === 'closed') return { available: false, reason: slot.note || 'Ruhetag' }
+  const eventCount = getEventsForDate(lichtungId, date)
+  if (eventCount >= slot.max_events) return { available: false, reason: `Voll (${eventCount}/${slot.max_events})` }
+  return { available: true, remaining: slot.max_events - eventCount }
 }
 
 // ─── Lichtung Permanente QR-Codes ───
