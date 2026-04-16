@@ -292,9 +292,7 @@ function MapAppInner() {
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3" style={{ pointerEvents: 'none' }}>
         <Link to="/" style={{ textDecoration: 'none', pointerEvents: 'auto' }}>
-          <div className="rounded-full flex items-center justify-center shadow-sm" style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-            <Logo size={34} />
-          </div>
+          <Logo size={42} />
         </Link>
 
         <div className="flex items-center gap-2.5" style={{ pointerEvents: 'auto' }}>
