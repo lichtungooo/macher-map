@@ -136,6 +136,19 @@ export async function createLichtung(data: { name: string; description: string; 
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
 
+// ─── Lichtung Galerie ───
+
+export async function getLichtungGallery(id: string) { return request(`/lichtungen/${id}/gallery`) }
+export async function uploadLichtungImage(id: string, file: File, caption?: string) {
+  const formData = new FormData()
+  formData.append('image', file)
+  if (caption) formData.append('caption', caption)
+  return request(`/lichtungen/${id}/gallery`, { method: 'POST', body: formData })
+}
+export async function deleteLichtungImage(lichtungId: string, imageId: string) {
+  return request(`/lichtungen/${lichtungId}/gallery/${imageId}`, { method: 'DELETE' })
+}
+
 // ─── Lichtung Telegram Links ───
 
 export async function getLichtungTelegramLinks(id: string) {

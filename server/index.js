@@ -19,6 +19,7 @@ import {
   getSlots, setSlot, deleteSlot, isSlotAvailable, getSlotsForDate, createTimeSlot, deleteSlotById,
   createConnection, getConnections, getConnectionCount, getFullChain,
   getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink,
+  getLichtungImages, addLichtungImage, deleteLichtungImage,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
 } from './db.js'
@@ -376,6 +377,25 @@ app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) =
   const image_path = `/uploads/${req.file.filename}`
   updateLichtung(req.params.id, { image_path })
   res.json({ image_path })
+})
+
+// ─── Lichtung Galerie ───
+
+app.get('/api/lichtungen/:id/gallery', (req, res) => {
+  res.json(getLichtungImages(req.params.id))
+})
+
+app.post('/api/lichtungen/:id/gallery', auth, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Kein Bild' })
+  const caption = req.body.caption || ''
+  const result = addLichtungImage(req.params.id, req.userId, req.file.filename, caption)
+  res.json({ ...result, path: `/uploads/${req.file.filename}` })
+})
+
+app.delete('/api/lichtungen/:id/gallery/:imageId', auth, (req, res) => {
+  const filename = deleteLichtungImage(req.params.imageId, req.userId)
+  if (!filename) return res.status(403).json({ error: 'Keine Berechtigung' })
+  res.json({ ok: true })
 })
 
 // ─── Lichtung Telegram Links ───

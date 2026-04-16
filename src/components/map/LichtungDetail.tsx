@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2 } from 'lucide-react'
+import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
 import { FullCalendar } from './FullCalendar'
 import * as api from '../../api/client'
@@ -23,7 +24,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'info' | 'kalender' | 'community'>('info')
+  const [tab, setTab] = useState<'info' | 'kalender' | 'galerie' | 'community'>('info')
   const [copied, setCopied] = useState(false)
   const [members, setMembers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
@@ -136,10 +137,10 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
       {/* Tabs */}
       <div className="flex px-5 pt-3 gap-0.5 overflow-x-auto" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        {['info', 'kalender', 'community'].map(key => (
+        {['info', 'kalender', 'galerie', 'community'].map(key => (
           <button key={key} onClick={() => setTab(key as any)} className="pb-2 px-2.5 shrink-0"
             style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.35)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#7BAE5E' : 'transparent'}`, cursor: 'pointer' }}>
-            {key === 'info' ? 'Info' : key === 'kalender' ? 'Kalender' : `Community (${members.length})`}
+            {key === 'info' ? 'Info' : key === 'kalender' ? 'Kalender' : key === 'galerie' ? 'Galerie' : `Community (${members.length})`}
           </button>
         ))}
       </div>
@@ -379,6 +380,9 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
               )}
             </div>
           </>
+        )}
+        {tab === 'galerie' && (
+          <LichtungGallery lichtungId={lichtungId} canUpload={!!myRole} />
         )}
         {tab === 'community' && (
           <>

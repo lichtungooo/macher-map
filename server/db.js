@@ -141,6 +141,18 @@ try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN end_hour INTEGER') } catch 
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN parallel_slots INTEGER DEFAULT 1') } catch {}
 try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER DEFAULT 0') } catch {}
 
+// Galerie-Tabelle
+db.exec(`
+  CREATE TABLE IF NOT EXISTS lichtung_images (
+    id TEXT PRIMARY KEY,
+    lichtung_id TEXT NOT NULL REFERENCES lichtungen(id),
+    user_id TEXT NOT NULL REFERENCES users(id),
+    filename TEXT NOT NULL,
+    caption TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`)
+
 // Migration: bestehende Lichtungen ohne Owner-Member -> Ersteller als Owner setzen
 try {
   const lichtungen = db.prepare('SELECT id, user_id FROM lichtungen').all()
@@ -598,6 +610,34 @@ export function verifyInviteToken(token) {
   if (!row || new Date(row.expires_at) < new Date()) return null
   db.prepare('UPDATE invite_tokens SET used = 1 WHERE token = ?').run(token)
   return row.user_id
+}
+
+// ─── Lichtung Galerie ───
+
+export function getLichtungImages(lichtungId) {
+  return db.prepare(`
+    SELECT i.id, i.filename, i.caption, i.created_at, u.name as user_name
+    FROM lichtung_images i JOIN users u ON i.user_id = u.id
+    WHERE i.lichtung_id = ?
+    ORDER BY i.created_at DESC
+  `).all(lichtungId)
+}
+
+export function addLichtungImage(lichtungId, userId, filename, caption) {
+  const id = randomUUID()
+  db.prepare('INSERT INTO lichtung_images (id, lichtung_id, user_id, filename, caption) VALUES (?, ?, ?, ?, ?)').run(id, lichtungId, userId, filename, caption || '')
+  return { id, filename }
+}
+
+export function deleteLichtungImage(imageId, userId) {
+  const img = db.prepare('SELECT * FROM lichtung_images WHERE id = ?').get(imageId)
+  if (!img) return false
+  if (img.user_id !== userId) {
+    const user = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(userId)
+    if (!user?.is_admin) return false
+  }
+  db.prepare('DELETE FROM lichtung_images WHERE id = ?').run(imageId)
+  return img.filename
 }
 
 export default db
