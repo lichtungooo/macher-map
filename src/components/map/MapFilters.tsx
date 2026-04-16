@@ -4,9 +4,10 @@ import { Sparkles, CalendarDays, Map } from 'lucide-react'
 const BTN_SIZE = 38
 
 const LAYERS = [
-  { key: 'osm_de', label: 'Deutschland' },
+  { key: 'osm_de', label: 'Deutsch (DE)' },
+  { key: 'osm', label: 'Standard' },
   { key: 'voyager', label: 'Voyager' },
-  { key: 'positron', label: 'Fein' },
+  { key: 'positron', label: 'Hell' },
 ]
 
 interface MapFiltersProps {

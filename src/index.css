@@ -246,9 +246,9 @@ body {
   touch-action: manipulation;
 }
 
-/* Dezenter warmer Farbton auf den Kartenkacheln */
+/* Karte: Farben leicht kraeftiger */
 .map-tiles-warm {
-  filter: saturate(0.92) brightness(1.01) sepia(0.04);
+  filter: saturate(1.1) contrast(1.03);
 }
 
 .leaflet-container .leaflet-grab {
