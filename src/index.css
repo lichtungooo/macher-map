@@ -238,6 +238,31 @@ body {
 
 /* ─── MapLibre ─── */
 
+.maplibregl-map {
+  font-family: var(--font-sans);
+}
+
+/* Zoom-Buttons: links, mittig vertikal */
+.maplibregl-ctrl-top-left {
+  top: 50% !important;
+  transform: translateY(-50%);
+}
+
+.maplibregl-ctrl-top-left .maplibregl-ctrl {
+  margin: 0 0 0 10px !important;
+}
+
+.maplibregl-ctrl-group {
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(10,10,10,0.06) !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: 36px !important;
+  height: 36px !important;
+}
+
 /* MapLibre Popup Styling */
 .maplibregl-popup-content {
   background: rgba(255, 255, 255, 0.97) !important;
