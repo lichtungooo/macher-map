@@ -17,13 +17,17 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  margin: 0;
-  padding: 0;
   background-color: #FFFFFF;
   color: var(--color-ink);
   font-family: var(--font-sans);

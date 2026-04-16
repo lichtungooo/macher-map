@@ -301,8 +301,8 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
   return (
     <div
       ref={mapContainer}
-      className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
-      style={{ position: 'absolute', inset: 0 }}
+      className={placingLight ? 'cursor-wand' : ''}
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
     />
   )
 }
