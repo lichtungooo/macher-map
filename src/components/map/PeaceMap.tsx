@@ -26,57 +26,43 @@ interface PeaceMapProps {
   showChain?: boolean
 }
 
-let pinCounter = 0
+// ─── Marker-Elemente (reines CSS, wie auf Leaflet) ───
 
 function createLightEl() {
-  const id = `lg${pinCounter++}`
   const el = document.createElement('div')
-  el.style.width = '32px'
-  el.style.height = '32px'
-  el.style.cursor = 'pointer'
-  el.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="${id}" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#FFFFF0" stop-opacity="1"/>
-        <stop offset="25%" stop-color="#FFF8D0" stop-opacity="0.9"/>
-        <stop offset="55%" stop-color="#F5E090" stop-opacity="0.5"/>
-        <stop offset="100%" stop-color="#D4A843" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <circle cx="16" cy="16" r="14" fill="url(#${id})" opacity="0.9"/>
-    <circle cx="16" cy="16" r="5" fill="#FFFFF0" opacity="0.95"/>
-    <circle cx="16" cy="16" r="2" fill="#fff"/>
-  </svg>`
   el.className = 'light-pin-marker'
+  el.style.cssText = 'width:28px;height:28px;border-radius:50%;cursor:pointer;background:radial-gradient(circle,#FFFFF0 0%,#FFF8D0 20%,#F5E090 45%,rgba(212,168,67,0) 100%);position:relative;'
+  // Leuchtender Kern
+  const core = document.createElement('div')
+  core.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#FFFFF0 50%,rgba(255,248,200,0) 100%);'
+  el.appendChild(core)
   return el
 }
 
 function createEventEl() {
   const el = document.createElement('div')
-  el.style.width = '26px'
-  el.style.height = '26px'
-  el.style.cursor = 'pointer'
-  el.style.background = 'rgba(160,124,192,0.15)'
-  el.style.borderRadius = '50%'
-  el.style.border = '2px solid rgba(160,124,192,0.4)'
-  el.style.display = 'flex'
-  el.style.alignItems = 'center'
-  el.style.justifyContent = 'center'
-  el.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:#A07CC0"></div>`
+  el.className = 'event-pin-marker'
+  el.style.cssText = 'width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+  el.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="14" fill="rgba(160,124,192,0.12)" stroke="#A07CC0" stroke-width="1.5"/>
+    <rect x="11" y="10" width="10" height="11" rx="1.5" fill="none" stroke="#A07CC0" stroke-width="1.3"/>
+    <line x1="13" y1="9" x2="13" y2="12" stroke="#A07CC0" stroke-width="1.3" stroke-linecap="round"/>
+    <line x1="19" y1="9" x2="19" y2="12" stroke="#A07CC0" stroke-width="1.3" stroke-linecap="round"/>
+    <line x1="11" y1="15" x2="21" y2="15" stroke="#A07CC0" stroke-width="0.8"/>
+  </svg>`
   return el
 }
 
 function createLichtungEl(name: string) {
   const el = document.createElement('div')
-  el.style.cursor = 'pointer'
-  el.style.display = 'flex'
-  el.style.alignItems = 'center'
-  el.style.gap = '6px'
+  el.style.cssText = 'cursor:pointer;display:flex;align-items:center;gap:6px;'
   el.innerHTML = `
-    <div style="width:28px;height:28px;border-radius:50%;background:rgba(123,174,94,0.12);border:2px solid #7BAE5E;display:flex;align-items:center;justify-content:center">
-      <div style="width:8px;height:8px;border-radius:50%;background:#7BAE5E"></div>
-    </div>
-    <span style="font-family:Inter,sans-serif;font-size:0.7rem;font-weight:500;color:#7BAE5E;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,0.8)">${name}</span>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="16" r="14" fill="rgba(123,174,94,0.1)" stroke="#7BAE5E" stroke-width="1.5"/>
+      <path d="M16 10 C16 10 11 16 11 19 C11 21.8 13.2 24 16 24 C18.8 24 21 21.8 21 19 C21 16 16 10 16 10Z" fill="#7BAE5E" opacity="0.7"/>
+      <circle cx="16" cy="18" r="2" fill="#fff" opacity="0.8"/>
+    </svg>
+    <span style="font-family:Inter,sans-serif;font-size:0.68rem;font-weight:600;color:#5a9240;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,0.9),0 0 6px rgba(255,255,255,0.6)">${name}</span>
   `
   return el
 }
