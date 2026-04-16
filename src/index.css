@@ -287,25 +287,38 @@ body {
   border-top-color: rgba(255, 255, 255, 0.97) !important;
 }
 
-/* MapLibre Logo verstecken */
-.maplibregl-ctrl-logo {
+/* MapLibre Logo und Attribution komplett verstecken */
+.maplibregl-ctrl-logo,
+.mapboxgl-ctrl-logo,
+.maplibregl-ctrl-attrib {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
 }
 
-/* Leuchtende Light-Pin-Marker — gross und leuchtend */
+/* Leuchtende Light-Pin-Marker — stabil mit GPU-Beschleunigung */
 .light-pin-marker {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
   animation: light-breathe 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5)) drop-shadow(0 0 20px rgba(212, 168, 67, 0.25));
+}
+
+.light-pin-marker svg {
+  filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5)) drop-shadow(0 0 16px rgba(212, 168, 67, 0.2));
 }
 
 @keyframes light-breathe {
   0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5)) drop-shadow(0 0 20px rgba(212, 168, 67, 0.25));
+    transform: translateZ(0) scale(1);
   }
   50% {
-    transform: scale(1.12);
-    filter: drop-shadow(0 0 14px rgba(212, 168, 67, 0.7)) drop-shadow(0 0 30px rgba(212, 168, 67, 0.35));
+    transform: translateZ(0) scale(1.1);
   }
 }
 

@@ -29,42 +29,94 @@ interface PeaceMapProps {
 // ─── Marker-Elemente ───
 
 let _pid = 0
+
 function createLightEl() {
   const id = 'lp' + (_pid++)
   const el = document.createElement('div')
   el.className = 'light-pin-marker'
-  el.style.cssText = 'width:52px;height:52px;cursor:pointer;'
-  el.innerHTML = `<svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="${id}a" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#FFFFF3" stop-opacity="1"/>
-        <stop offset="10%" stop-color="#FEF4D2" stop-opacity="1"/>
-        <stop offset="25%" stop-color="#FAECC3" stop-opacity=".95"/>
-        <stop offset="42%" stop-color="#F4E3BB" stop-opacity=".8"/>
-        <stop offset="60%" stop-color="#EED9AC" stop-opacity=".5"/>
-        <stop offset="78%" stop-color="#DEC895" stop-opacity=".2"/>
-        <stop offset="100%" stop-color="#DEC895" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="${id}b" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
-        <stop offset="35%" stop-color="#FFFFF3" stop-opacity=".95"/>
-        <stop offset="100%" stop-color="#FEF4D2" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <circle cx="26" cy="26" r="25" fill="url(#${id}a)"/>
-    <circle cx="26" cy="26" r="19" fill="none" stroke="#F4E3BB" stroke-width=".6" opacity=".5"/>
-    <circle cx="26" cy="26" r="14" fill="none" stroke="#FAECC3" stroke-width=".5" opacity=".4"/>
-    <circle cx="26" cy="26" r="9" fill="none" stroke="#FEF4D2" stroke-width=".4" opacity=".35"/>
-    <circle cx="26" cy="26" r="5.5" fill="url(#${id}b)"/>
-    <circle cx="26" cy="26" r="2.5" fill="#fff" opacity=".95"/>
-  </svg>`
+  // will-change und backface-visibility fuer stabile GPU-Beschleunigung
+  el.style.cssText = 'width:52px;height:52px;cursor:pointer;will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;'
+
+  // SVG als DOM-Elemente statt innerHTML — stabiler bei MapLibre
+  const ns = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(ns, 'svg')
+  svg.setAttribute('width', '52')
+  svg.setAttribute('height', '52')
+  svg.setAttribute('viewBox', '0 0 52 52')
+
+  const defs = document.createElementNS(ns, 'defs')
+
+  // Gradient A — aeusserer Glow
+  const gradA = document.createElementNS(ns, 'radialGradient')
+  gradA.id = `${id}a`
+  gradA.setAttribute('cx', '50%')
+  gradA.setAttribute('cy', '50%')
+  gradA.setAttribute('r', '50%')
+  const stopsA = [
+    ['0%', '#FFFFF3', '1'], ['10%', '#FEF4D2', '1'],
+    ['25%', '#FAECC3', '.95'], ['42%', '#F4E3BB', '.8'],
+    ['60%', '#EED9AC', '.5'], ['78%', '#DEC895', '.2'],
+    ['100%', '#DEC895', '0'],
+  ]
+  for (const [offset, color, opacity] of stopsA) {
+    const stop = document.createElementNS(ns, 'stop')
+    stop.setAttribute('offset', offset)
+    stop.setAttribute('stop-color', color)
+    stop.setAttribute('stop-opacity', opacity)
+    gradA.appendChild(stop)
+  }
+
+  // Gradient B — innerer Kern
+  const gradB = document.createElementNS(ns, 'radialGradient')
+  gradB.id = `${id}b`
+  gradB.setAttribute('cx', '50%')
+  gradB.setAttribute('cy', '50%')
+  gradB.setAttribute('r', '50%')
+  const stopsB = [
+    ['0%', '#fff', '1'], ['35%', '#FFFFF3', '.95'], ['100%', '#FEF4D2', '0'],
+  ]
+  for (const [offset, color, opacity] of stopsB) {
+    const stop = document.createElementNS(ns, 'stop')
+    stop.setAttribute('offset', offset)
+    stop.setAttribute('stop-color', color)
+    stop.setAttribute('stop-opacity', opacity)
+    gradB.appendChild(stop)
+  }
+
+  defs.appendChild(gradA)
+  defs.appendChild(gradB)
+  svg.appendChild(defs)
+
+  // Kreise
+  const circles = [
+    { cx: 26, cy: 26, r: 25, fill: `url(#${id}a)` },
+    { cx: 26, cy: 26, r: 19, fill: 'none', stroke: '#F4E3BB', strokeWidth: '.6', opacity: '.5' },
+    { cx: 26, cy: 26, r: 14, fill: 'none', stroke: '#FAECC3', strokeWidth: '.5', opacity: '.4' },
+    { cx: 26, cy: 26, r: 9, fill: 'none', stroke: '#FEF4D2', strokeWidth: '.4', opacity: '.35' },
+    { cx: 26, cy: 26, r: 5.5, fill: `url(#${id}b)` },
+    { cx: 26, cy: 26, r: 2.5, fill: '#fff', opacity: '.95' },
+  ]
+
+  for (const c of circles) {
+    const circle = document.createElementNS(ns, 'circle')
+    circle.setAttribute('cx', String(c.cx))
+    circle.setAttribute('cy', String(c.cy))
+    circle.setAttribute('r', String(c.r))
+    circle.setAttribute('fill', c.fill || 'none')
+    if (c.stroke) circle.setAttribute('stroke', c.stroke)
+    if (c.strokeWidth) circle.setAttribute('stroke-width', c.strokeWidth)
+    if (c.opacity) circle.setAttribute('opacity', c.opacity)
+    svg.appendChild(circle)
+  }
+
+  el.appendChild(svg)
   return el
 }
 
 function createEventEl() {
   const el = document.createElement('div')
   el.className = 'event-pin-marker'
-  el.style.cssText = 'width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+  el.style.cssText = 'width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;will-change:transform;'
   el.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="16" cy="16" r="14" fill="rgba(160,124,192,0.12)" stroke="#A07CC0" stroke-width="1.5"/>
     <rect x="11" y="10" width="10" height="11" rx="1.5" fill="none" stroke="#A07CC0" stroke-width="1.3"/>
@@ -77,7 +129,7 @@ function createEventEl() {
 
 function createLichtungEl(name: string) {
   const el = document.createElement('div')
-  el.style.cssText = 'cursor:pointer;display:flex;align-items:center;gap:6px;'
+  el.style.cssText = 'cursor:pointer;display:flex;align-items:center;gap:6px;will-change:transform;'
   el.innerHTML = `
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="14" fill="rgba(123,174,94,0.1)" stroke="#7BAE5E" stroke-width="1.5"/>
@@ -131,11 +183,15 @@ function eventPopupHtml(event: EventItem) {
   </div>`
 }
 
+// ─── Map Component ───
+
 export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile }: PeaceMapProps) {
   const { lights, events } = useApp()
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const markersRef = useRef<maplibregl.Marker[]>([])
+  // Click-Handler refs fuer Cleanup
+  const clickHandlersRef = useRef<Map<HTMLElement, () => void>>(new Map())
 
   const styleKey = localStorage.getItem('lichtung-map-style') || 'liberty'
   const styleUrl = STYLES[styleKey] || STYLES.liberty
@@ -150,32 +206,42 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       center: [10.0, 50.0],
       zoom: 4.5,
       attributionControl: false,
-      logoPosition: 'bottom-right',
     })
 
-    // MapLibre-Logo und Navigation ausblenden — wir haben eigenes UI
+    // Navigation-Control unten links, kein Logo
     map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true }), 'bottom-left')
 
-    // Resize nach dem Laden und bei jeder Aenderung
+    // MapLibre-Logo sofort und nach dem Laden entfernen
+    const removeLogo = () => {
+      const logos = map.getContainer().querySelectorAll('.maplibregl-ctrl-logo, .maplibregl-ctrl-attrib, .mapboxgl-ctrl-logo')
+      logos.forEach(el => (el as HTMLElement).style.display = 'none')
+    }
+    removeLogo()
+    map.on('load', removeLogo)
+    // Sicherheitshalber nochmal nach kurzer Verzoegerung
+    setTimeout(removeLogo, 200)
+    setTimeout(removeLogo, 1000)
+
     const doResize = () => { map.resize() }
     map.on('load', doResize)
-    // Mehrfach resize — MapLibre braucht manchmal einen Moment
     setTimeout(doResize, 100)
     setTimeout(doResize, 500)
-    setTimeout(doResize, 1500)
     window.addEventListener('resize', doResize)
 
     mapRef.current = map
-    return () => { window.removeEventListener('resize', doResize); map.remove(); mapRef.current = null }
+    return () => {
+      window.removeEventListener('resize', doResize)
+      map.remove()
+      mapRef.current = null
+    }
   }, [styleUrl])
 
-  // Click handler mit Funken-Effekt
+  // Click handler
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     const handler = (e: maplibregl.MapMouseEvent) => {
       if (placingLight && onMapClick) {
-        // Funken-Effekt
         const point = e.point
         if (point) {
           const canvas = map.getCanvas()
@@ -236,12 +302,18 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
     mapRef.current.easeTo({ zoom, duration: 300 })
   }, [zoomToRadius])
 
-  // Render markers
+  // Render markers — mit sauberem Cleanup
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
-    // Clear old
+    // Cleanup: alte Event-Listener entfernen
+    clickHandlersRef.current.forEach((handler, el) => {
+      el.removeEventListener('click', handler)
+    })
+    clickHandlersRef.current.clear()
+
+    // Alte Marker entfernen
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
@@ -249,13 +321,17 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
     if (showLights) {
       for (const light of lights) {
         const pos = light.position
-        if (!pos[0] || !pos[1]) continue
+        if (!pos || !pos[0] || !pos[1]) continue
         const el = createLightEl()
 
-        el.addEventListener('click', (e) => {
-          e.stopPropagation()
-          if (onShowProfile) onShowProfile(light)
-        })
+        if (onShowProfile) {
+          const handler = (e: Event) => {
+            e.stopPropagation()
+            onShowProfile(light)
+          }
+          el.addEventListener('click', handler)
+          clickHandlersRef.current.set(el, handler as () => void)
+        }
 
         const popup = new maplibregl.Popup({ offset: 18, closeButton: false, maxWidth: '220px' })
           .setHTML(popupHtml(light))
@@ -272,7 +348,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
     if (showEvents) {
       for (const event of events) {
         const pos = event.position
-        if (!pos[0] || !pos[1]) continue
+        if (!pos || !pos[0] || !pos[1]) continue
         const el = createEventEl()
 
         const popup = new maplibregl.Popup({ offset: 16, closeButton: false, maxWidth: '240px' })
@@ -290,15 +366,30 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
     for (const l of lichtungen) {
       if (!l.lat || !l.lng) continue
       const el = createLichtungEl(l.name || '')
-      el.addEventListener('click', (e) => {
-        e.stopPropagation()
-        if (onLichtungClick) onLichtungClick(l.id)
-      })
+
+      if (onLichtungClick) {
+        const handler = (e: Event) => {
+          e.stopPropagation()
+          onLichtungClick(l.id)
+        }
+        el.addEventListener('click', handler)
+        clickHandlersRef.current.set(el, handler as () => void)
+      }
 
       const marker = new maplibregl.Marker({ element: el, anchor: 'left' })
         .setLngLat([l.lng, l.lat])
         .addTo(map)
       markersRef.current.push(marker)
+    }
+
+    // Cleanup bei Unmount oder Re-Render
+    return () => {
+      clickHandlersRef.current.forEach((handler, el) => {
+        el.removeEventListener('click', handler)
+      })
+      clickHandlersRef.current.clear()
+      markersRef.current.forEach(m => m.remove())
+      markersRef.current = []
     }
   }, [lights, events, lichtungen, showLights, showEvents, onLichtungClick, onShowProfile])
 
