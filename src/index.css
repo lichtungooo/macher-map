@@ -287,15 +287,26 @@ body {
   border-top-color: rgba(255, 255, 255, 0.97) !important;
 }
 
-/* Leuchtende Light-Pin-Marker */
+/* MapLibre Logo verstecken */
+.maplibregl-ctrl-logo {
+  display: none !important;
+}
+
+/* Leuchtende Light-Pin-Marker — gross und leuchtend */
 .light-pin-marker {
   animation: light-breathe 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 4px rgba(212, 168, 67, 0.35));
+  filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5)) drop-shadow(0 0 20px rgba(212, 168, 67, 0.25));
 }
 
 @keyframes light-breathe {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(212, 168, 67, 0.35)); }
-  50% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5)); }
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5)) drop-shadow(0 0 20px rgba(212, 168, 67, 0.25));
+  }
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 14px rgba(212, 168, 67, 0.7)) drop-shadow(0 0 30px rgba(212, 168, 67, 0.35));
+  }
 }
 
 /* Event-Pin */

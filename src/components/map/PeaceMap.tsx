@@ -33,31 +33,30 @@ function createLightEl() {
   const id = 'lp' + (_pid++)
   const el = document.createElement('div')
   el.className = 'light-pin-marker'
-  el.style.cssText = 'width:36px;height:36px;cursor:pointer;'
-  // Mehrstufiges SVG wie das Lichtungs-Logo — konzentrische Ringe + leuchtender Kern
-  el.innerHTML = `<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+  el.style.cssText = 'width:52px;height:52px;cursor:pointer;'
+  el.innerHTML = `<svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <radialGradient id="${id}a" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="#FFFFF3" stop-opacity="1"/>
-        <stop offset="12%" stop-color="#FEF4D2" stop-opacity="1"/>
-        <stop offset="28%" stop-color="#FAECC3" stop-opacity=".95"/>
-        <stop offset="48%" stop-color="#F4E3BB" stop-opacity=".75"/>
-        <stop offset="68%" stop-color="#EED9AC" stop-opacity=".4"/>
-        <stop offset="85%" stop-color="#DEC895" stop-opacity=".15"/>
+        <stop offset="10%" stop-color="#FEF4D2" stop-opacity="1"/>
+        <stop offset="25%" stop-color="#FAECC3" stop-opacity=".95"/>
+        <stop offset="42%" stop-color="#F4E3BB" stop-opacity=".8"/>
+        <stop offset="60%" stop-color="#EED9AC" stop-opacity=".5"/>
+        <stop offset="78%" stop-color="#DEC895" stop-opacity=".2"/>
         <stop offset="100%" stop-color="#DEC895" stop-opacity="0"/>
       </radialGradient>
       <radialGradient id="${id}b" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
-        <stop offset="40%" stop-color="#FFFFF3" stop-opacity=".9"/>
+        <stop offset="35%" stop-color="#FFFFF3" stop-opacity=".95"/>
         <stop offset="100%" stop-color="#FEF4D2" stop-opacity="0"/>
       </radialGradient>
     </defs>
-    <circle cx="18" cy="18" r="17" fill="url(#${id}a)"/>
-    <circle cx="18" cy="18" r="13.5" fill="none" stroke="#F4E3BB" stroke-width=".5" opacity=".45"/>
-    <circle cx="18" cy="18" r="10" fill="none" stroke="#FAECC3" stroke-width=".4" opacity=".35"/>
-    <circle cx="18" cy="18" r="6.5" fill="none" stroke="#FEF4D2" stroke-width=".35" opacity=".3"/>
-    <circle cx="18" cy="18" r="4" fill="url(#${id}b)"/>
-    <circle cx="18" cy="18" r="1.8" fill="#fff" opacity=".95"/>
+    <circle cx="26" cy="26" r="25" fill="url(#${id}a)"/>
+    <circle cx="26" cy="26" r="19" fill="none" stroke="#F4E3BB" stroke-width=".6" opacity=".5"/>
+    <circle cx="26" cy="26" r="14" fill="none" stroke="#FAECC3" stroke-width=".5" opacity=".4"/>
+    <circle cx="26" cy="26" r="9" fill="none" stroke="#FEF4D2" stroke-width=".4" opacity=".35"/>
+    <circle cx="26" cy="26" r="5.5" fill="url(#${id}b)"/>
+    <circle cx="26" cy="26" r="2.5" fill="#fff" opacity=".95"/>
   </svg>`
   return el
 }
@@ -151,9 +150,11 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       center: [10.0, 50.0],
       zoom: 4.5,
       attributionControl: false,
+      logoPosition: 'bottom-right',
     })
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left')
+    // MapLibre-Logo und Navigation ausblenden — wir haben eigenes UI
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true }), 'bottom-left')
 
     // Resize nach dem Laden und bei jeder Aenderung
     const doResize = () => { map.resize() }
