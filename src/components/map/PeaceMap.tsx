@@ -155,14 +155,17 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left')
 
-    // Resize nach dem Laden damit die Karte den vollen Container fuellt
-    map.on('load', () => map.resize())
-    // Auch bei Window-Resize
-    const onResize = () => map.resize()
-    window.addEventListener('resize', onResize)
+    // Resize nach dem Laden und bei jeder Aenderung
+    const doResize = () => { map.resize() }
+    map.on('load', doResize)
+    // Mehrfach resize — MapLibre braucht manchmal einen Moment
+    setTimeout(doResize, 100)
+    setTimeout(doResize, 500)
+    setTimeout(doResize, 1500)
+    window.addEventListener('resize', doResize)
 
     mapRef.current = map
-    return () => { window.removeEventListener('resize', onResize); map.remove(); mapRef.current = null }
+    return () => { window.removeEventListener('resize', doResize); map.remove(); mapRef.current = null }
   }, [styleUrl])
 
   // Click handler mit Funken-Effekt
