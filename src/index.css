@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "maplibre-gl/dist/maplibre-gl.css";
+@import "leaflet/dist/leaflet.css";
 
 @theme {
   --color-gold: #D4A843;
@@ -173,8 +173,7 @@ body {
 /* Desktop: Cursor verstecken wenn Zauberstab aktiv */
 .cursor-wand,
 .cursor-wand *,
-.cursor-wand .maplibregl-map,
-.cursor-wand .maplibregl-canvas {
+.cursor-wand .leaflet-container {
   cursor: none !important;
 }
 
@@ -182,7 +181,7 @@ body {
 @media (pointer: coarse) {
   .cursor-wand,
   .cursor-wand *,
-  .cursor-wand .maplibregl-map {
+  .cursor-wand .leaflet-container {
     cursor: default !important;
   }
 }
@@ -240,64 +239,29 @@ body {
   animation: sparkle-particle 0.6s ease-out forwards;
 }
 
-/* ─── MapLibre ─── */
+/* ─── Leaflet Popup Styling ─── */
 
-.maplibregl-map {
-  font-family: var(--font-sans);
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.maplibregl-canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* Zoom-Buttons: links, mittig vertikal */
-.maplibregl-ctrl-top-left {
-  top: 50% !important;
-  transform: translateY(-50%);
-}
-
-.maplibregl-ctrl-top-left .maplibregl-ctrl {
-  margin: 0 0 0 10px !important;
-}
-
-.maplibregl-ctrl-group {
-  border-radius: 10px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-  border: 1px solid rgba(10,10,10,0.06) !important;
-}
-
-.maplibregl-ctrl-group button {
-  width: 36px !important;
-  height: 36px !important;
-}
-
-/* MapLibre Popup Styling */
-.maplibregl-popup-content {
+.leaflet-popup-content-wrapper {
   background: rgba(255, 255, 255, 0.97) !important;
   border: 1px solid rgba(10, 10, 10, 0.06) !important;
   border-radius: 12px !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-  padding: 12px !important;
+  padding: 4px !important;
 }
 
-.maplibregl-popup-tip {
-  border-top-color: rgba(255, 255, 255, 0.97) !important;
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.97) !important;
 }
 
-/* MapLibre Logo und Attribution komplett verstecken */
-.maplibregl-ctrl-logo,
-.mapboxgl-ctrl-logo,
-.maplibregl-ctrl-attrib {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  position: absolute !important;
-  pointer-events: none !important;
+.leaflet-popup-close-button {
+  color: rgba(10, 10, 10, 0.3) !important;
+  font-size: 18px !important;
+}
+
+/* Leaflet Container */
+.leaflet-container {
+  background: #F5F4F0 !important;
+  font-family: var(--font-sans);
 }
 
 /* Leuchtende Light-Pin-Marker — stabil mit GPU-Beschleunigung */
