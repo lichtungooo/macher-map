@@ -124,22 +124,36 @@ function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   return null
 }
 
+const isRetina = window.devicePixelRatio > 1
+
 const TILE_LAYERS = {
   osm_de: {
     url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    tileSize: isRetina ? 128 : 256,
+    zoomOffset: isRetina ? 1 : 0,
   },
   osm: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    tileSize: isRetina ? 128 : 256,
+    zoomOffset: isRetina ? 1 : 0,
   },
   voyager: {
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    url: isRetina
+      ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap &copy; CARTO',
+    tileSize: 256,
+    zoomOffset: 0,
   },
   positron: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    url: isRetina
+      ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap &copy; CARTO',
+    tileSize: 256,
+    zoomOffset: 0,
   },
 }
 
@@ -163,6 +177,8 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <TileLayer
         url={tile.url}
         attribution={tile.attribution}
+        tileSize={tile.tileSize}
+        zoomOffset={tile.zoomOffset}
         className="map-tiles-warm"
       />
 
