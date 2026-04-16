@@ -240,6 +240,13 @@ body {
 
 .maplibregl-map {
   font-family: var(--font-sans);
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Zoom-Buttons: links, mittig vertikal */

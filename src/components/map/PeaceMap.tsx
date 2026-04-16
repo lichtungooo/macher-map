@@ -153,11 +153,16 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       attributionControl: false,
     })
 
-    // Zoom-Buttons links mittig
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left')
 
+    // Resize nach dem Laden damit die Karte den vollen Container fuellt
+    map.on('load', () => map.resize())
+    // Auch bei Window-Resize
+    const onResize = () => map.resize()
+    window.addEventListener('resize', onResize)
+
     mapRef.current = map
-    return () => { map.remove(); mapRef.current = null }
+    return () => { window.removeEventListener('resize', onResize); map.remove(); mapRef.current = null }
   }, [styleUrl])
 
   // Click handler mit Funken-Effekt
