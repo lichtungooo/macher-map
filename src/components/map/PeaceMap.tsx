@@ -124,9 +124,26 @@ function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   return null
 }
 
+const TILE_LAYERS = {
+  osm_de: {
+    url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  },
+  positron: {
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+  },
+  voyager: {
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+  },
+}
+
 export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile, chainData = [], showChain }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
+  const tileKey = (localStorage.getItem('lichtung-tile-layer') || 'osm_de') as keyof typeof TILE_LAYERS
+  const tile = TILE_LAYERS[tileKey] || TILE_LAYERS.osm_de
 
   return (
     <MapContainer
@@ -140,8 +157,9 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       className={`h-full w-full ${placingLight ? 'cursor-wand' : ''}`}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        attribution='&copy; OpenStreetMap &copy; CARTO'
+        url={tile.url}
+        attribution={tile.attribution}
+        className="map-tiles-warm"
       />
 
       <MapClickHandler onMapClick={onMapClick} placingLight={placingLight} />
