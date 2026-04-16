@@ -26,16 +26,39 @@ interface PeaceMapProps {
   showChain?: boolean
 }
 
-// ─── Marker-Elemente (reines CSS, wie auf Leaflet) ───
+// ─── Marker-Elemente ───
 
+let _pid = 0
 function createLightEl() {
+  const id = 'lp' + (_pid++)
   const el = document.createElement('div')
   el.className = 'light-pin-marker'
-  el.style.cssText = 'width:28px;height:28px;border-radius:50%;cursor:pointer;background:radial-gradient(circle,#FFFFF0 0%,#FFF8D0 20%,#F5E090 45%,rgba(212,168,67,0) 100%);position:relative;'
-  // Leuchtender Kern
-  const core = document.createElement('div')
-  core.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#FFFFF0 50%,rgba(255,248,200,0) 100%);'
-  el.appendChild(core)
+  el.style.cssText = 'width:36px;height:36px;cursor:pointer;'
+  // Mehrstufiges SVG wie das Lichtungs-Logo — konzentrische Ringe + leuchtender Kern
+  el.innerHTML = `<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="${id}a" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFFFF3" stop-opacity="1"/>
+        <stop offset="12%" stop-color="#FEF4D2" stop-opacity="1"/>
+        <stop offset="28%" stop-color="#FAECC3" stop-opacity=".95"/>
+        <stop offset="48%" stop-color="#F4E3BB" stop-opacity=".75"/>
+        <stop offset="68%" stop-color="#EED9AC" stop-opacity=".4"/>
+        <stop offset="85%" stop-color="#DEC895" stop-opacity=".15"/>
+        <stop offset="100%" stop-color="#DEC895" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="${id}b" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+        <stop offset="40%" stop-color="#FFFFF3" stop-opacity=".9"/>
+        <stop offset="100%" stop-color="#FEF4D2" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="18" cy="18" r="17" fill="url(#${id}a)"/>
+    <circle cx="18" cy="18" r="13.5" fill="none" stroke="#F4E3BB" stroke-width=".5" opacity=".45"/>
+    <circle cx="18" cy="18" r="10" fill="none" stroke="#FAECC3" stroke-width=".4" opacity=".35"/>
+    <circle cx="18" cy="18" r="6.5" fill="none" stroke="#FEF4D2" stroke-width=".35" opacity=".3"/>
+    <circle cx="18" cy="18" r="4" fill="url(#${id}b)"/>
+    <circle cx="18" cy="18" r="1.8" fill="#fff" opacity=".95"/>
+  </svg>`
   return el
 }
 
