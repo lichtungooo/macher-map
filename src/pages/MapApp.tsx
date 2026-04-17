@@ -11,6 +11,7 @@ import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { QRCodeDialog } from '../components/auth/QRCodeDialog'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { EventCalendar } from '../components/events/EventCalendar'
+import { EventDetail } from '../components/events/EventDetail'
 import { Logo } from '../components/Logo'
 import { WandCursor } from '../components/map/WandCursor'
 import { InfoPopup } from '../components/map/InfoPopup'
@@ -58,6 +59,7 @@ function MapAppInner() {
   const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
   const [eventLichtung, setEventLichtung] = useState<{ id: string; name: string } | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [showChain, setShowChain] = useState(false)
   const [chainData, setChainData] = useState<any[]>([])
@@ -346,6 +348,7 @@ function MapAppInner() {
         lichtungen={lichtungen}
         onLichtungClick={id => setSelectedLichtung(id)}
         onShowProfile={light => setSelectedProfile(light)}
+        onShowEvent={event => setSelectedEvent(event)}
         chainData={chainData}
         showChain={showChain}
       />
@@ -513,6 +516,7 @@ function MapAppInner() {
           setDialog('create-event')
         }} />}
       {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
+      {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}
       <InfoPopup />
       <WandCursor active={mode === 'place-light'} />
     </div>

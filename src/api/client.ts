@@ -212,4 +212,10 @@ export async function createInvite() {
   return request('/invite/create', { method: 'POST' })
 }
 
+// ─── Tags ───
+
+export async function searchTags(query: string) {
+  return request(`/tags?q=${encodeURIComponent(query)}`)
+}
+
 export { getToken, setToken, clearToken }

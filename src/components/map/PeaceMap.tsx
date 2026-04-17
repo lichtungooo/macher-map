@@ -21,6 +21,7 @@ interface PeaceMapProps {
   lichtungen?: any[]
   onLichtungClick?: (id: string) => void
   onShowProfile?: (light: any) => void
+  onShowEvent?: (event: any) => void
   chainData?: any[]
   showChain?: boolean
 }
@@ -175,7 +176,7 @@ const TILE_LAYERS = {
   },
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile, chainData = [], showChain }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile, onShowEvent, chainData = [], showChain }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
   const tileKey = (localStorage.getItem('lichtung-tile-layer') || 'osm_de') as keyof typeof TILE_LAYERS
@@ -226,7 +227,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       ))}
 
       {showEvents && events.map(event => (
-        <EventMarker key={event.id} event={event} />
+        <EventMarker key={event.id} event={event} onShowEvent={onShowEvent} />
       ))}
 
       {lichtungen.map(l => (

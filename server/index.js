@@ -22,6 +22,7 @@ import {
   getLichtungImages, addLichtungImage, deleteLichtungImage,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
+  searchTags, ensureTag,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
 
@@ -656,6 +657,13 @@ app.post('/api/admin/change-password', adminAuth, async (req, res) => {
   const user = findUserById(req.userId)
   if (user) setPassword(user.email, hash)
   res.json({ ok: true })
+})
+
+// ─── Tags ───
+
+app.get('/api/tags', (req, res) => {
+  const { q } = req.query
+  res.json(searchTags(q || ''))
 })
 
 // ─── Start ───

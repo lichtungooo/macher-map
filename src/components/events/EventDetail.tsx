@@ -52,7 +52,7 @@ interface EventDetailProps {
   event: EventItem
   userPos?: [number, number] | null
   onClose: () => void
-  onBack: () => void
+  onBack?: () => void
 }
 
 export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProps) {
@@ -106,9 +106,11 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        <button onClick={onBack} className="flex items-center gap-1" style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
-          <ArrowLeft size={14} /> Zurueck
-        </button>
+        {onBack ? (
+          <button onClick={onBack} className="flex items-center gap-1" style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <ArrowLeft size={14} /> Zurueck
+          </button>
+        ) : <div />}
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.25)' }}>
           <X size={18} />
         </button>

@@ -2,22 +2,6 @@ import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import type { EventItem } from '../../context/AppContext'
 
-const EVENT_TYPE_LABELS: Record<EventItem['type'], string> = {
-  meditation: 'Meditation',
-  gebet: 'Gebet',
-  fest: 'Fest',
-  begegnung: 'Begegnung',
-  tanz: 'Tanz',
-  stille: 'Stille',
-}
-
-const RECURRING_LABELS: Record<string, string> = {
-  vollmond: 'Jeden Vollmond',
-  neumond: 'Jeden Neumond',
-  woechentlich: 'Woechentlich',
-  monatlich: 'Monatlich',
-}
-
 function createEventIcon() {
   const svg = `
     <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
@@ -44,41 +28,51 @@ function createEventIcon() {
 
 const eventIcon = createEventIcon()
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+function formatShortDate(dateStr: string) {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) +
+    ', ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
 interface EventMarkerProps {
   event: EventItem
+  onShowEvent?: (event: EventItem) => void
 }
 
-export function EventMarker({ event }: EventMarkerProps) {
+export function EventMarker({ event, onShowEvent }: EventMarkerProps) {
   return (
     <Marker position={event.position} icon={eventIcon}>
       <Popup className="event-popup">
-        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", padding: '4px 0', maxWidth: '220px' }}>
-          <p style={{ fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: '0 0 2px' }}>
+        <div style={{ padding: '4px 0', minWidth: '160px', maxWidth: '220px', textAlign: 'center' }}>
+          {/* Titel */}
+          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: '0 0 2px' }}>
             {event.title}
           </p>
 
-          <p style={{ fontSize: '0.72rem', fontFamily: 'Inter, sans-serif', color: '#D4A843', margin: '0 0 6px', fontWeight: 400 }}>
-            {EVENT_TYPE_LABELS[event.type]}
-            {event.recurring && ` · ${RECURRING_LABELS[event.recurring]}`}
+          {/* Hashtag */}
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#D4A843', margin: '0 0 4px' }}>
+            #{event.type}
           </p>
 
-          <p style={{ fontSize: '0.78rem', fontFamily: 'Inter, sans-serif', color: 'rgba(10,10,10,0.5)', margin: '0 0 6px' }}>
-            {formatDate(event.start)}
+          {/* Datum/Uhrzeit */}
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.45)', margin: '0 0 8px' }}>
+            {formatShortDate(event.start)}
           </p>
 
-          <p style={{ fontSize: '0.88rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.6)', margin: 0, lineHeight: 1.5 }}>
-            {event.description}
-          </p>
+          {/* Zum Event */}
+          {onShowEvent && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onShowEvent(event) }}
+              style={{
+                fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 500,
+                color: '#6B4C8A', background: 'rgba(160,124,192,0.08)',
+                border: '1px solid rgba(160,124,192,0.2)', borderRadius: '6px',
+                padding: '6px 18px', cursor: 'pointer',
+              }}
+            >
+              Zum Event
+            </button>
+          )}
         </div>
       </Popup>
     </Marker>

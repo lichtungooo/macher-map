@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
-import { X, MapPin, Camera, ChevronDown } from 'lucide-react'
-import { useApp, type EventItem } from '../../context/AppContext'
+import { X, MapPin, Camera } from 'lucide-react'
+import { useApp } from '../../context/AppContext'
 import { MarkdownToolbar } from '../auth/MarkdownToolbar'
+import { TagInput } from './TagInput'
 import * as api from '../../api/client'
 
 interface CreateEventDialogProps {
@@ -10,17 +11,6 @@ interface CreateEventDialogProps {
   lichtungName?: string
   onClose: () => void
 }
-
-const TAGS = [
-  { value: 'meditation', label: '#meditation' },
-  { value: 'gebet', label: '#gebet' },
-  { value: 'stille', label: '#stille' },
-  { value: 'begegnung', label: '#begegnung' },
-  { value: 'tanz', label: '#tanz' },
-  { value: 'fest', label: '#fest' },
-  { value: 'musik', label: '#musik' },
-  { value: 'natur', label: '#natur' },
-]
 
 const RECURRING_OPTIONS = [
   { value: '', label: 'Einmalig' },
@@ -34,13 +24,12 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
   const { setEvents } = useApp()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [type, setType] = useState<EventItem['type']>('meditation')
+  const [tags, setTags] = useState<string[]>(['meditation'])
   const [recurring, setRecurring] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('18:00')
   const [maxParticipants, setMaxParticipants] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showTags, setShowTags] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [_imageFile, setImageFile] = useState<File | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -67,7 +56,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
         lat: position[0],
         lng: position[1],
         start_time: `${date}T${time}:00`,
-        type,
+        type: tags[0] || 'meditation',
         recurring: recurring || undefined,
         max_participants: maxParticipants ? Number(maxParticipants) : undefined,
         lichtung_id: lichtungId || undefined,
@@ -147,35 +136,18 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
             </div>
           </div>
 
-          {/* Hashtag + Teilnehmer — kompakt */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="relative">
-              <label style={labelStyle}>Kategorie</label>
-              <button type="button" onClick={() => setShowTags(!showTags)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg"
-                style={{ ...inputStyle, cursor: 'pointer', textAlign: 'left' }}>
-                <span style={{ color: '#D4A843', fontSize: '0.78rem' }}>#{type}</span>
-                <ChevronDown size={14} style={{ color: 'rgba(10,10,10,0.3)' }} />
-              </button>
-              {showTags && (
-                <div className="absolute left-0 right-0 top-full mt-1 rounded-lg shadow-lg p-1.5 z-10 grid grid-cols-2 gap-1" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)' }}>
-                  {TAGS.map(t => (
-                    <button key={t.value} type="button"
-                      onClick={() => { setType(t.value as any); setShowTags(false) }}
-                      className="px-2 py-1.5 rounded text-left"
-                      style={{ ...font, fontSize: '0.7rem', color: type === t.value ? '#D4A843' : 'rgba(10,10,10,0.5)', background: type === t.value ? 'rgba(212,168,67,0.06)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div>
-              <label style={labelStyle}>Teilnehmer</label>
-              <input type="number" min="1" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)}
-                placeholder="unbegrenzt"
-                className="w-full px-3 py-2 rounded-lg outline-none" style={inputStyle} />
-            </div>
+          {/* Hashtags */}
+          <div>
+            <label style={labelStyle}>Hashtags</label>
+            <TagInput value={tags} onChange={setTags} />
+          </div>
+
+          {/* Teilnehmer */}
+          <div>
+            <label style={labelStyle}>Teilnehmer (optional)</label>
+            <input type="number" min="1" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)}
+              placeholder="unbegrenzt"
+              className="w-full px-3 py-2 rounded-lg outline-none" style={inputStyle} />
           </div>
 
           {/* Beschreibung mit Markdown */}

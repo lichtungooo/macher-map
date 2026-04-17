@@ -142,6 +142,39 @@ try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN parallel_slots INTEGER DEFA
 try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 
+// ─── Tags ───
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS tags (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    usage_count INTEGER DEFAULT 0
+  )
+`)
+
+// Vorbefuellte Tags
+const defaultTags = ['meditation', 'gebet', 'stille', 'begegnung', 'tanz', 'fest', 'musik', 'natur', 'yoga', 'feuer', 'gesang', 'wald', 'wasser', 'vollmond', 'neumond', 'frieden', 'liebe', 'heilung', 'gemeinschaft', 'kunst']
+for (const tag of defaultTags) {
+  try { db.prepare('INSERT OR IGNORE INTO tags (id, name) VALUES (?, ?)').run(randomUUID(), tag) } catch {}
+}
+
+export function searchTags(query) {
+  if (!query) return db.prepare('SELECT name FROM tags ORDER BY usage_count DESC, name ASC LIMIT 20').all()
+  return db.prepare('SELECT name FROM tags WHERE name LIKE ? ORDER BY usage_count DESC, name ASC LIMIT 15').all(`${query}%`)
+}
+
+export function ensureTag(name) {
+  const clean = name.toLowerCase().replace(/[^a-zäöüß0-9]/g, '')
+  if (!clean) return null
+  const existing = db.prepare('SELECT name FROM tags WHERE name = ?').get(clean)
+  if (existing) {
+    db.prepare('UPDATE tags SET usage_count = usage_count + 1 WHERE name = ?').run(clean)
+    return clean
+  }
+  db.prepare('INSERT INTO tags (id, name, usage_count) VALUES (?, ?, 1)').run(randomUUID(), clean)
+  return clean
+}
+
 // Galerie-Tabelle
 db.exec(`
   CREATE TABLE IF NOT EXISTS lichtung_images (
