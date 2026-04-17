@@ -4,8 +4,9 @@ import { Sparkles, CalendarDays, Map } from 'lucide-react'
 const BTN_SIZE = 38
 
 const LAYERS = [
-  { key: 'liberty', label: 'Liberty' },
-  { key: 'bright', label: 'Bright' },
+  { key: 'osm_de', label: 'OpenStreetMap DE' },
+  { key: 'osm', label: 'OpenStreetMap' },
+  { key: 'voyager', label: 'Voyager' },
   { key: 'positron', label: 'Positron' },
 ]
 
@@ -18,10 +19,10 @@ interface MapFiltersProps {
 
 export function MapFilters({ showLights, showEvents, onToggleLights, onToggleEvents }: MapFiltersProps) {
   const [showLayerMenu, setShowLayerMenu] = useState(false)
-  const currentLayer = localStorage.getItem('lichtung-map-style') || 'liberty'
+  const currentLayer = localStorage.getItem('lichtung-tile-layer') || 'osm_de'
 
   const switchLayer = (key: string) => {
-    localStorage.setItem('lichtung-map-style', key)
+    localStorage.setItem('lichtung-tile-layer', key)
     setShowLayerMenu(false)
     window.location.reload() // Leaflet braucht Reload fuer Tile-Wechsel
   }

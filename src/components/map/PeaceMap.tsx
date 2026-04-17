@@ -117,9 +117,18 @@ function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   const map = useMap()
   useEffect(() => {
     if (!radiusKm || radiusKm <= 0) return
-    const zoom = Math.max(2, Math.min(18, Math.log2(20000 / radiusKm)))
     const center = map.getCenter()
-    map.setView(center, zoom, { animate: true, duration: 0.3 })
+    // Exakte Berechnung: Lat-Differenz fuer den Radius, dann Bounds setzen
+    const latDelta = radiusKm / 111.32 // 1 Grad Lat ≈ 111.32 km
+    const lngDelta = radiusKm / (111.32 * Math.cos(center.lat * Math.PI / 180))
+    const L = (window as any).L
+    if (L) {
+      const bounds = L.latLngBounds(
+        [center.lat - latDelta, center.lng - lngDelta],
+        [center.lat + latDelta, center.lng + lngDelta]
+      )
+      map.fitBounds(bounds, { animate: true, duration: 0.3, padding: [20, 20] })
+    }
   }, [radiusKm, map])
   return null
 }
@@ -166,7 +175,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
   return (
     <MapContainer
       center={center}
-      zoom={5}
+      zoom={7}
       zoomControl={false}
       attributionControl={false}
       zoomSnap={0.25}

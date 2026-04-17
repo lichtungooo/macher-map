@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map } from 'lucide-react'
 import { MyEvents } from '../events/MyEvents'
 import { MyConnections } from './MyConnections'
 import { useApp } from '../../context/AppContext'
@@ -219,6 +219,35 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
                 Sichtbar fuer deine Verbindungen. Format: @deinname
               </p>
               {telegramStatus && telegramStatus !== 'Gespeichert.' && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#c44', marginTop: '4px' }}>{telegramStatus}</p>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Kartenstil</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'osm_de', label: 'OpenStreetMap DE' },
+                  { key: 'osm', label: 'OpenStreetMap' },
+                  { key: 'voyager', label: 'Voyager' },
+                  { key: 'positron', label: 'Positron' },
+                ].map(layer => {
+                  const active = (localStorage.getItem('lichtung-tile-layer') || 'osm_de') === layer.key
+                  return (
+                    <button key={layer.key}
+                      onClick={() => { localStorage.setItem('lichtung-tile-layer', layer.key); window.location.reload() }}
+                      className="flex items-center gap-2 p-3 rounded-lg"
+                      style={{
+                        background: active ? 'rgba(212,168,67,0.06)' : '#FAFAF8',
+                        border: active ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.04)',
+                        cursor: 'pointer',
+                      }}>
+                      <Map size={13} style={{ color: active ? '#D4A843' : 'rgba(10,10,10,0.3)' }} />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: active ? 600 : 400, color: active ? '#D4A843' : 'rgba(10,10,10,0.5)' }}>
+                        {layer.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
