@@ -140,6 +140,7 @@ try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN start_hour INTEGER') } catc
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN end_hour INTEGER') } catch {}
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN parallel_slots INTEGER DEFAULT 1') } catch {}
 try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER DEFAULT 0') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 
 // Galerie-Tabelle
 db.exec(`
@@ -260,8 +261,8 @@ export function getStats() {
 
 export function getAllLights() {
   return db.prepare(`
-    SELECT l.id, l.lat, l.lng, l.created_at, l.invited_by,
-           u.name, u.statement, u.image_path
+    SELECT l.id, l.user_id, l.lat, l.lng, l.created_at, l.invited_by,
+           u.name, u.statement, u.bio, u.image_path, u.telegram
     FROM lights l JOIN users u ON l.user_id = u.id
     ORDER BY l.created_at DESC
   `).all()

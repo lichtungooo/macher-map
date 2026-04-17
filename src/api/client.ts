@@ -72,10 +72,10 @@ export async function getProfile() {
   return request('/profile')
 }
 
-export async function updateProfile(name: string, statement: string) {
+export async function updateProfile(data: { name?: string; statement?: string; bio?: string; telegram?: string }) {
   return request('/profile', {
     method: 'PUT',
-    body: JSON.stringify({ name, statement }),
+    body: JSON.stringify(data),
   })
 }
 

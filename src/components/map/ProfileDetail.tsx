@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { X, MessageCircle } from 'lucide-react'
 import type { LightPin } from '../../context/AppContext'
 
 function renderMd(t: string) {
@@ -12,6 +12,7 @@ interface ProfileDetailProps {
 
 export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
   const font = { fontFamily: 'Inter, sans-serif' as const }
+  const data = light as any
 
   return (
     <div className="fixed z-[1500] rounded-2xl shadow-xl overflow-hidden"
@@ -27,39 +28,62 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
         </button>
       </div>
 
-      <div className="p-5 text-center">
-        {/* Profilbild */}
-        {(light as any).image_path ? (
-          <img src={(light as any).image_path} alt={light.name}
-            className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
-            style={{ border: '3px solid rgba(212,168,67,0.3)' }} />
-        ) : (
-          <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)' }}>
-            <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', fontWeight: 500, color: '#D4A843' }}>
-              {light.name?.charAt(0) || '?'}
-            </span>
+      <div className="p-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+        <div className="text-center mb-4">
+          {/* Profilbild */}
+          {data.image_path ? (
+            <img src={data.image_path} alt={light.name}
+              className="w-20 h-20 rounded-full object-cover mx-auto mb-3"
+              style={{ border: '3px solid rgba(212,168,67,0.3)' }} />
+          ) : (
+            <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center"
+              style={{ background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)' }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', fontWeight: 500, color: '#D4A843' }}>
+                {light.name?.charAt(0) || '?'}
+              </span>
+            </div>
+          )}
+
+          {/* Name */}
+          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+            {light.name}
+          </h2>
+
+          {/* Datum */}
+          {light.createdAt && (
+            <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.35)', marginBottom: '12px' }}>
+              Leuchtet seit {new Date(light.createdAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          )}
+
+          {/* Kurz-Statement */}
+          {light.statement && (
+            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', lineHeight: 1.5 }}>
+              "{light.statement}"
+            </p>
+          )}
+        </div>
+
+        {/* Bio / ausfuehrlicher Text */}
+        {data.bio && (
+          <div className="rounded-xl p-4 mt-3" style={{ background: '#FAFAF8' }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}
+              dangerouslySetInnerHTML={{ __html: renderMd(data.bio) }} />
           </div>
         )}
 
-        {/* Name */}
-        <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
-          {light.name}
-        </h2>
-
-        {/* Datum */}
-        {light.createdAt && (
-          <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.35)', marginBottom: '16px' }}>
-            Leuchtet seit {new Date(light.createdAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-        )}
-
-        {/* Statement */}
-        {light.statement && (
-          <div className="rounded-xl p-4 text-left" style={{ background: '#FAFAF8' }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.6)', fontStyle: 'italic' }}
-              dangerouslySetInnerHTML={{ __html: renderMd(light.statement) }} />
-          </div>
+        {/* Telegram Kontakt */}
+        {data.telegram && (
+          <a
+            href={`https://t.me/${data.telegram.replace('@', '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-4"
+            style={{ background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', textDecoration: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#5078C8' }}
+          >
+            <MessageCircle size={16} />
+            Telegram: {data.telegram}
+          </a>
         )}
       </div>
     </div>

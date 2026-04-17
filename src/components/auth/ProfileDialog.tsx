@@ -15,10 +15,11 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
   const { user, updateProfile, logout } = useApp()
   const [name, setName] = useState(user?.name || '')
   const [statement, setStatement] = useState(user?.statement || '')
+  const [bio, setBio] = useState('')
   const [imagePreview, setImagePreview] = useState<string | undefined>(user?.imageUrl)
+  const [showPreview, setShowPreview] = useState(false)
   const [view, setView] = useState<'profile' | 'events' | 'connections' | 'settings'>('profile')
   const [telegram, setTelegram] = useState('')
-  const [telegramStatus, setTelegramStatus] = useState('')
   const [pwMsg, setPwMsg] = useState('')
   const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
   const [pushEnabled, setPushEnabled] = useState(false)
@@ -31,11 +32,12 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
     }
   }, [])
 
-  // Telegram aus Profil laden
+  // Profil-Daten laden (telegram, bio)
   useEffect(() => {
     if (!api.getToken()) return
     api.getProfile().then((p: any) => {
       if (p.telegram) setTelegram(p.telegram)
+      if (p.bio) setBio(p.bio)
     }).catch(() => {})
   }, [])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -55,7 +57,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
 
   const handleSave = async () => {
     updateProfile({ name, statement })
-    try { await api.updateProfile(name, statement) } catch {}
+    try { await api.updateProfile({ name, statement, bio, telegram }) } catch {}
     onClose()
   }
 
@@ -200,35 +202,6 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
             </div>
 
             <div>
-              <label style={labelStyle}>Telegram (optional)</label>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <MessageCircle size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(10,10,10,0.25)' }} />
-                  <input type="text" value={telegram} onChange={e => setTelegram(e.target.value)}
-                    placeholder="@deinname"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none"
-                    style={{ border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }} />
-                </div>
-                <button onClick={async () => {
-                  try {
-                    await api.setTelegram(telegram)
-                    setTelegramStatus('Gespeichert.')
-                    setTimeout(() => setTelegramStatus(''), 2000)
-                  } catch {
-                    setTelegramStatus('Fehler.')
-                  }
-                }}
-                  className="px-3 py-2.5 rounded-lg" style={{ background: telegramStatus === 'Gespeichert.' ? 'rgba(123,174,94,0.1)' : '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: telegramStatus === 'Gespeichert.' ? '#7BAE5E' : '#0A0A0A', cursor: 'pointer' }}>
-                  {telegramStatus === 'Gespeichert.' ? '✓' : 'OK'}
-                </button>
-              </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '4px' }}>
-                Sichtbar fuer deine Verbindungen. Format: @deinname
-              </p>
-              {telegramStatus && telegramStatus !== 'Gespeichert.' && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#c44', marginTop: '4px' }}>{telegramStatus}</p>}
-            </div>
-
-            <div>
               <label style={labelStyle}>Kartenstil</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -270,45 +243,122 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
           </div>
         ) : (
           /* ─── Profile View ─── */
-          <>
-            {/* Avatar Upload */}
-            <div className="flex justify-center mb-5">
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden"
-                style={{ background: imagePreview ? 'transparent' : 'rgba(212,168,67,0.06)', border: imagePreview ? '2.5px solid rgba(212,168,67,0.3)' : '2px dashed rgba(212,168,67,0.25)', cursor: 'pointer' }}
-              >
-                {imagePreview ? (
-                  <img src={imagePreview} alt="" className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <Camera size={24} style={{ color: '#D4A843' }} />
-                )}
+          showPreview ? (
+            /* ─── Profil-Vorschau ─── */
+            <div>
+              <button onClick={() => setShowPreview(false)} className="flex items-center gap-1 mb-4"
+                style={{ ...inputStyle, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)' }}>
+                &larr; Zurueck zum Bearbeiten
               </button>
-            </div>
 
-            {/* Name */}
-            <div className="mb-4">
-              <label style={labelStyle}>Dein Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Dein Name"
-                className="w-full px-4 py-3 rounded-lg outline-none" style={inputStyle} />
+              <div className="text-center">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-3" style={{ border: '3px solid rgba(212,168,67,0.3)' }} />
+                ) : (
+                  <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)' }}>
+                    <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', color: '#D4A843' }}>{name?.charAt(0) || '?'}</span>
+                  </div>
+                )}
+                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>{name || 'Dein Name'}</h3>
+                {statement && (
+                  <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginBottom: '12px' }}>
+                    "{statement}"
+                  </p>
+                )}
+                {bio && (
+                  <div className="rounded-xl p-4 text-left mt-3" style={{ background: '#FAFAF8' }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}>{bio}</p>
+                  </div>
+                )}
+                {telegram && (
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <MessageCircle size={14} style={{ color: '#5078C8' }} />
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#5078C8' }}>{telegram}</span>
+                  </div>
+                )}
+              </div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(10,10,10,0.25)', textAlign: 'center', marginTop: '16px' }}>
+                So sehen andere dein Profil.
+              </p>
             </div>
+          ) : (
+            /* ─── Profil bearbeiten ─── */
+            <>
+              {/* Avatar Upload */}
+              <div className="flex justify-center mb-4">
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-18 h-18 rounded-full flex items-center justify-center overflow-hidden"
+                  style={{ width: 72, height: 72, background: imagePreview ? 'transparent' : 'rgba(212,168,67,0.06)', border: imagePreview ? '2.5px solid rgba(212,168,67,0.3)' : '2px dashed rgba(212,168,67,0.25)', cursor: 'pointer' }}
+                >
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <Camera size={22} style={{ color: '#D4A843' }} />
+                  )}
+                </button>
+              </div>
 
-            {/* Statement */}
-            <div className="mb-6">
-              <label style={labelStyle}>Dein Friedens-Statement</label>
-              <MarkdownToolbar textareaRef={textareaRef} value={statement} onChange={setStatement} />
-              <textarea ref={textareaRef} value={statement} onChange={e => setStatement(e.target.value)}
-                placeholder="Ein Satz, ein Gedicht, ein Gebet — was aus deinem Herzen kommt." rows={5}
-                className="w-full px-4 py-3 rounded-lg outline-none resize-none"
-                style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', lineHeight: 1.6 }} />
-            </div>
+              {/* Name */}
+              <div className="mb-3">
+                <label style={labelStyle}>Name</label>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Dein Name"
+                  className="w-full px-4 py-2.5 rounded-lg outline-none" style={inputStyle} />
+              </div>
 
-            <button onClick={handleSave} className="w-full py-3 rounded-lg"
-              style={{ background: '#0A0A0A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
-              Speichern
-            </button>
-          </>
+              {/* Kurz-Statement */}
+              <div className="mb-3">
+                <label style={labelStyle}>Friedens-Statement</label>
+                <input type="text" value={statement} onChange={e => setStatement(e.target.value)}
+                  placeholder="Ein kurzer Satz — z.B. Frieden kommt aus dem Herzen."
+                  className="w-full px-4 py-2.5 rounded-lg outline-none"
+                  style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem' }}
+                  maxLength={120}
+                />
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', color: 'rgba(10,10,10,0.25)', textAlign: 'right', marginTop: '2px' }}>
+                  {statement.length}/120
+                </p>
+              </div>
+
+              {/* Bio — ausfuehrlicher Text */}
+              <div className="mb-3">
+                <label style={labelStyle}>Ueber dich</label>
+                <MarkdownToolbar textareaRef={textareaRef} value={bio} onChange={setBio} />
+                <textarea ref={textareaRef} value={bio} onChange={e => setBio(e.target.value)}
+                  placeholder="Erzaehle mehr von dir — deine Geschichte, dein Weg, deine Vision."
+                  rows={4}
+                  className="w-full px-4 py-2.5 rounded-lg outline-none resize-none"
+                  style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.6 }} />
+              </div>
+
+              {/* Telegram */}
+              <div className="mb-5">
+                <label style={labelStyle}>Telegram</label>
+                <div className="relative">
+                  <MessageCircle size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(10,10,10,0.25)' }} />
+                  <input type="text" value={telegram} onChange={e => setTelegram(e.target.value)}
+                    placeholder="@deinname"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-lg outline-none"
+                    style={inputStyle} />
+                </div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', color: 'rgba(10,10,10,0.25)', marginTop: '3px' }}>
+                  Sichtbar fuer deine Verbindungen.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={handleSave} className="flex-1 py-2.5 rounded-lg"
+                  style={{ background: '#0A0A0A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
+                  Speichern
+                </button>
+                <button onClick={() => setShowPreview(true)} className="py-2.5 px-4 rounded-lg"
+                  style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', cursor: 'pointer' }}>
+                  Vorschau
+                </button>
+              </div>
+            </>
+          )
         )}
       </div>
     </div>

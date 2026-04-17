@@ -170,8 +170,13 @@ app.get('/api/profile', auth, (req, res) => {
 })
 
 app.put('/api/profile', auth, (req, res) => {
-  const { name, statement } = req.body
-  updateUser(req.userId, { name, statement })
+  const { name, statement, bio, telegram } = req.body
+  const fields = {}
+  if (name !== undefined) fields.name = name
+  if (statement !== undefined) fields.statement = statement
+  if (bio !== undefined) fields.bio = bio
+  if (telegram !== undefined) fields.telegram = telegram
+  updateUser(req.userId, fields)
   res.json({ ok: true })
 })
 
