@@ -57,6 +57,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
         lng: position[1],
         start_time: `${date}T${time}:00`,
         type: tags[0] || 'meditation',
+        tags: tags.join(','),
         recurring: recurring || undefined,
         max_participants: maxParticipants ? Number(maxParticipants) : undefined,
         lichtung_id: lichtungId || undefined,

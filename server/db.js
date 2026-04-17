@@ -141,6 +141,8 @@ try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN end_hour INTEGER') } catch 
 try { db.exec('ALTER TABLE lichtung_slots ADD COLUMN parallel_slots INTEGER DEFAULT 1') } catch {}
 try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER DEFAULT 0') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 
 // ─── Tags ───
 
@@ -325,18 +327,19 @@ export function getLightCount() {
 
 export function getAllEvents() {
   return db.prepare(`
-    SELECT e.*, u.name as creator_name
+    SELECT e.*, u.name as creator_name, u.image_path as creator_image,
+      (SELECT COUNT(*) FROM event_participants WHERE event_id = e.id AND status = 'joined') as participant_count
     FROM events e JOIN users u ON e.user_id = u.id
     ORDER BY e.start_time ASC
   `).all()
 }
 
-export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global }) {
+export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags }) {
   const id = randomUUID()
   db.prepare(`
-    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0)
+    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0, image_path || null, tags || '')
   return { id }
 }
 
