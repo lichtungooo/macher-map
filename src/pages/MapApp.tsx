@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Link2, QrCode, CalendarDays, LocateFixed, Check, X as XIcon, Settings } from 'lucide-react'
+import { User, QrCode, CalendarDays, LocateFixed, Check, X as XIcon, Settings } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
@@ -25,7 +25,7 @@ type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' |
 type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung'
 
 function MapAppInner() {
-  const { user, lights, setLights, setEvents, login: loginCtx } = useApp()
+  const { user, setLights, setEvents, login: loginCtx } = useApp()
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
@@ -46,10 +46,7 @@ function MapAppInner() {
   const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
   const [eventLichtung, setEventLichtung] = useState<{ id: string; name: string } | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
-  const [connectionCount, setConnectionCount] = useState(0)
-  const [showChain, setShowChain] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -85,12 +82,6 @@ function MapAppInner() {
   useEffect(() => {
     api.getLichtungen().then(setLichtungen).catch(() => {})
   }, [])
-
-  useEffect(() => {
-    if (user && api.getToken()) {
-      api.getConnectionCount().then(setConnectionCount).catch(() => {})
-    }
-  }, [user])
 
   // Ort-QR-Code: ?place=CODE&by=USER_ID (Bringer)
   useEffect(() => {
@@ -305,8 +296,8 @@ function MapAppInner() {
         lichtungen={lichtungen}
         onLichtungClick={id => setSelectedLichtung(id)}
         onShowProfile={light => setSelectedProfile(light)}
-        chainData={chainData}
-        showChain={showChain}
+        chainData={[]}
+        showChain={false}
       />
 
       {/* Top Bar */}
@@ -323,23 +314,6 @@ function MapAppInner() {
             style={{ width: BTN_SIZE, height: BTN_SIZE, background: showSettings ? 'rgba(212,168,67,0.1)' : '#fff', border: showSettings ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
           >
             <Settings size={18} style={{ color: showSettings ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
-          </button>
-
-          {/* Lichterkette */}
-          <button
-            onClick={() => {
-              if (!showChain && user && api.getToken()) {
-                api.getChain().then(setChainData).catch(() => {})
-              }
-              setShowChain(!showChain)
-            }}
-            className="rounded-full flex flex-col items-center justify-center shadow-sm"
-            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showChain ? 'rgba(212,168,67,0.1)' : '#fff', border: showChain ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
-          >
-            <Link2 size={16} style={{ color: '#D4A843' }} />
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', marginTop: '1px' }}>
-              {connectionCount || lights.length}
-            </span>
           </button>
 
           {/* Kalender */}
