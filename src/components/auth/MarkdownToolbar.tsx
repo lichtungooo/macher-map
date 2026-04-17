@@ -1,4 +1,4 @@
-import { Bold, Italic, Quote, Heading2 } from 'lucide-react'
+import { Bold, Italic, Quote, Heading2, List, Link, Minus, Heart } from 'lucide-react'
 
 interface MarkdownToolbarProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
@@ -20,7 +20,6 @@ function insertMarkdown(
   const newValue = value.slice(0, start) + replacement + value.slice(end)
   onChange(newValue)
 
-  // Restore cursor position
   setTimeout(() => {
     textarea.focus()
     const cursorPos = start + prefix.length
@@ -34,11 +33,15 @@ const TOOLS = [
   { icon: Italic, label: 'Kursiv', prefix: '*', suffix: '*' },
   { icon: Heading2, label: 'Ueberschrift', prefix: '## ', suffix: '' },
   { icon: Quote, label: 'Zitat', prefix: '> ', suffix: '' },
+  { icon: List, label: 'Liste', prefix: '- ', suffix: '' },
+  { icon: Link, label: 'Link', prefix: '[', suffix: '](url)' },
+  { icon: Minus, label: 'Trennlinie', prefix: '\n---\n', suffix: '' },
+  { icon: Heart, label: 'Herz', prefix: '\u2764 ', suffix: '' },
 ]
 
 export function MarkdownToolbar({ textareaRef, value, onChange }: MarkdownToolbarProps) {
   return (
-    <div className="flex items-center gap-1 mb-2">
+    <div className="flex items-center gap-0.5 mb-1.5 flex-wrap">
       {TOOLS.map((tool, i) => (
         <button
           key={i}
@@ -49,12 +52,13 @@ export function MarkdownToolbar({ textareaRef, value, onChange }: MarkdownToolba
               insertMarkdown(textareaRef.current, value, onChange, tool.prefix, tool.suffix)
             }
           }}
-          className="w-8 h-8 rounded flex items-center justify-center transition-colors"
+          className="rounded flex items-center justify-center transition-colors"
           style={{
+            width: 28, height: 28,
             background: 'transparent',
-            border: '1px solid rgba(10,10,10,0.08)',
+            border: '1px solid rgba(10,10,10,0.06)',
             cursor: 'pointer',
-            color: 'rgba(10,10,10,0.4)',
+            color: 'rgba(10,10,10,0.35)',
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = 'rgba(212,168,67,0.08)'
@@ -63,11 +67,11 @@ export function MarkdownToolbar({ textareaRef, value, onChange }: MarkdownToolba
           }}
           onMouseLeave={e => {
             e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'rgba(10,10,10,0.4)'
-            e.currentTarget.style.borderColor = 'rgba(10,10,10,0.08)'
+            e.currentTarget.style.color = 'rgba(10,10,10,0.35)'
+            e.currentTarget.style.borderColor = 'rgba(10,10,10,0.06)'
           }}
         >
-          <tool.icon size={14} />
+          <tool.icon size={12} />
         </button>
       ))}
     </div>

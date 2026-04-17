@@ -83,29 +83,37 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
   return (
     <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
       <div className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-        {/* Header with icon-only tabs + tooltip */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-0.5">
-            {([
-              ['profile', 'Profil', User],
-              ['events', 'Termine', CalendarDays],
-              ['connections', 'Netz', Users],
-              ['settings', 'Einstellungen', Settings],
-            ] as [string, string, any][]).map(([key, label, Icon]) => (
-              <div key={key} className="relative group">
-                <button onClick={() => setView(key as any)}
-                  className="rounded-full flex items-center justify-center"
-                  style={{ width: 36, height: 36, background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                  <Icon size={16} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                </button>
-                {/* Tooltip */}
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-                  style={{ background: '#0A0A0A', whiteSpace: 'nowrap' }}>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{label}</span>
+          {showPreview ? (
+            /* Vorschau: nur Zurueck-Pfeil */
+            <button onClick={() => setShowPreview(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              &larr;
+            </button>
+          ) : (
+            /* Tabs */
+            <div className="flex items-center gap-0.5">
+              {([
+                ['profile', 'Profil', User],
+                ['events', 'Termine', CalendarDays],
+                ['connections', 'Netz', Users],
+                ['settings', 'Einstellungen', Settings],
+              ] as [string, string, any][]).map(([key, label, Icon]) => (
+                <div key={key} className="relative group">
+                  <button onClick={() => setView(key as any)}
+                    className="rounded-full flex items-center justify-center"
+                    style={{ width: 36, height: 36, background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                    <Icon size={16} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                  </button>
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+                    style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{label}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
             <X size={18} />
           </button>
@@ -245,41 +253,32 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
           /* ─── Profile View ─── */
           showPreview ? (
             /* ─── Profil-Vorschau ─── */
-            <div>
-              <button onClick={() => setShowPreview(false)} className="flex items-center gap-1 mb-4"
-                style={{ ...inputStyle, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)' }}>
-                &larr; Zurueck zum Bearbeiten
-              </button>
-
-              <div className="text-center">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-3" style={{ border: '3px solid rgba(212,168,67,0.3)' }} />
-                ) : (
-                  <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)' }}>
-                    <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', color: '#D4A843' }}>{name?.charAt(0) || '?'}</span>
-                  </div>
-                )}
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>{name || 'Dein Name'}</h3>
-                {statement && (
-                  <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginBottom: '12px' }}>
-                    "{statement}"
-                  </p>
-                )}
-                {bio && (
-                  <div className="rounded-xl p-4 text-left mt-3" style={{ background: '#FAFAF8' }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}>{bio}</p>
-                  </div>
-                )}
-                {telegram && (
-                  <div className="flex items-center justify-center gap-2 mt-4">
-                    <MessageCircle size={14} style={{ color: '#5078C8' }} />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#5078C8' }}>{telegram}</span>
-                  </div>
-                )}
-              </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(10,10,10,0.25)', textAlign: 'center', marginTop: '16px' }}>
-                So sehen andere dein Profil.
-              </p>
+            <div className="text-center">
+              {imagePreview ? (
+                <img src={imagePreview} alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-3" style={{ border: '3px solid rgba(212,168,67,0.3)' }} />
+              ) : (
+                <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)' }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', color: '#D4A843' }}>{name?.charAt(0) || '?'}</span>
+                </div>
+              )}
+              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '2px' }}>{name || 'Dein Name'}</h3>
+              {telegram && (
+                <a href={`https://t.me/${telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                  style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#5078C8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <MessageCircle size={12} />
+                  {telegram}
+                </a>
+              )}
+              {statement && (
+                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginTop: '10px', lineHeight: 1.5 }}>
+                  "{statement}"
+                </p>
+              )}
+              {bio && (
+                <div className="rounded-xl p-4 text-left mt-4" style={{ background: '#FAFAF8' }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}>{bio}</p>
+                </div>
+              )}
             </div>
           ) : (
             /* ─── Profil bearbeiten ─── */
@@ -301,10 +300,10 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
               </div>
 
               {/* Name */}
-              <div className="mb-3">
+              <div className="mb-2.5">
                 <label style={labelStyle}>Name</label>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Dein Name"
-                  className="w-full px-4 py-2.5 rounded-lg outline-none" style={inputStyle} />
+                  className="w-full px-3 py-2 rounded-lg outline-none" style={{ ...inputStyle, fontSize: '0.85rem' }} />
               </div>
 
               {/* Kurz-Statement */}
