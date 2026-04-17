@@ -99,6 +99,10 @@ export async function getEvents() { return request('/events') }
 export async function createEvent(event: Record<string, unknown>) {
   return request('/events', { method: 'POST', body: JSON.stringify(event) })
 }
+export async function updateEvent(id: string, data: Record<string, unknown>) {
+  return request(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+
 export async function deleteEvent(id: string) {
   return request(`/events/${id}`, { method: 'DELETE' })
 }

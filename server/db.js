@@ -325,6 +325,21 @@ export function getLightCount() {
 
 // ─── Events ───
 
+export function getEventById(id) {
+  return db.prepare('SELECT * FROM events WHERE id = ?').get(id)
+}
+
+export function updateEvent(id, fields) {
+  const sets = []
+  const vals = []
+  for (const [key, val] of Object.entries(fields)) {
+    if (val !== undefined) { sets.push(`${key} = ?`); vals.push(val) }
+  }
+  if (sets.length === 0) return
+  vals.push(id)
+  db.prepare(`UPDATE events SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
+}
+
 export function getAllEvents() {
   return db.prepare(`
     SELECT e.*, u.name as creator_name, u.image_path as creator_image,

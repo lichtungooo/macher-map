@@ -10,7 +10,7 @@ import {
   createResetToken, verifyResetToken,
   createVerifyToken, verifyEmailToken,
   getAllLights, getUserLight, createLight, getLightCount,
-  getAllEvents, createEvent, getGlobalEvents, deleteEvent,
+  getAllEvents, getEventById, updateEvent, createEvent, getGlobalEvents, deleteEvent,
   joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
   createInviteToken, verifyInviteToken,
   getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
@@ -230,7 +230,53 @@ app.post('/api/events', auth, (req, res) => {
   res.json(createEvent(req.userId, req.body))
 })
 
+app.put('/api/events/:id', auth, (req, res) => {
+  const event = getEventById(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
+  if (event.user_id !== req.userId) return res.status(403).json({ error: 'Nur der Ersteller kann bearbeiten' })
+
+  const { title, description, start_time, end_time, type, recurring, tags, max_participants } = req.body
+  const fields = {}
+  if (title !== undefined) fields.title = title
+  if (description !== undefined) fields.description = description
+  if (start_time !== undefined) fields.start_time = start_time
+  if (end_time !== undefined) fields.end_time = end_time
+  if (type !== undefined) fields.type = type
+  if (recurring !== undefined) fields.recurring = recurring
+  if (tags !== undefined) fields.tags = tags
+  if (max_participants !== undefined) fields.max_participants = max_participants
+
+  updateEvent(req.params.id, fields)
+
+  // Teilnehmer per Mail benachrichtigen
+  const participants = getEventParticipants(req.params.id)
+  if (participants.length > 0) {
+    const updatedEvent = getEventById(req.params.id)
+    const subject = `Aenderung: ${updatedEvent.title} — Licht fuer Frieden`
+    const bodyHtml = `
+      <p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${updatedEvent.title}</strong> wurde aktualisiert.</p>
+      <p style="font-size: 14px; color: rgba(10,10,10,0.55);">Neuer Termin: ${updatedEvent.start_time ? new Date(updatedEvent.start_time).toLocaleString('de-DE') : 'unveraendert'}</p>
+      <a href="${process.env.BASE_URL || 'https://lichtung.ooo'}/app" style="display: inline-block; padding: 12px 28px; background: #0A0A0A; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; margin-top: 16px;">Zur Karte</a>
+    `
+    sendNewsletter(participants, subject, bodyHtml).catch(err => console.error('Event-Mail-Fehler:', err))
+  }
+
+  res.json({ ok: true })
+})
+
 app.delete('/api/events/:id', auth, (req, res) => {
+  const event = getEventById(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
+  if (event.user_id !== req.userId) return res.status(403).json({ error: 'Nur der Ersteller kann loeschen' })
+
+  // Teilnehmer benachrichtigen
+  const participants = getEventParticipants(req.params.id)
+  if (participants.length > 0) {
+    const subject = `Abgesagt: ${event.title} — Licht fuer Frieden`
+    const bodyHtml = `<p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${event.title}</strong> wurde leider abgesagt.</p>`
+    sendNewsletter(participants, subject, bodyHtml).catch(err => console.error('Event-Mail-Fehler:', err))
+  }
+
   deleteEvent(req.params.id)
   res.json({ ok: true })
 })

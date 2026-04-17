@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation } from 'lucide-react'
+import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation, Pencil, Trash2 } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import * as api from '../../api/client'
 
@@ -210,6 +210,37 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
             <p className="text-center" style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', marginTop: '8px' }}>
               Melde dich an, um teilzunehmen.
             </p>
+          )}
+
+          {/* Bearbeiten / Loeschen — nur fuer Ersteller */}
+          {user && user.id === event.createdBy && (
+            <div className="flex gap-2 mt-4 pt-3" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
+              <button
+                onClick={() => {
+                  // TODO: Edit-Dialog oeffnen
+                  alert('Bearbeiten kommt bald.')
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg"
+                style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
+              >
+                <Pencil size={12} /> Bearbeiten
+              </button>
+              <button
+                onClick={async () => {
+                  if (!confirm('Veranstaltung wirklich loeschen? Alle Teilnehmer werden benachrichtigt.')) return
+                  try {
+                    await api.deleteEvent(event.id)
+                    onClose()
+                  } catch (err: any) {
+                    alert(err.message || 'Fehler beim Loeschen.')
+                  }
+                }}
+                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg"
+                style={{ ...font, fontSize: '0.72rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}
+              >
+                <Trash2 size={12} /> Loeschen
+              </button>
+            </div>
           )}
         </div>
       </div>
