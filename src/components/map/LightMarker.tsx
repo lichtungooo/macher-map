@@ -44,32 +44,30 @@ export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
   return (
     <Marker position={light.position} icon={lightIcon}>
       <Popup className="light-popup">
-        <div style={{ padding: '4px 0', minWidth: '180px', maxWidth: '230px' }}>
-          {/* Profilbild links + Name rechts — gleicher Stil wie DetailView */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: light.statement ? '8px' : '0' }}>
-            {hasImage ? (
-              <img src={data.image_path} alt=""
-                style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,168,67,0.3)', flexShrink: 0 }} />
-            ) : (
-              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', color: '#D4A843' }}>{light.name?.charAt(0) || '?'}</span>
-              </div>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 500, color: '#0A0A0A', margin: 0 }}>
-                {light.name}
-              </p>
+        <div style={{ padding: '4px 0', minWidth: '160px', maxWidth: '220px', textAlign: 'center' }}>
+          {/* Profilbild mittig */}
+          {hasImage ? (
+            <img src={data.image_path} alt=""
+              style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,168,67,0.3)', margin: '0 auto 8px', display: 'block' }} />
+          ) : (
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', color: '#D4A843' }}>{light.name?.charAt(0) || '?'}</span>
             </div>
-          </div>
+          )}
 
-          {/* Statement */}
+          {/* Name mittig */}
+          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', margin: '0 0 4px' }}>
+            {light.name}
+          </p>
+
+          {/* Statement mittig */}
           {light.statement && (
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', margin: '0 0 8px', lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
               "{light.statement.length > 80 ? light.statement.slice(0, 80).trim() + '...' : light.statement}"
             </p>
           )}
 
-          {/* Mehr lesen */}
+          {/* Zum Profil */}
           {onShowProfile && (
             <button
               onClick={(e) => { e.stopPropagation(); onShowProfile(light) }}
@@ -77,10 +75,10 @@ export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
                 fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 500,
                 color: '#D4A843', background: 'rgba(212,168,67,0.08)',
                 border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px',
-                padding: '5px 14px', cursor: 'pointer', width: '100%',
+                padding: '6px 18px', cursor: 'pointer',
               }}
             >
-              Mehr lesen
+              Zum Profil
             </button>
           )}
         </div>
