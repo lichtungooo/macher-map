@@ -59,12 +59,6 @@ export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
               <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 500, color: '#0A0A0A', margin: 0 }}>
                 {light.name}
               </p>
-              {data.telegram && (
-                <a href={`https://t.me/${data.telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-                  style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#5078C8', textDecoration: 'none' }}>
-                  {data.telegram}
-                </a>
-              )}
             </div>
           </div>
 
