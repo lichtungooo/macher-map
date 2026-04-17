@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents, Polyline } from 'react-leaflet'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
@@ -115,20 +115,29 @@ function FlyToHandler({ flyTo }: { flyTo?: [number, number, number] | null }) {
 
 function ZoomToRadiusHandler({ radiusKm }: { radiusKm?: number | null }) {
   const map = useMap()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastRadiusRef = useRef<number>(0)
+
   useEffect(() => {
     if (!radiusKm || radiusKm <= 0) return
-    const center = map.getCenter()
-    // Exakte Berechnung: Lat-Differenz fuer den Radius, dann Bounds setzen
-    const latDelta = radiusKm / 111.32 // 1 Grad Lat ≈ 111.32 km
-    const lngDelta = radiusKm / (111.32 * Math.cos(center.lat * Math.PI / 180))
-    const L = (window as any).L
-    if (L) {
-      const bounds = L.latLngBounds(
-        [center.lat - latDelta, center.lng - lngDelta],
-        [center.lat + latDelta, center.lng + lngDelta]
-      )
-      map.fitBounds(bounds, { animate: true, duration: 0.3, padding: [20, 20] })
-    }
+    // Debounce: nur zoomen wenn Slider 80ms ruht (sanftes Gleiten)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      const center = map.getCenter()
+      // Exakter Zoom-Level aus Radius berechnen
+      // Leaflet: bei Zoom z zeigt die Karte ca. 40075 * cos(lat) / 2^z km Breite
+      const smallerDim = Math.min(map.getContainer().clientHeight, map.getContainer().clientWidth)
+      // Zoom so, dass der Radius in die halbe Bildschirmbreite passt
+      const desiredMpx = (radiusKm * 2000) / smallerDim
+      const targetZoom = Math.log2((40075016.686 * Math.cos(center.lat * Math.PI / 180)) / (256 * desiredMpx))
+      const clampedZoom = Math.max(2, Math.min(18, targetZoom))
+
+      // Sanftes Gleiten: flyTo statt fitBounds
+      map.flyTo(center, clampedZoom, { duration: 0.6, easeLinearity: 0.5 })
+      lastRadiusRef.current = radiusKm
+    }, 80)
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [radiusKm, map])
   return null
 }

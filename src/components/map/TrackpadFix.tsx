@@ -27,11 +27,11 @@ export function TrackpadFix() {
       const dt = now - lastTime
       lastTime = now
 
-      // Akkumulieren fuer 16ms-Fenster (1 Frame)
-      if (dt < 16) {
-        accum += -e.deltaY / 200
+      // Akkumulieren fuer 32ms-Fenster (2 Frames) — glatter
+      if (dt < 32) {
+        accum += -e.deltaY / 120
       } else {
-        accum = -e.deltaY / 200
+        accum = -e.deltaY / 120
       }
 
       const newZoom = Math.max(2, Math.min(19, map.getZoom() + accum))
