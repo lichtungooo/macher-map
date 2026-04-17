@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat, Navigation as NavIcon } from 'lucide-react'
+import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat, Navigation as NavIcon, Plus } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import { EventDetail } from './EventDetail'
 
@@ -37,9 +37,10 @@ interface EventCalendarProps {
   onClose: () => void
   mapRadius?: number
   onRadiusSlide?: (radiusKm: number) => void
+  onCreateEvent?: () => void
 }
 
-export function EventCalendar({ onClose, mapRadius, onRadiusSlide }: EventCalendarProps) {
+export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent }: EventCalendarProps) {
   const { events } = useApp()
   const [view, setView] = useState<'list' | 'month'>('list')
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
@@ -117,7 +118,22 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide }: EventCalend
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A' }}>Kalender</h2>
+        <div className="flex items-center gap-2.5">
+          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A' }}>Kalender</h2>
+          {onCreateEvent && (
+            <div className="relative group">
+              <button onClick={onCreateEvent}
+                className="rounded-full flex items-center justify-center"
+                style={{ width: 26, height: 26, background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', cursor: 'pointer' }}>
+                <Plus size={14} style={{ color: '#D4A843' }} />
+              </button>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+                style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>Neuer Eintrag</span>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-full overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
             {(['list', 'month'] as const).map(v => (

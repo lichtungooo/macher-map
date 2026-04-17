@@ -195,6 +195,15 @@ function MapAppInner() {
     if (!seen && !api.getToken() && !searchParams.get('invite')) setTutorialStep('welcome')
   }, [])
 
+  // Escape-Taste zum Abbrechen von Platzierungsmodi
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mode !== 'browse') setMode('browse')
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [mode])
+
   const closeTutorial = () => {
     setTutorialStep(null)
     localStorage.setItem('lichtung-tutorial-seen', '1')
@@ -407,13 +416,12 @@ function MapAppInner() {
 
       {/* Mode Indicator */}
       {mode !== 'browse' && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A' }}>
-            {mode === 'place-light' ? 'Tippe auf die Karte, um dein Licht zu setzen' : mode === 'place-lichtung' ? 'Tippe auf die Karte, um die Lichtung zu platzieren' : 'Tippe auf die Karte, um den Ort zu waehlen'}
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', textAlign: 'center' }}>
+            {mode === 'place-light' && 'Setze dein Licht auf die Karte'}
+            {mode === 'place-lichtung' && 'Setze deinen Ort auf die Karte'}
+            {mode === 'place-event' && 'Setze deinen Termin auf die Karte'}
           </p>
-          <button onClick={() => setMode('browse')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
-            Abbrechen
-          </button>
         </div>
       )}
 
@@ -442,7 +450,7 @@ function MapAppInner() {
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} lichtungId={eventLichtung?.id} lichtungName={eventLichtung?.name} onClose={() => { setDialog('none'); setEventPosition(undefined); setEventLichtung(null) }} />}
       {dialog === 'create-lichtung' && <CreateLichtungDialog position={lichtungPosition} onClose={() => { setDialog('none'); setLichtungPosition(undefined) }} onCreated={() => api.getLichtungen().then(setLichtungen)} />}
-      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} />}
+      {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} onCreateEvent={() => { setShowCalendar(false); handleCreateEvent() }} />}
       {showSettings && <MapSettings showLights={showLights} showEvents={showEvents} onToggleLights={() => setShowLights(!showLights)} onToggleEvents={() => setShowEvents(!showEvents)} onClose={() => setShowSettings(false)} />}
 
       {/* Standort-Dialog */}
