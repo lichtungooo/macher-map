@@ -39,25 +39,24 @@ interface LightMarkerProps {
 
 export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
   const data = light as any
+  const hasImage = !!data.image_path
 
   return (
     <Marker position={light.position} icon={lightIcon}>
       <Popup className="light-popup">
-        <div style={{ padding: '4px 0', minWidth: '180px', maxWidth: '220px' }}>
-          {/* Profilbild links + Name/Statement rechts */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            {/* Profilbild */}
-            {data.image_path ? (
+        <div style={{ padding: '4px 0', minWidth: '180px', maxWidth: '230px' }}>
+          {/* Profilbild links + Name rechts — gleicher Stil wie DetailView */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: light.statement ? '8px' : '0' }}>
+            {hasImage ? (
               <img src={data.image_path} alt=""
-                style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,168,67,0.3)', flexShrink: 0 }} />
+                style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,168,67,0.3)', flexShrink: 0 }} />
             ) : (
-              <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.1rem', color: '#D4A843' }}>{light.name?.charAt(0) || '?'}</span>
+              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', color: '#D4A843' }}>{light.name?.charAt(0) || '?'}</span>
               </div>
             )}
-            {/* Name + Telegram */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', fontWeight: 500, color: '#0A0A0A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 500, color: '#0A0A0A', margin: 0 }}>
                 {light.name}
               </p>
               {data.telegram && (
