@@ -216,6 +216,14 @@ export async function createInvite() {
   return request('/invite/create', { method: 'POST' })
 }
 
+// ─── Notifications ───
+
+export async function getNotifySettings() { return request('/notify/settings') }
+export async function updateNotifySettings(data: Record<string, unknown>) {
+  return request('/notify/settings', { method: 'PUT', body: JSON.stringify(data) })
+}
+export async function getTelegramLink() { return request('/notify/telegram-link') }
+
 // ─── Tags ───
 
 export async function searchTags(query: string) {

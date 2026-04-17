@@ -143,6 +143,11 @@ try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER
 try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN telegram_chat_id TEXT') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN notify_new_connection INTEGER DEFAULT 1') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN notify_new_event INTEGER DEFAULT 1') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN notify_radius INTEGER DEFAULT 50') } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN notify_lichtung INTEGER DEFAULT 1') } catch {}
 
 // ─── Tags ───
 
@@ -158,6 +163,54 @@ db.exec(`
 const defaultTags = ['meditation', 'gebet', 'stille', 'begegnung', 'tanz', 'fest', 'musik', 'natur', 'yoga', 'feuer', 'gesang', 'wald', 'wasser', 'vollmond', 'neumond', 'frieden', 'liebe', 'heilung', 'gemeinschaft', 'kunst']
 for (const tag of defaultTags) {
   try { db.prepare('INSERT OR IGNORE INTO tags (id, name) VALUES (?, ?)').run(randomUUID(), tag) } catch {}
+}
+
+// ─── Telegram Notifications ───
+
+export function setTelegramChatId(userId, chatId) {
+  db.prepare('UPDATE users SET telegram_chat_id = ? WHERE id = ?').run(chatId, userId)
+}
+
+export function findUserByTelegramStart(startParam) {
+  // startParam ist die userId
+  return findUserById(startParam)
+}
+
+export function updateNotifySettings(userId, settings) {
+  const fields = {}
+  if (settings.notify_new_connection !== undefined) fields.notify_new_connection = settings.notify_new_connection ? 1 : 0
+  if (settings.notify_new_event !== undefined) fields.notify_new_event = settings.notify_new_event ? 1 : 0
+  if (settings.notify_radius !== undefined) fields.notify_radius = settings.notify_radius
+  if (settings.notify_lichtung !== undefined) fields.notify_lichtung = settings.notify_lichtung ? 1 : 0
+  updateUser(userId, fields)
+}
+
+export function getUsersToNotifyForEvent(lat, lng) {
+  // Alle User mit Telegram-chat_id die Event-Benachrichtigungen aktiviert haben
+  const users = db.prepare(`
+    SELECT u.id, u.telegram_chat_id, u.notify_radius, l.lat as light_lat, l.lng as light_lng
+    FROM users u LEFT JOIN lights l ON l.user_id = u.id
+    WHERE u.telegram_chat_id IS NOT NULL AND u.notify_new_event = 1
+  `).all()
+
+  return users.filter(u => {
+    if (!u.light_lat || !u.light_lng) return false
+    // Haversine-Distanz
+    const R = 6371
+    const dLat = (lat - u.light_lat) * Math.PI / 180
+    const dLng = (lng - u.light_lng) * Math.PI / 180
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(u.light_lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+    const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return dist <= (u.notify_radius || 50)
+  })
+}
+
+export function getUsersToNotifyForConnection(userId) {
+  // Den User selbst benachrichtigen wenn jemand in seine Kette kommt
+  return db.prepare(`
+    SELECT id, telegram_chat_id FROM users
+    WHERE id = ? AND telegram_chat_id IS NOT NULL AND notify_new_connection = 1
+  `).all(userId)
 }
 
 export function searchTags(query) {

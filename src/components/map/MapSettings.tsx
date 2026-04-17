@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, Map, Sparkles, CalendarDays, Check, Settings, User, LocateFixed } from 'lucide-react'
+import { X, Map, Sparkles, CalendarDays, Check, Settings, User, LocateFixed, MessageCircle, Link2, ExternalLink } from 'lucide-react'
+import * as api from '../../api/client'
 
 const LAYERS = [
   { key: 'osm_de', label: 'OpenStreetMap DE' },
@@ -22,10 +23,22 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
   const [tab, setTab] = useState<Tab>('general')
   const [currentLayer, setCurrentLayer] = useState(localStorage.getItem('lichtung-tile-layer') || 'osm_de')
   const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
-  const [pushEnabled, setPushEnabled] = useState(false)
+  const [telegramConnected, setTelegramConnected] = useState(false)
+  const [notifyConnection, setNotifyConnection] = useState(true)
+  const [notifyEvent, setNotifyEvent] = useState(true)
+  const [notifyRadius, setNotifyRadius] = useState(50)
+  const [notifyLichtung, setNotifyLichtung] = useState(true)
 
   useEffect(() => {
-    if ('Notification' in window) setPushEnabled(Notification.permission === 'granted')
+    if (api.getToken()) {
+      api.getNotifySettings().then((s: any) => {
+        setTelegramConnected(s.telegram_connected)
+        setNotifyConnection(s.notify_new_connection)
+        setNotifyEvent(s.notify_new_event)
+        setNotifyRadius(s.notify_radius)
+        setNotifyLichtung(s.notify_lichtung)
+      }).catch(() => {})
+    }
   }, [])
 
   const switchLayer = (key: string) => {
@@ -94,25 +107,73 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
               </button>
             </div>
 
-            {/* Push */}
+            {/* Telegram-Benachrichtigungen */}
             <div>
-              <p style={labelStyle}>Benachrichtigungen</p>
-              <button
-                onClick={async () => {
-                  if (!('Notification' in window)) return
-                  if (pushEnabled) { setPushEnabled(false); return }
-                  const perm = await Notification.requestPermission()
-                  if (perm === 'granted') {
-                    setPushEnabled(true)
-                    new Notification('Licht fuer Frieden', { body: 'Push aktiv.', icon: '/favicon.svg' })
-                  }
-                }}
-                className="w-full flex items-center gap-3 p-2.5 rounded-lg"
-                style={{ background: pushEnabled ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (pushEnabled ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                <CalendarDays size={14} style={{ color: pushEnabled ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A', flex: 1 }}>Push-Nachrichten</span>
-                {pushEnabled && <Check size={13} style={{ color: '#D4A843' }} />}
-              </button>
+              <p style={labelStyle}>Telegram-Benachrichtigungen</p>
+
+              {/* Verbinden-Button */}
+              {!telegramConnected ? (
+                <button
+                  onClick={async () => {
+                    if (!api.getToken()) return
+                    const { url } = await api.getTelegramLink()
+                    window.open(url, '_blank')
+                    // Poll fuer Verbindung
+                    setTimeout(() => {
+                      api.getNotifySettings().then((s: any) => setTelegramConnected(s.telegram_connected)).catch(() => {})
+                    }, 5000)
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg mb-2"
+                  style={{ ...font, fontSize: '0.75rem', fontWeight: 500, color: '#5078C8', background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', cursor: 'pointer' }}>
+                  <MessageCircle size={14} />
+                  Mit Telegram verbinden
+                  <ExternalLink size={11} />
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg mb-2" style={{ background: 'rgba(123,174,94,0.06)', border: '1px solid rgba(123,174,94,0.15)' }}>
+                  <Check size={13} style={{ color: '#7BAE5E' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#7BAE5E' }}>Telegram verbunden</span>
+                </div>
+              )}
+
+              {/* Einstellungen */}
+              <div className="space-y-1.5">
+                <button onClick={() => { const v = !notifyConnection; setNotifyConnection(v); api.updateNotifySettings({ notify_new_connection: v }) }}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg"
+                  style={{ background: notifyConnection ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (notifyConnection ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
+                  <Link2 size={13} style={{ color: notifyConnection ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Neue Verbindung</span>
+                  {notifyConnection && <Check size={12} style={{ color: '#D4A843' }} />}
+                </button>
+
+                <button onClick={() => { const v = !notifyEvent; setNotifyEvent(v); api.updateNotifySettings({ notify_new_event: v }) }}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg"
+                  style={{ background: notifyEvent ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (notifyEvent ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
+                  <CalendarDays size={13} style={{ color: notifyEvent ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Neue Veranstaltung</span>
+                  {notifyEvent && <Check size={12} style={{ color: '#D4A843' }} />}
+                </button>
+
+                {notifyEvent && (
+                  <div className="px-2 py-1.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.4)' }}>Umkreis</span>
+                      <span style={{ ...font, fontSize: '0.65rem', fontWeight: 600, color: '#D4A843' }}>{notifyRadius} km</span>
+                    </div>
+                    <input type="range" min="5" max="200" value={notifyRadius}
+                      onChange={e => { const v = Number(e.target.value); setNotifyRadius(v); api.updateNotifySettings({ notify_radius: v }) }}
+                      className="w-full" style={{ accentColor: '#D4A843', height: '3px' }} />
+                  </div>
+                )}
+
+                <button onClick={() => { const v = !notifyLichtung; setNotifyLichtung(v); api.updateNotifySettings({ notify_lichtung: v }) }}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg"
+                  style={{ background: notifyLichtung ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (notifyLichtung ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
+                  <Sparkles size={13} style={{ color: notifyLichtung ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Lichtungen</span>
+                  {notifyLichtung && <Check size={12} style={{ color: '#D4A843' }} />}
+                </button>
+              </div>
             </div>
           </>
         )}

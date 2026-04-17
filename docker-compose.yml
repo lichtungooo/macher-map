@@ -18,6 +18,8 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - JWT_SECRET=${JWT_SECRET}
       - BASE_URL=https://lichtung.ooo
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=LichtungFriedenBot
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.lichtung-api.rule=Host(`lichtung.ooo`) && PathPrefix(`/api`)"

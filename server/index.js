@@ -23,8 +23,10 @@ import {
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
   searchTags, ensureTag,
+  setTelegramChatId, findUserByTelegramStart, updateNotifySettings, getUsersToNotifyForEvent, getUsersToNotifyForConnection,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
+import { sendTelegramMessage } from './telegram.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -197,7 +199,18 @@ app.post('/api/lights', auth, (req, res) => {
   const { lat, lng, invited_by } = req.body
   if (lat == null || lng == null) return res.status(400).json({ error: 'Position fehlt' })
   // createLight loescht automatisch das alte Licht des Users
-  res.json(createLight(req.userId, lat, lng, invited_by))
+  const light = createLight(req.userId, lat, lng, invited_by)
+
+  // Telegram: Einladenden benachrichtigen bei neuer Verbindung
+  if (invited_by && invited_by !== req.userId) {
+    const toNotify = getUsersToNotifyForConnection(invited_by)
+    const newUser = findUserById(req.userId)
+    for (const u of toNotify) {
+      sendTelegramMessage(u.telegram_chat_id, `🔗 <b>Neue Verbindung!</b>\n\n<b>${newUser?.name || 'Jemand'}</b> ist durch dich auf die Karte gekommen.\n\n👉 lichtung.ooo/app`)
+    }
+  }
+
+  res.json(light)
 })
 
 // ─── Events ───
@@ -227,7 +240,19 @@ app.post('/api/events', auth, (req, res) => {
       return res.status(403).json({ error: 'Nur Admins dieses Ortes koennen hier Termine erstellen.' })
     }
   }
-  res.json(createEvent(req.userId, req.body))
+  const newEvent = createEvent(req.userId, req.body)
+
+  // Telegram-Benachrichtigungen an Nutzer im Umkreis
+  if (req.body.lat && req.body.lng) {
+    const toNotify = getUsersToNotifyForEvent(req.body.lat, req.body.lng)
+    const creator = findUserById(req.userId)
+    for (const u of toNotify) {
+      if (u.id === req.userId) continue // Ersteller nicht benachrichtigen
+      sendTelegramMessage(u.telegram_chat_id, `📅 <b>Neue Veranstaltung in deiner Naehe</b>\n\n<b>${req.body.title}</b>\n${req.body.start_time ? new Date(req.body.start_time).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}\n\nErstellt von ${creator?.name || 'Anonym'}\n\n👉 lichtung.ooo/app`)
+    }
+  }
+
+  res.json(newEvent)
 })
 
 app.put('/api/events/:id', auth, (req, res) => {
@@ -703,6 +728,58 @@ app.post('/api/admin/change-password', adminAuth, async (req, res) => {
   const user = findUserById(req.userId)
   if (user) setPassword(user.email, hash)
   res.json({ ok: true })
+})
+
+// ─── Telegram Bot Webhook ───
+
+app.post('/api/telegram/webhook', (req, res) => {
+  const msg = req.body?.message
+  if (!msg) return res.json({ ok: true })
+
+  const chatId = msg.chat?.id
+  const text = msg.text || ''
+
+  if (text.startsWith('/start')) {
+    const userId = text.replace('/start', '').trim()
+    if (userId) {
+      const user = findUserByTelegramStart(userId)
+      if (user) {
+        setTelegramChatId(userId, String(chatId))
+        sendTelegramMessage(chatId, `✨ <b>Willkommen bei Licht fuer Frieden!</b>\n\nDu bist jetzt verbunden als <b>${user.name || 'Anonym'}</b>.\n\nDu erhaeltst Benachrichtigungen ueber:\n• Neue Veranstaltungen in deiner Naehe\n• Neue Verbindungen in deiner Kette\n• Neuigkeiten deiner Lichtungen\n\nEinstellungen kannst du auf lichtung.ooo anpassen.`)
+      } else {
+        sendTelegramMessage(chatId, 'Verbindung fehlgeschlagen. Bitte versuche es ueber lichtung.ooo erneut.')
+      }
+    } else {
+      sendTelegramMessage(chatId, '✨ <b>Licht fuer Frieden</b>\n\nVerbinde dich ueber dein Profil auf lichtung.ooo mit diesem Bot, um Benachrichtigungen zu erhalten.')
+    }
+  } else if (text === '/status') {
+    sendTelegramMessage(chatId, '🔗 Dein Bot ist aktiv. Einstellungen auf lichtung.ooo.')
+  }
+
+  res.json({ ok: true })
+})
+
+// ─── Notification Settings ───
+
+app.get('/api/notify/settings', auth, (req, res) => {
+  const user = findUserById(req.userId)
+  res.json({
+    telegram_connected: !!user.telegram_chat_id,
+    notify_new_connection: !!user.notify_new_connection,
+    notify_new_event: !!user.notify_new_event,
+    notify_radius: user.notify_radius || 50,
+    notify_lichtung: !!user.notify_lichtung,
+  })
+})
+
+app.put('/api/notify/settings', auth, (req, res) => {
+  updateNotifySettings(req.userId, req.body)
+  res.json({ ok: true })
+})
+
+app.get('/api/notify/telegram-link', auth, (req, res) => {
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'LichtungFriedenBot'
+  res.json({ url: `https://t.me/${botUsername}?start=${req.userId}` })
 })
 
 // ─── Tags ───
