@@ -76,7 +76,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setLights = useCallback((newLights: LightPin[]) => {
-    // Map backend format to frontend format
+    // Map backend format to frontend format — alle Felder durchreichen
     const mapped = newLights.map((l: any) => ({
       id: l.id,
       position: [l.lat ?? l.position?.[0], l.lng ?? l.position?.[1]] as [number, number],
@@ -84,6 +84,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       statement: l.statement || '',
       invitedBy: l.invited_by,
       createdAt: l.created_at || l.createdAt || '',
+      // Extra-Felder fuer Profil-Anzeige
+      image_path: l.image_path || null,
+      bio: l.bio || '',
+      telegram: l.telegram || null,
+      user_id: l.user_id || null,
     }))
     setLightsState(mapped)
   }, [])
