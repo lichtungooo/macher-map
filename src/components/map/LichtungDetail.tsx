@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2 } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2, Pencil } from 'lucide-react'
 import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
 import { FullCalendar } from './FullCalendar'
@@ -24,7 +24,10 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'info' | 'kalender' | 'galerie' | 'community'>('info')
+  const [tab, setTab] = useState<'info' | 'kalender' | 'galerie' | 'community' | 'settings'>('info')
+  const [editMode, setEditMode] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editDesc, setEditDesc] = useState('')
   const [copied, setCopied] = useState(false)
   const [members, setMembers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
@@ -137,10 +140,16 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
 
       {/* Tabs */}
       <div className="flex px-5 pt-3 gap-0.5 overflow-x-auto" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        {['info', 'kalender', 'galerie', 'community'].map(key => (
+        {[
+          { key: 'info', label: 'Info' },
+          { key: 'kalender', label: 'Kalender' },
+          { key: 'galerie', label: 'Galerie' },
+          { key: 'community', label: `Community (${members.length})` },
+          ...((myRole === 'owner' || myRole === 'admin') ? [{ key: 'settings', label: '⚙' }] : []),
+        ].map(({ key, label }) => (
           <button key={key} onClick={() => setTab(key as any)} className="pb-2 px-2.5 shrink-0"
             style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.35)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#7BAE5E' : 'transparent'}`, cursor: 'pointer' }}>
-            {key === 'info' ? 'Info' : key === 'kalender' ? 'Kalender' : key === 'galerie' ? 'Galerie' : `Community (${members.length})`}
+            {label}
           </button>
         ))}
       </div>
@@ -153,20 +162,67 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
               <img src={lichtung.image_path} alt={lichtung.name} className="w-full h-40 object-cover rounded-xl mb-4" />
             )}
 
-            {/* Name */}
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
-              {lichtung.name}
-            </h2>
-            <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', marginBottom: '16px' }}>
-              von {lichtung.creator_name}
-            </p>
-
-            {/* Beschreibung */}
-            {lichtung.description && (
-              <div className="rounded-xl p-4 mb-4" style={{ background: '#FAFAF8' }}>
-                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.6)' }}
-                  dangerouslySetInnerHTML={{ __html: renderMd(lichtung.description) }} />
+            {editMode ? (
+              /* ─── Bearbeiten ─── */
+              <div className="space-y-3 mb-4">
+                <div>
+                  <label style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }}>Name</label>
+                  <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg outline-none"
+                    style={{ border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.85rem', color: '#0A0A0A' }} />
+                </div>
+                <div>
+                  <label style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }}>Beschreibung</label>
+                  <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={4}
+                    className="w-full px-3 py-2 rounded-lg outline-none resize-none"
+                    style={{ border: '1px solid rgba(10,10,10,0.1)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.6, color: '#0A0A0A' }} />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={async () => {
+                    await api.createLichtung({ name: editName, description: editDesc, lat: lichtung.lat, lng: lichtung.lng })
+                    // Actually use updateLichtung
+                    await fetch(`/api/lichtungen/${lichtungId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${api.getToken()}` }, body: JSON.stringify({ name: editName, description: editDesc }) })
+                    const updated = await api.getLichtung(lichtungId)
+                    setLichtung(updated)
+                    setEditMode(false)
+                  }}
+                    className="flex-1 py-2 rounded-lg"
+                    style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                    Speichern
+                  </button>
+                  <button onClick={() => setEditMode(false)}
+                    className="px-4 py-2 rounded-lg"
+                    style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.5)', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                    Abbrechen
+                  </button>
+                </div>
               </div>
+            ) : (
+              /* ─── Anzeige ─── */
+              <>
+                <div className="flex items-start justify-between mb-1">
+                  <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A' }}>
+                    {lichtung.name}
+                  </h2>
+                  {(myRole === 'owner' || myRole === 'admin') && (
+                    <button onClick={() => { setEditName(lichtung.name); setEditDesc(lichtung.description || ''); setEditMode(true) }}
+                      className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                      <Pencil size={13} style={{ color: 'rgba(10,10,10,0.35)' }} />
+                    </button>
+                  )}
+                </div>
+                <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', marginBottom: '16px' }}>
+                  von {lichtung.creator_name}
+                </p>
+
+                {lichtung.description && (
+                  <div className="rounded-xl p-4 mb-4" style={{ background: '#FAFAF8' }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.6)' }}
+                      dangerouslySetInnerHTML={{ __html: renderMd(lichtung.description) }} />
+                  </div>
+                )}
+              </>
             )}
 
             {/* Navigation */}
@@ -335,6 +391,20 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                         {e.description.slice(0, 120)}{e.description.length > 120 ? '...' : ''}
                       </p>
                     )}
+                    {/* Loeschen fuer Admins/Owner */}
+                    {(myRole === 'owner' || myRole === 'admin') && (
+                      <div className="flex gap-2 mt-2 pt-2" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
+                        <button onClick={async () => {
+                          if (!confirm(`"${e.title}" wirklich loeschen?`)) return
+                          await api.deleteEvent(e.id)
+                          api.getLichtungEvents(lichtungId).then(setEvents)
+                        }}
+                          className="flex items-center gap-1 px-2 py-1 rounded"
+                          style={{ ...font, fontSize: '0.6rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.12)', cursor: 'pointer' }}>
+                          <Trash2 size={10} /> Loeschen
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -441,6 +511,75 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                 style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
                 <Users size={16} />
                 Dieser Lichtung beitreten
+              </button>
+            )}
+          </>
+        )}
+        {tab === 'settings' && (myRole === 'owner' || myRole === 'admin') && (
+          <>
+            {/* Ort bearbeiten */}
+            <div className="mb-4">
+              <p style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', marginBottom: '8px' }}>Ort verwalten</p>
+              <button onClick={() => { setEditName(lichtung.name); setEditDesc(lichtung.description || ''); setTab('info'); setEditMode(true) }}
+                className="w-full flex items-center gap-2 p-3 rounded-lg"
+                style={{ ...font, fontSize: '0.78rem', color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)', cursor: 'pointer', textAlign: 'left' }}>
+                <Pencil size={14} style={{ color: '#7BAE5E' }} />
+                Name und Beschreibung bearbeiten
+              </button>
+            </div>
+
+            {/* Telegram-Bot */}
+            <div className="mb-4">
+              <p style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', marginBottom: '8px' }}>Telegram-Bot</p>
+              <div className="rounded-lg p-3" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <p style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.5)', lineHeight: 1.5, marginBottom: '8px' }}>
+                  Fuege @lichtungsbot zu einer Telegram-Gruppe hinzu und tippe dort:
+                </p>
+                <code style={{ ...font, fontSize: '0.72rem', color: '#7BAE5E', background: 'rgba(123,174,94,0.06)', padding: '4px 8px', borderRadius: '4px', display: 'block', marginBottom: '6px' }}>
+                  /connect {lichtung.code || lichtungId.slice(0, 8)}
+                </code>
+                <p style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.35)' }}>
+                  Neue Events werden automatisch in die Gruppe gepostet.
+                </p>
+              </div>
+            </div>
+
+            {/* Rollen */}
+            <div className="mb-4">
+              <p style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', marginBottom: '8px' }}>Rollen</p>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FAFAF8' }}>
+                  <Shield size={12} style={{ color: '#7BAE5E' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Hueter</span>
+                  <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Volle Kontrolle</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FAFAF8' }}>
+                  <Shield size={12} style={{ color: '#D4A843' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Gaertner</span>
+                  <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Events + Kalender</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FAFAF8' }}>
+                  <Users size={12} style={{ color: 'rgba(10,10,10,0.35)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Mitglied</span>
+                  <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Teilnehmen + Sehen</span>
+                </div>
+              </div>
+              <p style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '6px' }}>
+                Rollen aendern: Community-Tab → Button neben dem Namen.
+              </p>
+            </div>
+
+            {/* Ort loeschen */}
+            {myRole === 'owner' && (
+              <button onClick={async () => {
+                if (!confirm(`"${lichtung.name}" wirklich loeschen? Alle Events und Mitglieder werden entfernt.`)) return
+                await fetch(`/api/lichtungen/${lichtungId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${api.getToken()}` } })
+                onClose()
+              }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg mt-4"
+                style={{ ...font, fontSize: '0.75rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}>
+                <Trash2 size={14} />
+                Ort loeschen
               </button>
             )}
           </>
