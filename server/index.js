@@ -24,9 +24,12 @@ import {
   getStats, getRecentUsers, getNewsletterEmails,
   searchTags, ensureTag,
   setTelegramChatId, findUserByTelegramStart, updateNotifySettings, getUsersToNotifyForEvent, getUsersToNotifyForConnection,
+  connectGroup, getGroupsForLichtung, getGroupByChatId, setGroupReminderInterval,
+  saveMessageRef, getMessageRef, deleteMessageRef,
+  getGroupsDueForReminder, markReminderSent, getUpcomingEventsForLichtung,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
-import { sendTelegramMessage } from './telegram.js'
+import { sendTelegramMessage, deleteTelegramMessage, formatEventMessage, formatUpcomingEvents } from './telegram.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -242,13 +245,24 @@ app.post('/api/events', auth, (req, res) => {
   }
   const newEvent = createEvent(req.userId, req.body)
 
-  // Telegram-Benachrichtigungen an Nutzer im Umkreis
+  const fullEvent = getEventById(newEvent.id)
+
+  // Telegram: Nutzer im Umkreis
   if (req.body.lat && req.body.lng) {
     const toNotify = getUsersToNotifyForEvent(req.body.lat, req.body.lng)
-    const creator = findUserById(req.userId)
     for (const u of toNotify) {
-      if (u.id === req.userId) continue // Ersteller nicht benachrichtigen
-      sendTelegramMessage(u.telegram_chat_id, `📅 <b>Neue Veranstaltung in deiner Naehe</b>\n\n<b>${req.body.title}</b>\n${req.body.start_time ? new Date(req.body.start_time).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}\n\nErstellt von ${creator?.name || 'Anonym'}\n\n👉 lichtung.ooo/app`)
+      if (u.id === req.userId) continue
+      sendTelegramMessage(u.telegram_chat_id, formatEventMessage(fullEvent || req.body, 'new'))
+    }
+  }
+
+  // Telegram: Verbundene Gruppen der Lichtung
+  if (req.body.lichtung_id) {
+    const groups = getGroupsForLichtung(req.body.lichtung_id)
+    for (const g of groups) {
+      sendTelegramMessage(g.chat_id, formatEventMessage(fullEvent || req.body, 'new')).then(msgId => {
+        if (msgId) saveMessageRef(g.chat_id, msgId, newEvent.id)
+      })
     }
   }
 
@@ -286,6 +300,21 @@ app.put('/api/events/:id', auth, (req, res) => {
     sendNewsletter(participants, subject, bodyHtml).catch(err => console.error('Event-Mail-Fehler:', err))
   }
 
+  // Telegram: Gruppen updaten (alten Post loeschen, neuen senden)
+  if (updatedEvent.lichtung_id) {
+    const groups = getGroupsForLichtung(updatedEvent.lichtung_id)
+    for (const g of groups) {
+      const oldMsg = getMessageRef(g.chat_id, req.params.id)
+      if (oldMsg) {
+        deleteTelegramMessage(g.chat_id, oldMsg.message_id)
+        deleteMessageRef(g.chat_id, req.params.id)
+      }
+      sendTelegramMessage(g.chat_id, formatEventMessage(updatedEvent, 'update')).then(msgId => {
+        if (msgId) saveMessageRef(g.chat_id, msgId, req.params.id)
+      })
+    }
+  }
+
   res.json({ ok: true })
 })
 
@@ -300,6 +329,19 @@ app.delete('/api/events/:id', auth, (req, res) => {
     const subject = `Abgesagt: ${event.title} — Licht fuer Frieden`
     const bodyHtml = `<p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${event.title}</strong> wurde leider abgesagt.</p>`
     sendNewsletter(participants, subject, bodyHtml).catch(err => console.error('Event-Mail-Fehler:', err))
+  }
+
+  // Telegram: Absage an Gruppen
+  if (event.lichtung_id) {
+    const groups = getGroupsForLichtung(event.lichtung_id)
+    for (const g of groups) {
+      const oldMsg = getMessageRef(g.chat_id, req.params.id)
+      if (oldMsg) {
+        deleteTelegramMessage(g.chat_id, oldMsg.message_id)
+        deleteMessageRef(g.chat_id, req.params.id)
+      }
+      sendTelegramMessage(g.chat_id, formatEventMessage(event, 'cancel'))
+    }
   }
 
   deleteEvent(req.params.id)
@@ -737,23 +779,81 @@ app.post('/api/telegram/webhook', (req, res) => {
   if (!msg) return res.json({ ok: true })
 
   const chatId = msg.chat?.id
+  const chatType = msg.chat?.type // 'private', 'group', 'supergroup', 'channel'
+  const chatTitle = msg.chat?.title || ''
   const text = msg.text || ''
+  const isGroup = chatType === 'group' || chatType === 'supergroup' || chatType === 'channel'
 
-  if (text.startsWith('/start')) {
-    const userId = text.replace('/start', '').trim()
-    if (userId) {
-      const user = findUserByTelegramStart(userId)
-      if (user) {
-        setTelegramChatId(userId, String(chatId))
-        sendTelegramMessage(chatId, `✨ <b>Willkommen bei Licht fuer Frieden!</b>\n\nDu bist jetzt verbunden als <b>${user.name || 'Anonym'}</b>.\n\nDu erhaeltst Benachrichtigungen ueber:\n• Neue Veranstaltungen in deiner Naehe\n• Neue Verbindungen in deiner Kette\n• Neuigkeiten deiner Lichtungen\n\nEinstellungen kannst du auf lichtung.ooo anpassen.`)
+  // ─── Private Messages ───
+  if (!isGroup) {
+    if (text.startsWith('/start')) {
+      const userId = text.replace('/start', '').trim()
+      if (userId) {
+        const user = findUserByTelegramStart(userId)
+        if (user) {
+          setTelegramChatId(userId, String(chatId))
+          sendTelegramMessage(chatId, `✨ <b>Willkommen bei Licht fuer Frieden!</b>\n\nDu bist jetzt verbunden als <b>${user.name || 'Anonym'}</b>.\n\nDu erhaeltst Benachrichtigungen ueber:\n• Neue Veranstaltungen in deiner Naehe\n• Neue Verbindungen in deiner Kette\n• Neuigkeiten deiner Lichtungen\n\nEinstellungen: lichtung.ooo`)
+        } else {
+          sendTelegramMessage(chatId, 'Verbindung fehlgeschlagen. Bitte ueber lichtung.ooo erneut versuchen.')
+        }
       } else {
-        sendTelegramMessage(chatId, 'Verbindung fehlgeschlagen. Bitte versuche es ueber lichtung.ooo erneut.')
+        sendTelegramMessage(chatId, '✨ <b>Licht fuer Frieden</b>\n\nVerbinde dich ueber dein Profil auf lichtung.ooo mit diesem Bot.')
       }
-    } else {
-      sendTelegramMessage(chatId, '✨ <b>Licht fuer Frieden</b>\n\nVerbinde dich ueber dein Profil auf lichtung.ooo mit diesem Bot, um Benachrichtigungen zu erhalten.')
+    } else if (text === '/status') {
+      sendTelegramMessage(chatId, '🔗 Bot aktiv. Einstellungen auf lichtung.ooo.')
     }
-  } else if (text === '/status') {
-    sendTelegramMessage(chatId, '🔗 Dein Bot ist aktiv. Einstellungen auf lichtung.ooo.')
+  }
+
+  // ─── Group/Channel Commands ───
+  if (isGroup) {
+    if (text.startsWith('/connect')) {
+      const code = text.replace('/connect', '').replace('@lichtungsbot', '').trim()
+      if (!code) {
+        sendTelegramMessage(chatId, '💡 Nutzung: <code>/connect CODE</code>\n\nDen Code findest du auf der Lichtungs-Detailseite auf lichtung.ooo.')
+        return res.json({ ok: true })
+      }
+      const lichtung = findLichtungByCode(code)
+      if (!lichtung) {
+        sendTelegramMessage(chatId, '❌ Lichtung nicht gefunden. Pruefe den Code.')
+        return res.json({ ok: true })
+      }
+      connectGroup(chatId, chatTitle, lichtung.id, msg.from?.id ? String(msg.from.id) : null)
+      sendTelegramMessage(chatId, `✅ <b>Verbunden!</b>\n\nDiese Gruppe ist jetzt mit <b>${lichtung.name}</b> verbunden.\n\nNeue Veranstaltungen werden automatisch hier gepostet.\n\nErinnerungen setzen: <code>/remind daily</code>, <code>/remind 3days</code> oder <code>/remind weekly</code>`)
+    }
+
+    if (text.startsWith('/events')) {
+      const group = getGroupByChatId(chatId)
+      if (!group?.lichtung_id) {
+        sendTelegramMessage(chatId, 'Keine Lichtung verbunden. Nutze <code>/connect CODE</code>.')
+        return res.json({ ok: true })
+      }
+      const events = getUpcomingEventsForLichtung(group.lichtung_id, 10)
+      const lichtung = getLichtung(group.lichtung_id)
+      sendTelegramMessage(chatId, formatUpcomingEvents(events, lichtung?.name || 'Lichtung'))
+    }
+
+    if (text.startsWith('/remind')) {
+      const interval = text.replace('/remind', '').replace('@lichtungsbot', '').trim().toLowerCase()
+      const valid = ['none', 'daily', '3days', 'weekly']
+      if (!valid.includes(interval)) {
+        sendTelegramMessage(chatId, `⏰ Erinnerungs-Intervall setzen:\n\n<code>/remind daily</code> — taeglich\n<code>/remind 3days</code> — alle 3 Tage\n<code>/remind weekly</code> — woechentlich\n<code>/remind none</code> — aus`)
+        return res.json({ ok: true })
+      }
+      setGroupReminderInterval(String(chatId), interval)
+      const labels = { none: 'deaktiviert', daily: 'taeglich', '3days': 'alle 3 Tage', weekly: 'woechentlich' }
+      sendTelegramMessage(chatId, `⏰ Erinnerungen: <b>${labels[interval]}</b>`)
+    }
+
+    if (text === '/status') {
+      const group = getGroupByChatId(chatId)
+      if (group?.lichtung_id) {
+        const lichtung = getLichtung(group.lichtung_id)
+        const labels = { none: 'aus', daily: 'taeglich', '3days': 'alle 3 Tage', weekly: 'woechentlich' }
+        sendTelegramMessage(chatId, `🔗 Verbunden mit: <b>${lichtung?.name || '?'}</b>\n⏰ Erinnerungen: ${labels[group.reminder_interval] || 'aus'}`)
+      } else {
+        sendTelegramMessage(chatId, 'Keine Lichtung verbunden. Nutze <code>/connect CODE</code>.')
+      }
+    }
   }
 
   res.json({ ok: true })
@@ -790,6 +890,36 @@ app.get('/api/tags', (req, res) => {
 })
 
 // ─── Start ───
+
+// ─── Erinnerungs-Scheduler (alle 30 Minuten) ───
+
+async function runReminders() {
+  try {
+    const groups = getGroupsDueForReminder()
+    for (const g of groups) {
+      if (!g.lichtung_id) continue
+      const events = getUpcomingEventsForLichtung(g.lichtung_id, 5)
+      if (events.length === 0) continue
+
+      // Alten Erinnerungs-Post loeschen
+      const oldMsg = getMessageRef(g.chat_id, `reminder-${g.lichtung_id}`)
+      if (oldMsg) {
+        await deleteTelegramMessage(g.chat_id, oldMsg.message_id)
+        deleteMessageRef(g.chat_id, `reminder-${g.lichtung_id}`)
+      }
+
+      // Neuen Erinnerungs-Post senden
+      const msgId = await sendTelegramMessage(g.chat_id, formatUpcomingEvents(events, g.lichtung_name || 'Lichtung'))
+      if (msgId) saveMessageRef(g.chat_id, msgId, `reminder-${g.lichtung_id}`, 'reminder')
+      markReminderSent(g.chat_id)
+    }
+  } catch (err) {
+    console.error('Reminder-Fehler:', err.message)
+  }
+}
+
+setInterval(runReminders, 30 * 60 * 1000) // alle 30 Min
+setTimeout(runReminders, 10000) // 10 Sek nach Start
 
 app.listen(PORT, () => {
   console.log(`Lichtung API laeuft auf Port ${PORT}`)

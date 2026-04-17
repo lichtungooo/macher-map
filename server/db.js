@@ -144,6 +144,32 @@ try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN telegram_chat_id TEXT') } catch {}
+
+// ─── Telegram Gruppen ───
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS telegram_groups (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT UNIQUE NOT NULL,
+    chat_title TEXT DEFAULT '',
+    lichtung_id TEXT,
+    reminder_interval TEXT DEFAULT 'none',
+    last_reminder_at TEXT,
+    connected_by TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`)
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS telegram_messages (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT NOT NULL,
+    message_id INTEGER NOT NULL,
+    event_id TEXT,
+    type TEXT DEFAULT 'event',
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`)
 try { db.exec('ALTER TABLE users ADD COLUMN notify_new_connection INTEGER DEFAULT 1') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN notify_new_event INTEGER DEFAULT 1') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN notify_radius INTEGER DEFAULT 50') } catch {}
@@ -211,6 +237,74 @@ export function getUsersToNotifyForConnection(userId) {
     SELECT id, telegram_chat_id FROM users
     WHERE id = ? AND telegram_chat_id IS NOT NULL AND notify_new_connection = 1
   `).all(userId)
+}
+
+// ─── Telegram Gruppen DB ───
+
+export function connectGroup(chatId, chatTitle, lichtungId, connectedBy) {
+  const existing = db.prepare('SELECT * FROM telegram_groups WHERE chat_id = ?').get(String(chatId))
+  if (existing) {
+    db.prepare('UPDATE telegram_groups SET lichtung_id = ?, chat_title = ? WHERE chat_id = ?').run(lichtungId, chatTitle, String(chatId))
+    return existing.id
+  }
+  const id = randomUUID()
+  db.prepare('INSERT INTO telegram_groups (id, chat_id, chat_title, lichtung_id, connected_by) VALUES (?, ?, ?, ?, ?)').run(id, String(chatId), chatTitle, lichtungId, connectedBy)
+  return id
+}
+
+export function getGroupsForLichtung(lichtungId) {
+  return db.prepare('SELECT * FROM telegram_groups WHERE lichtung_id = ?').all(lichtungId)
+}
+
+export function getGroupByChatId(chatId) {
+  return db.prepare('SELECT * FROM telegram_groups WHERE chat_id = ?').get(String(chatId))
+}
+
+export function setGroupReminderInterval(chatId, interval) {
+  db.prepare('UPDATE telegram_groups SET reminder_interval = ? WHERE chat_id = ?').run(interval, String(chatId))
+}
+
+export function saveMessageRef(chatId, messageId, eventId, type = 'event') {
+  const id = randomUUID()
+  db.prepare('INSERT INTO telegram_messages (id, chat_id, message_id, event_id, type) VALUES (?, ?, ?, ?, ?)').run(id, String(chatId), messageId, eventId, type)
+}
+
+export function getMessageRef(chatId, eventId) {
+  return db.prepare('SELECT * FROM telegram_messages WHERE chat_id = ? AND event_id = ? ORDER BY created_at DESC LIMIT 1').get(String(chatId), eventId)
+}
+
+export function deleteMessageRef(chatId, eventId) {
+  db.prepare('DELETE FROM telegram_messages WHERE chat_id = ? AND event_id = ?').run(String(chatId), eventId)
+}
+
+export function getGroupsDueForReminder() {
+  const now = new Date()
+  return db.prepare(`
+    SELECT g.*, l.name as lichtung_name
+    FROM telegram_groups g LEFT JOIN lichtungen l ON g.lichtung_id = l.id
+    WHERE g.reminder_interval != 'none' AND g.lichtung_id IS NOT NULL
+  `).all().filter(g => {
+    if (!g.last_reminder_at) return true
+    const last = new Date(g.last_reminder_at)
+    const hours = (now.getTime() - last.getTime()) / (1000 * 60 * 60)
+    if (g.reminder_interval === 'daily') return hours >= 24
+    if (g.reminder_interval === '3days') return hours >= 72
+    if (g.reminder_interval === 'weekly') return hours >= 168
+    return false
+  })
+}
+
+export function markReminderSent(chatId) {
+  db.prepare('UPDATE telegram_groups SET last_reminder_at = datetime("now") WHERE chat_id = ?').run(String(chatId))
+}
+
+export function getUpcomingEventsForLichtung(lichtungId, limit = 5) {
+  return db.prepare(`
+    SELECT e.*, u.name as creator_name
+    FROM events e JOIN users u ON e.user_id = u.id
+    WHERE e.lichtung_id = ? AND e.start_time > datetime('now')
+    ORDER BY e.start_time ASC LIMIT ?
+  `).all(lichtungId, limit)
 }
 
 export function searchTags(query) {
