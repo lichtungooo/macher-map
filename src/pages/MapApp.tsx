@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { User, Link2, QrCode, CalendarDays, LocateFixed, Check, X as XIcon } from 'lucide-react'
+import { User, Link2, QrCode, CalendarDays, LocateFixed, Check, X as XIcon, Settings } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
 import { ActionButton } from '../components/map/ActionButton'
-import { MapFilters } from '../components/map/MapFilters'
+import { MapSettings } from '../components/map/MapSettings'
 import { GuidedTutorial, type TutorialStep } from '../components/map/GuidedTutorial'
 import { AuthDialog } from '../components/auth/AuthDialog'
 import { ProfileDialog } from '../components/auth/ProfileDialog'
@@ -48,6 +48,7 @@ function MapAppInner() {
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
   const [connectionCount, setConnectionCount] = useState(0)
   const [showChain, setShowChain] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
@@ -136,6 +137,25 @@ function MapAppInner() {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     )
   }, [user])
+
+  // Auto-Zoom auf 100km Umkreis beim Laden
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        // Zoom fuer 100km Radius berechnen
+        const radiusKm = 100
+        const smallerDim = Math.min(window.innerHeight, window.innerWidth)
+        const desiredMpx = (radiusKm * 2000) / smallerDim
+        const targetZoom = Math.log2((40075016.686 * Math.cos(p[0] * Math.PI / 180)) / (256 * desiredMpx))
+        const zoom = Math.max(2, Math.min(18, targetZoom))
+        setFlyTo([p[0], p[1], zoom + Math.random() * 0.001])
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    )
+  }, [])
 
   // Tutorial only for first-time visitors
   useEffect(() => {
@@ -296,13 +316,13 @@ function MapAppInner() {
         </Link>
 
         <div className="flex items-center gap-2.5" style={{ pointerEvents: 'auto' }}>
-          {/* Standort-Pointer */}
+          {/* Einstellungen */}
           <button
-            onClick={handleLocateMe}
+            onClick={() => setShowSettings(!showSettings)}
             className="rounded-full flex items-center justify-center shadow-sm"
-            style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showSettings ? 'rgba(212,168,67,0.1)' : '#fff', border: showSettings ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
           >
-            <LocateFixed size={18} style={{ color: '#D4A843' }} />
+            <Settings size={18} style={{ color: showSettings ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
           </button>
 
           {/* Lichterkette */}
@@ -374,13 +394,16 @@ function MapAppInner() {
         </div>
       )}
 
-      {/* Filters */}
-      <MapFilters
-        showLights={showLights}
-        showEvents={showEvents}
-        onToggleLights={() => setShowLights(!showLights)}
-        onToggleEvents={() => setShowEvents(!showEvents)}
-      />
+      {/* Standort-Pointer — unten links */}
+      <div className="fixed left-4 bottom-6 z-[1000]">
+        <button
+          onClick={handleLocateMe}
+          className="rounded-full flex items-center justify-center shadow-lg"
+          style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+        >
+          <LocateFixed size={18} style={{ color: '#D4A843' }} />
+        </button>
+      </div>
 
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
@@ -390,6 +413,7 @@ function MapAppInner() {
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} lichtungId={eventLichtung?.id} lichtungName={eventLichtung?.name} onClose={() => { setDialog('none'); setEventPosition(undefined); setEventLichtung(null) }} />}
       {dialog === 'create-lichtung' && <CreateLichtungDialog position={lichtungPosition} onClose={() => { setDialog('none'); setLichtungPosition(undefined) }} onCreated={() => api.getLichtungen().then(setLichtungen)} />}
       {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} />}
+      {showSettings && <MapSettings showLights={showLights} showEvents={showEvents} onToggleLights={() => setShowLights(!showLights)} onToggleEvents={() => setShowEvents(!showEvents)} onClose={() => setShowSettings(false)} />}
 
       {/* Standort-Dialog */}
       {showLocateDialog && locatedPos && (
