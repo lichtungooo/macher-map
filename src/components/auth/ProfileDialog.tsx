@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map, User } from 'lucide-react'
 import { MyEvents } from '../events/MyEvents'
 import { MyConnections } from './MyConnections'
 import { useApp } from '../../context/AppContext'
@@ -8,9 +8,10 @@ import * as api from '../../api/client'
 
 interface ProfileDialogProps {
   onClose: () => void
+  onShowChainOnMap?: () => void
 }
 
-export function ProfileDialog({ onClose }: ProfileDialogProps) {
+export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps) {
   const { user, updateProfile, logout } = useApp()
   const [name, setName] = useState(user?.name || '')
   const [statement, setStatement] = useState(user?.statement || '')
@@ -80,21 +81,27 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
   return (
     <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
       <div className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-        {/* Header with tabs */}
+        {/* Header with icon-only tabs + tooltip */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             {([
-              ['profile', 'Profil', null],
+              ['profile', 'Profil', User],
               ['events', 'Termine', CalendarDays],
               ['connections', 'Netz', Users],
-              ['settings', '', Settings],
+              ['settings', 'Einstellungen', Settings],
             ] as [string, string, any][]).map(([key, label, Icon]) => (
-              <button key={key} onClick={() => setView(key as any)}
-                className="rounded-full flex items-center justify-center gap-1 px-2.5 py-1.5"
-                style={{ background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                {Icon && <Icon size={13} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.3)' }} />}
-                {label && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', fontWeight: 500, color: view === key ? '#D4A843' : 'rgba(10,10,10,0.35)' }}>{label}</span>}
-              </button>
+              <div key={key} className="relative group">
+                <button onClick={() => setView(key as any)}
+                  className="rounded-full flex items-center justify-center"
+                  style={{ width: 36, height: 36, background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                  <Icon size={16} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                </button>
+                {/* Tooltip */}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+                  style={{ background: '#0A0A0A', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{label}</span>
+                </div>
+              </div>
             ))}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
@@ -105,7 +112,7 @@ export function ProfileDialog({ onClose }: ProfileDialogProps) {
         {view === 'events' ? (
           <MyEvents />
         ) : view === 'connections' ? (
-          <MyConnections />
+          <MyConnections onShowOnMap={onShowChainOnMap ? () => { onShowChainOnMap(); onClose() } : undefined} />
         ) : view === 'settings' ? (
           /* ─── Settings View ─── */
           <div className="space-y-4">

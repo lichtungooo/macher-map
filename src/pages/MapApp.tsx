@@ -47,6 +47,8 @@ function MapAppInner() {
   const [eventLichtung, setEventLichtung] = useState<{ id: string; name: string } | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showChain, setShowChain] = useState(false)
+  const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
 
   // Capture invite parameter
@@ -129,23 +131,50 @@ function MapAppInner() {
     )
   }, [user])
 
-  // Auto-Zoom auf 100km Umkreis beim Laden
+  // Auto-Zoom auf eigenes Licht (100km Umkreis), Fallback: GPS
   useEffect(() => {
-    if (!('geolocation' in navigator)) return
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const p: [number, number] = [pos.coords.latitude, pos.coords.longitude]
-        // Zoom fuer 100km Radius berechnen
-        const radiusKm = 100
-        const smallerDim = Math.min(window.innerHeight, window.innerWidth)
-        const desiredMpx = (radiusKm * 2000) / smallerDim
-        const targetZoom = Math.log2((40075016.686 * Math.cos(p[0] * Math.PI / 180)) / (256 * desiredMpx))
-        const zoom = Math.max(2, Math.min(18, targetZoom))
-        setFlyTo([p[0], p[1], zoom + Math.random() * 0.001])
-      },
-      () => {},
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
-    )
+    function zoomTo(lat: number, lng: number) {
+      const radiusKm = 100
+      const smallerDim = Math.min(window.innerHeight, window.innerWidth)
+      const desiredMpx = (radiusKm * 2000) / smallerDim
+      const targetZoom = Math.log2((40075016.686 * Math.cos(lat * Math.PI / 180)) / (256 * desiredMpx))
+      const zoom = Math.max(2, Math.min(18, targetZoom))
+      setFlyTo([lat, lng, zoom + Math.random() * 0.001])
+    }
+
+    // Eigenes Licht aus dem Backend laden
+    if (api.getToken()) {
+      api.getProfile().then((profile: any) => {
+        // Licht des Users finden
+        return api.getLights().then((lights: any[]) => {
+          const myLight = lights.find((l: any) => l.user_id === profile.id)
+          if (myLight) {
+            zoomTo(myLight.lat, myLight.lng)
+          } else if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              pos => zoomTo(pos.coords.latitude, pos.coords.longitude),
+              () => {},
+              { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+            )
+          }
+        })
+      }).catch(() => {
+        // Nicht eingeloggt oder Fehler → GPS Fallback
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            pos => zoomTo(pos.coords.latitude, pos.coords.longitude),
+            () => {},
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+          )
+        }
+      })
+    } else if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        pos => zoomTo(pos.coords.latitude, pos.coords.longitude),
+        () => {},
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      )
+    }
   }, [])
 
   // Tutorial only for first-time visitors
@@ -296,8 +325,8 @@ function MapAppInner() {
         lichtungen={lichtungen}
         onLichtungClick={id => setSelectedLichtung(id)}
         onShowProfile={light => setSelectedProfile(light)}
-        chainData={[]}
-        showChain={false}
+        chainData={chainData}
+        showChain={showChain}
       />
 
       {/* Top Bar */}
@@ -382,7 +411,12 @@ function MapAppInner() {
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
       {dialog === 'auth' && <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />}
-      {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} />}
+      {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} onShowChainOnMap={() => {
+        api.getChain().then(data => {
+          setChainData(data)
+          setShowChain(true)
+        }).catch(() => {})
+      }} />}
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} lichtungId={eventLichtung?.id} lichtungName={eventLichtung?.name} onClose={() => { setDialog('none'); setEventPosition(undefined); setEventLichtung(null) }} />}
       {dialog === 'create-lichtung' && <CreateLichtungDialog position={lichtungPosition} onClose={() => { setDialog('none'); setLichtungPosition(undefined) }} onCreated={() => api.getLichtungen().then(setLichtungen)} />}

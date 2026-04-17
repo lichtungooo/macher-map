@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, MessageCircle, Link2, ChevronRight } from 'lucide-react'
+import { Users, MessageCircle, Link2, ChevronRight, Map } from 'lucide-react'
 import * as api from '../../api/client'
 
 interface ConnectionProfile {
@@ -62,7 +62,11 @@ function ConnectionDetail({ connection, onClose }: { connection: ConnectionProfi
   )
 }
 
-export function MyConnections() {
+interface MyConnectionsProps {
+  onShowOnMap?: () => void
+}
+
+export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
   const [connections, setConnections] = useState<ConnectionProfile[]>([])
   const [chain, setChain] = useState<any[]>([])
   const [connectionCount, setConnectionCount] = useState(0)
@@ -104,6 +108,15 @@ export function MyConnections() {
             </p>
           )}
         </div>
+        {onShowOnMap && connectionCount > 0 && (
+          <button onClick={onShowOnMap}
+            className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.15)', cursor: 'pointer' }}
+            title="Auf der Karte zeigen"
+          >
+            <Map size={16} style={{ color: '#D4A843' }} />
+          </button>
+        )}
       </div>
 
       {/* Direkte Verbindungen */}
