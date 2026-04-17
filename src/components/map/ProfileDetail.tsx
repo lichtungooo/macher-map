@@ -30,7 +30,7 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
 
       <div className="p-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
         <div className="text-center mb-4">
-          {/* Profilbild */}
+          {/* Profilbild — immer anzeigen */}
           {data.image_path ? (
             <img src={data.image_path} alt={light.name}
               className="w-20 h-20 rounded-full object-cover mx-auto mb-3"
@@ -45,13 +45,22 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
           )}
 
           {/* Name */}
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '2px' }}>
             {light.name}
           </h2>
 
+          {/* Telegram direkt unter dem Namen */}
+          {data.telegram && (
+            <a href={`https://t.me/${data.telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+              style={{ ...font, fontSize: '0.75rem', color: '#5078C8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <MessageCircle size={12} />
+              {data.telegram}
+            </a>
+          )}
+
           {/* Datum */}
           {light.createdAt && (
-            <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.35)', marginBottom: '12px' }}>
+            <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.3)', marginTop: '8px', marginBottom: '12px' }}>
               Leuchtet seit {new Date(light.createdAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           )}
@@ -70,20 +79,6 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
             <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}
               dangerouslySetInnerHTML={{ __html: renderMd(data.bio) }} />
           </div>
-        )}
-
-        {/* Telegram Kontakt */}
-        {data.telegram && (
-          <a
-            href={`https://t.me/${data.telegram.replace('@', '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-4"
-            style={{ background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', textDecoration: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#5078C8' }}
-          >
-            <MessageCircle size={16} />
-            Telegram: {data.telegram}
-          </a>
         )}
       </div>
     </div>

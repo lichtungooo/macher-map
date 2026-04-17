@@ -38,28 +38,45 @@ interface LightMarkerProps {
 }
 
 export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
+  const data = light as any
+
   return (
     <Marker position={light.position} icon={lightIcon}>
       <Popup className="light-popup">
-        <div style={{ textAlign: 'center', padding: '4px 0', minWidth: '160px', maxWidth: '200px' }}>
-          {/* Profilbild — nur wenn vorhanden, kein Buchstaben-Fallback */}
-          {(light as any).image_path && (
-            <img
-              src={(light as any).image_path}
-              alt=""
-              style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px', border: '2px solid rgba(212,168,67,0.4)', display: 'block' }}
-            />
-          )}
-          {light.name && (
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: 'rgba(10,10,10,0.7)', margin: '0 0 4px' }}>
-              {light.name}
-            </p>
-          )}
+        <div style={{ padding: '4px 0', minWidth: '180px', maxWidth: '220px' }}>
+          {/* Profilbild links + Name/Statement rechts */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            {/* Profilbild */}
+            {data.image_path ? (
+              <img src={data.image_path} alt=""
+                style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,168,67,0.3)', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.1rem', color: '#D4A843' }}>{light.name?.charAt(0) || '?'}</span>
+              </div>
+            )}
+            {/* Name + Telegram */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', fontWeight: 500, color: '#0A0A0A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {light.name}
+              </p>
+              {data.telegram && (
+                <a href={`https://t.me/${data.telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                  style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#5078C8', textDecoration: 'none' }}>
+                  {data.telegram}
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Statement */}
           {light.statement && (
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.85rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', margin: '0 0 10px', lineHeight: 1.5 }}>
-              "{light.statement.length > 90 ? light.statement.slice(0, 90).trim() + '…' : light.statement}"
+            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', margin: '0 0 8px', lineHeight: 1.5 }}>
+              "{light.statement.length > 80 ? light.statement.slice(0, 80).trim() + '...' : light.statement}"
             </p>
           )}
+
+          {/* Mehr lesen */}
           {onShowProfile && (
             <button
               onClick={(e) => { e.stopPropagation(); onShowProfile(light) }}
@@ -67,7 +84,7 @@ export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
                 fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 500,
                 color: '#D4A843', background: 'rgba(212,168,67,0.08)',
                 border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px',
-                padding: '5px 14px', cursor: 'pointer',
+                padding: '5px 14px', cursor: 'pointer', width: '100%',
               }}
             >
               Mehr lesen
