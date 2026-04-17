@@ -21,6 +21,18 @@ import * as api from '../api/client'
 
 const BTN_SIZE = 46
 
+function MapTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="relative group">
+      {children}
+      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[1100]"
+        style={{ background: '#0A0A0A', whiteSpace: 'nowrap' }}>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{label}</span>
+      </div>
+    </div>
+  )
+}
+
 type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' | 'qr-code'
 type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung'
 
@@ -331,57 +343,65 @@ function MapAppInner() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3" style={{ pointerEvents: 'none' }}>
-        <Link to="/" style={{ textDecoration: 'none', pointerEvents: 'auto' }}>
-          <Logo size={42} />
-        </Link>
+        <MapTooltip label="Lichtung">
+          <Link to="/" style={{ textDecoration: 'none', pointerEvents: 'auto' }}>
+            <Logo size={42} />
+          </Link>
+        </MapTooltip>
 
         <div className="flex items-center gap-2.5" style={{ pointerEvents: 'auto' }}>
           {/* Einstellungen */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="rounded-full flex items-center justify-center shadow-sm"
-            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showSettings ? 'rgba(212,168,67,0.1)' : '#fff', border: showSettings ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
-          >
-            <Settings size={18} style={{ color: showSettings ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
-          </button>
+          <MapTooltip label="Einstellungen">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="rounded-full flex items-center justify-center shadow-sm"
+              style={{ width: BTN_SIZE, height: BTN_SIZE, background: showSettings ? '#F5EDD8' : '#fff', border: '1px solid ' + (showSettings ? 'rgba(212,168,67,0.35)' : 'rgba(10,10,10,0.06)'), cursor: 'pointer' }}
+            >
+              <Settings size={18} style={{ color: showSettings ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+            </button>
+          </MapTooltip>
 
           {/* Kalender */}
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="rounded-full flex items-center justify-center shadow-sm"
-            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showCalendar ? 'rgba(212,168,67,0.1)' : '#fff', border: showCalendar ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
-          >
-            <CalendarDays size={18} style={{ color: showCalendar ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
-          </button>
+          <MapTooltip label="Kalender">
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="rounded-full flex items-center justify-center shadow-sm"
+              style={{ width: BTN_SIZE, height: BTN_SIZE, background: showCalendar ? '#F5EDD8' : '#fff', border: '1px solid ' + (showCalendar ? 'rgba(212,168,67,0.35)' : 'rgba(10,10,10,0.06)'), cursor: 'pointer' }}
+            >
+              <CalendarDays size={18} style={{ color: showCalendar ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+            </button>
+          </MapTooltip>
 
           {/* Profil — mit QR-Code-Overlay */}
-          <div className="relative">
-            <button
-              onClick={() => user ? setDialog('profile') : setDialog('auth')}
-              className="rounded-full flex items-center justify-center overflow-hidden shadow-sm"
-              style={{
-                width: BTN_SIZE, height: BTN_SIZE,
-                background: user?.imageUrl ? 'transparent' : '#fff',
-                border: user?.imageUrl ? '2.5px solid rgba(212,168,67,0.4)' : '1px solid rgba(10,10,10,0.06)',
-                cursor: 'pointer',
-              }}
-            >
-              {user?.imageUrl ? (
-                <img src={user.imageUrl} alt="" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
-              )}
-            </button>
-            {user && (
+          <MapTooltip label="Profil">
+            <div className="relative">
               <button
-                onClick={() => setDialog('qr-code')}
-                className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center"
-                style={{ width: 20, height: 20, background: '#fff', border: '1px solid rgba(10,10,10,0.1)', cursor: 'pointer' }}
+                onClick={() => user ? setDialog('profile') : setDialog('auth')}
+                className="rounded-full flex items-center justify-center overflow-hidden shadow-sm"
+                style={{
+                  width: BTN_SIZE, height: BTN_SIZE,
+                  background: user?.imageUrl ? '#F5EDD8' : '#fff',
+                  border: user?.imageUrl ? '2.5px solid rgba(212,168,67,0.4)' : '1px solid rgba(10,10,10,0.06)',
+                  cursor: 'pointer',
+                }}
               >
-                <QrCode size={10} style={{ color: '#D4A843' }} />
+                {user?.imageUrl ? (
+                  <img src={user.imageUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+                )}
               </button>
-            )}
-          </div>
+              {user && (
+                <button
+                  onClick={() => setDialog('qr-code')}
+                  className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center"
+                  style={{ width: 20, height: 20, background: '#fff', border: '1px solid rgba(10,10,10,0.1)', cursor: 'pointer' }}
+                >
+                  <QrCode size={10} style={{ color: '#D4A843' }} />
+                </button>
+              )}
+            </div>
+          </MapTooltip>
         </div>
       </div>
 
@@ -399,13 +419,15 @@ function MapAppInner() {
 
       {/* Standort-Pointer — unten links */}
       <div className="fixed left-4 bottom-6 z-[1000]">
-        <button
-          onClick={handleLocateMe}
-          className="rounded-full flex items-center justify-center shadow-lg"
-          style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
-        >
-          <LocateFixed size={18} style={{ color: '#D4A843' }} />
-        </button>
+        <MapTooltip label="Standort">
+          <button
+            onClick={handleLocateMe}
+            className="rounded-full flex items-center justify-center shadow-lg"
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+          >
+            <LocateFixed size={18} style={{ color: '#D4A843' }} />
+          </button>
+        </MapTooltip>
       </div>
 
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} />
