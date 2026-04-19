@@ -366,7 +366,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                           style={{ background: '#fff', border: '1px solid rgba(80,120,200,0.12)', textDecoration: 'none' }}>
                           <MessageCircle size={12} style={{ color: '#5078C8' }} />
                           <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A' }}>{link.label}</span>
-                          {link.is_private && <Lock size={10} style={{ color: '#D4A843', marginLeft: 'auto' }} />}
+                          {!!link.is_private && <Lock size={10} style={{ color: '#D4A843', marginLeft: 'auto' }} />}
                         </a>
                       )}
                       {!isEditing && (myRole === 'owner' || myRole === 'admin') && (
