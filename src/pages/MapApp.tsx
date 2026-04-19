@@ -10,6 +10,7 @@ import { AuthDialog } from '../components/auth/AuthDialog'
 import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { QRCodeDialog } from '../components/auth/QRCodeDialog'
 import { ResetPasswordDialog } from '../components/auth/ResetPasswordDialog'
+import { GlobalEventBanner } from '../components/map/GlobalEventBanner'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { EventCalendar } from '../components/events/EventCalendar'
 import { EventDetail } from '../components/events/EventDetail'
@@ -549,6 +550,7 @@ function MapAppInner() {
       {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}
       <InfoPopup />
       <WandCursor active={mode !== 'browse'} />
+      <GlobalEventBanner onShowEvent={ev => setSelectedEvent(ev)} />
 
       {resetToken && (
         <ResetPasswordDialog

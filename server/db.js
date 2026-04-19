@@ -144,6 +144,8 @@ try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE lichtungen ADD COLUMN tags TEXT DEFAULT ""') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN wave_mode TEXT') } catch {}
+try { db.exec('ALTER TABLE events ADD COLUMN docked_to_event_id TEXT') } catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS event_co_owners (
@@ -571,12 +573,12 @@ export function getAllEvents() {
   `).all()
 }
 
-export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags }) {
+export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id }) {
   const id = randomUUID()
   db.prepare(`
-    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0, image_path || null, tags || '')
+    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0, image_path || null, tags || '', wave_mode || null, docked_to_event_id || null)
   return { id }
 }
 
@@ -587,6 +589,27 @@ export function getGlobalEvents() {
     WHERE e.is_global = 1
     ORDER BY e.start_time ASC
   `).all()
+}
+
+export function getUpcomingGlobalEvents() {
+  const now = new Date().toISOString()
+  return db.prepare(`
+    SELECT e.*, u.name as creator_name,
+      (SELECT COUNT(*) FROM events d WHERE d.docked_to_event_id = e.id) as docked_count
+    FROM events e JOIN users u ON e.user_id = u.id
+    WHERE e.is_global = 1 AND (e.start_time >= ? OR e.recurring IS NOT NULL)
+    ORDER BY e.start_time ASC
+    LIMIT 5
+  `).all(now)
+}
+
+export function getDockedEvents(globalEventId) {
+  return db.prepare(`
+    SELECT e.*, u.name as creator_name
+    FROM events e JOIN users u ON e.user_id = u.id
+    WHERE e.docked_to_event_id = ?
+    ORDER BY e.start_time ASC
+  `).all(globalEventId)
 }
 
 export function deleteEvent(eventId) {

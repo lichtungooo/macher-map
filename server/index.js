@@ -11,6 +11,7 @@ import {
   createVerifyToken, verifyEmailToken,
   getAllLights, getUserLight, createLight, getLightCount,
   getAllEvents, getEventById, updateEvent, createEvent, getGlobalEvents, deleteEvent,
+  getUpcomingGlobalEvents, getDockedEvents,
   getEventCoOwners, addEventCoOwner, removeEventCoOwner, isEventCoOwner,
   joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
   createInviteToken, verifyInviteToken,
@@ -119,7 +120,7 @@ app.post('/api/auth/login', async (req, res) => {
   const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' })
   res.json({
     token: jwtToken,
-    user: { id: user.id, email: user.email, name: user.name, statement: user.statement, image_path: user.image_path },
+    user: { id: user.id, email: user.email, name: user.name, statement: user.statement, image_path: user.image_path, is_admin: user.is_admin },
   })
 })
 
@@ -241,6 +242,51 @@ app.get('/api/events', (req, res) => {
 })
 
 app.get('/api/events/global', (req, res) => res.json(getGlobalEvents()))
+app.get('/api/events/global/upcoming', (req, res) => res.json(getUpcomingGlobalEvents()))
+app.get('/api/events/:id/docked', (req, res) => res.json(getDockedEvents(req.params.id)))
+
+// Admin: Globale Events erstellen
+app.post('/api/admin/global-events', adminAuth, (req, res) => {
+  const { title, description, start_time, end_time, wave_mode, tags, recurring, image_path } = req.body
+  if (!title || !start_time) return res.status(400).json({ error: 'Titel und Startzeit erforderlich' })
+  if (!['simultaneous', 'timezone_wave'].includes(wave_mode)) return res.status(400).json({ error: 'wave_mode muss simultaneous oder timezone_wave sein' })
+  // Globale Events haben Position = (0,0) als Platzhalter, sie werden nicht auf der Karte angezeigt
+  const result = createEvent(req.userId, {
+    title, description: description || '',
+    lat: 0, lng: 0,
+    start_time, end_time: end_time || null,
+    type: 'meditation',
+    recurring: recurring || null,
+    is_global: 1,
+    image_path: image_path || null,
+    tags: tags || '',
+    wave_mode,
+  })
+  res.json(result)
+})
+
+app.delete('/api/admin/global-events/:id', adminAuth, (req, res) => {
+  const event = getEventById(req.params.id)
+  if (!event || !event.is_global) return res.status(404).json({ error: 'Nicht gefunden' })
+  deleteEvent(req.params.id)
+  res.json({ ok: true })
+})
+
+// Event an globales Event andocken (Lichtung-Besitzer)
+app.post('/api/events/:id/dock', auth, (req, res) => {
+  const event = getEventById(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
+  if (event.user_id !== req.userId && !isEventCoOwner(req.params.id, req.userId)) {
+    return res.status(403).json({ error: 'Nur der Ersteller kann andocken' })
+  }
+  const { global_event_id } = req.body
+  if (global_event_id) {
+    const global = getEventById(global_event_id)
+    if (!global || !global.is_global) return res.status(400).json({ error: 'Kein globales Event' })
+  }
+  updateEvent(req.params.id, { docked_to_event_id: global_event_id || null })
+  res.json({ ok: true })
+})
 
 app.post('/api/events', auth, (req, res) => {
   // Slot-Verfuegbarkeit pruefen wenn an Lichtung gebunden

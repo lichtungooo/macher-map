@@ -115,6 +115,11 @@ export async function createLight(lat: number, lng: number, invitedBy?: string) 
 // ─── Events ───
 
 export async function getEvents() { return request('/events') }
+export async function getUpcomingGlobalEvents() { return request('/events/global/upcoming') }
+export async function getDockedEvents(globalEventId: string) { return request(`/events/${globalEventId}/docked`) }
+export async function dockEventToGlobal(eventId: string, globalEventId: string | null) {
+  return request(`/events/${eventId}/dock`, { method: 'POST', body: JSON.stringify({ global_event_id: globalEventId }) })
+}
 export async function createEvent(event: Record<string, unknown>) {
   return request('/events', { method: 'POST', body: JSON.stringify(event) })
 }

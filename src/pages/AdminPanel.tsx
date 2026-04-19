@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Users, Sparkles, CalendarDays, Mail, Send, LogOut, Shield, KeyRound, Bold, Italic, Heading2, Image, Link as LinkIcon, Eye, Trees, MessageCircle, Link2, UserCheck, ShieldCheck, ImagePlus } from 'lucide-react'
 import * as api from '../api/client'
+import { GlobalEventsTab } from '../components/admin/GlobalEventsTab'
 
-type Tab = 'overview' | 'users' | 'newsletter' | 'settings'
+type Tab = 'overview' | 'users' | 'globals' | 'newsletter' | 'settings'
 
 export default function AdminPanel() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -177,6 +178,7 @@ export default function AdminPanel() {
         <div className="flex gap-0 mb-6" style={{ borderBottom: '1px solid rgba(10,10,10,0.06)' }}>
           <button style={tabBtn('overview')} onClick={() => setTab('overview')}>Uebersicht</button>
           <button style={tabBtn('users')} onClick={() => setTab('users')}>Nutzer</button>
+          <button style={tabBtn('globals')} onClick={() => setTab('globals')}>Globale Events</button>
           <button style={tabBtn('newsletter')} onClick={() => setTab('newsletter')}>Newsletter</button>
           <button style={tabBtn('settings')} onClick={() => setTab('settings')}>Einstellungen</button>
         </div>
@@ -347,6 +349,8 @@ export default function AdminPanel() {
         )}
 
         {/* ─── Newsletter ─── */}
+        {tab === 'globals' && <GlobalEventsTab />}
+
         {tab === 'newsletter' && (
           <div style={card}>
             <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '12px' }}>Newsletter schreiben</h3>
