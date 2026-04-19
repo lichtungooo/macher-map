@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Globe, Clock, Trash2, Plus, Waves, Zap } from 'lucide-react'
+import { Globe, Clock, Trash2, Plus, Waves, Zap, Moon, Sparkles } from 'lucide-react'
 import * as api from '../../api/client'
 
 export function GlobalEventsTab() {
@@ -15,6 +15,13 @@ export function GlobalEventsTab() {
   const [time, setTime] = useState('21:00')
   const [recurring, setRecurring] = useState('')
   const [tags, setTags] = useState('meditation')
+
+  // Mondphasen-Seeder
+  const [seedLoading, setSeedLoading] = useState(false)
+  const [seedMsg, setSeedMsg] = useState('')
+  const [seedYears, setSeedYears] = useState(10)
+  const [seedHour, setSeedHour] = useState(21)
+  const [seedWaveMode, setSeedWaveMode] = useState<'simultaneous' | 'timezone_wave'>('timezone_wave')
 
   const load = async () => {
     try {
@@ -48,6 +55,24 @@ export function GlobalEventsTab() {
     } catch (err: any) {
       alert(err?.message || 'Fehler.')
     } finally { setLoading(false) }
+  }
+
+  const handleSeedMoon = async () => {
+    if (!confirm(`Mondphasen fuer ${seedYears} Jahre als globale Events erstellen?\n\nModus: ${seedWaveMode === 'timezone_wave' ? `${seedHour}:00 Ortszeit (Welle)` : 'Exakte UTC-Zeit (Gleichzeitig)'}\n\nDuplikate werden uebersprungen.`)) return
+    setSeedLoading(true); setSeedMsg('')
+    try {
+      const res = await fetch('/api/admin/seed-moon-events', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${api.getToken()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ years: seedYears, wave_mode: seedWaveMode, hour: seedHour }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setSeedMsg(`${data.created} Mondphasen eingetragen (insgesamt ${data.total_phases} gefunden).`)
+      load()
+    } catch (err: any) {
+      setSeedMsg('Fehler: ' + (err?.message || 'unbekannt'))
+    } finally { setSeedLoading(false) }
   }
 
   const handleDelete = async (id: string) => {
@@ -94,6 +119,45 @@ export function GlobalEventsTab() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Mondphasen-Seeder */}
+      <div style={card}>
+        <div className="flex items-center gap-2 mb-2">
+          <Moon size={16} style={{ color: '#6B4C8A' }} />
+          <h3 style={{ ...font, fontSize: '0.9rem', fontWeight: 600, color: '#0A0A0A' }}>Mondphasen automatisch eintragen</h3>
+        </div>
+        <p style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6, marginBottom: '12px' }}>
+          Erzeugt Voll- und Neumond-Meditationen als globale Events. Berechnung nach Jean Meeus (genau auf ca. 1-2 Minuten).
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div>
+            <label style={labelStyle}>Jahre voraus</label>
+            <input type="number" min="1" max="30" value={seedYears} onChange={e => setSeedYears(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg outline-none" style={inp} />
+          </div>
+          <div>
+            <label style={labelStyle}>Modus</label>
+            <select value={seedWaveMode} onChange={e => setSeedWaveMode(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-lg outline-none" style={inp}>
+              <option value="timezone_wave">Welle (Ortszeit)</option>
+              <option value="simultaneous">Exakte Mondphase</option>
+            </select>
+          </div>
+          {seedWaveMode === 'timezone_wave' && (
+            <div>
+              <label style={labelStyle}>Ortszeit</label>
+              <input type="number" min="0" max="23" value={seedHour} onChange={e => setSeedHour(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-lg outline-none" style={inp} />
+            </div>
+          )}
+        </div>
+        <button onClick={handleSeedMoon} disabled={seedLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg"
+          style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', background: seedLoading ? 'rgba(10,10,10,0.5)' : '#6B4C8A', border: 'none', cursor: seedLoading ? 'wait' : 'pointer' }}>
+          <Sparkles size={14} /> {seedLoading ? 'Wird erstellt...' : 'Mondphasen eintragen'}
+        </button>
+        {seedMsg && <p style={{ ...font, fontSize: '0.72rem', color: seedMsg.startsWith('Fehler') ? '#c44' : '#7BAE5E', marginTop: '8px' }}>{seedMsg}</p>}
       </div>
 
       {/* Create */}
