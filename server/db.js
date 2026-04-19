@@ -438,11 +438,49 @@ export function getNewsletterEmails() {
 }
 
 export function getStats() {
-  const users = db.prepare('SELECT COUNT(*) as c FROM users').get().c
-  const lights = db.prepare('SELECT COUNT(*) as c FROM lights').get().c
-  const events = db.prepare('SELECT COUNT(*) as c FROM events').get().c
-  const newsletter = db.prepare('SELECT COUNT(*) as c FROM users WHERE newsletter = 1').get().c
-  return { users, lights, events, newsletter }
+  const count = (table, where = '') => db.prepare(`SELECT COUNT(*) as c FROM ${table}${where ? ' WHERE ' + where : ''}`).get().c
+  return {
+    users: count('users'),
+    lights: count('lights'),
+    events: count('events'),
+    lichtungen: count('lichtungen'),
+    lichtung_members: count('lichtung_members'),
+    telegram_links: count('lichtung_telegram_links'),
+    telegram_groups: count('telegram_groups'),
+    gallery_images: count('lichtung_images'),
+    event_participants: count('event_participants'),
+    connections: count('connections'),
+    newsletter: count('users', 'newsletter = 1'),
+    verified: count('users', 'email_verified = 1'),
+    admins: count('users', 'is_admin = 1'),
+  }
+}
+
+export function deleteUserCompletely(userId) {
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM lights WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM connections WHERE user_a = ? OR user_b = ?').run(userId, userId)
+    db.prepare('DELETE FROM event_participants WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM lichtung_members WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM lichtung_images WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM events WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM lichtungen WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId)
+  })
+  tx()
+}
+
+export function exportUserData(userId) {
+  return {
+    profile: db.prepare('SELECT id, email, name, statement, bio, image_path, telegram, newsletter, email_verified, created_at FROM users WHERE id = ?').get(userId),
+    light: db.prepare('SELECT id, lat, lng, invited_by, created_at FROM lights WHERE user_id = ?').get(userId),
+    lichtungen: db.prepare('SELECT id, name, description, lat, lng, tags, created_at FROM lichtungen WHERE user_id = ?').all(userId),
+    events: db.prepare('SELECT id, title, description, lat, lng, start_time, end_time, type, tags, created_at FROM events WHERE user_id = ?').all(userId),
+    event_participations: db.prepare('SELECT event_id, status, created_at FROM event_participants WHERE user_id = ?').all(userId),
+    memberships: db.prepare('SELECT lichtung_id, role, created_at FROM lichtung_members WHERE user_id = ?').all(userId),
+    connections: db.prepare('SELECT user_a, user_b, created_at FROM connections WHERE user_a = ? OR user_b = ?').all(userId, userId),
+    exported_at: new Date().toISOString(),
+  }
 }
 
 // ─── Lights ───

@@ -15,6 +15,7 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
   const [newsletter, setNewsletter] = useState(false)
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,6 +28,7 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
     try {
       if (mode === 'register') {
         if (password !== password2) { setError('Passwoerter stimmen nicht ueberein.'); setLoading(false); return }
+        if (!privacyAccepted) { setError('Bitte Datenschutzerklaerung zustimmen.'); setLoading(false); return }
         const user = await api.register(email.trim(), password, newsletter)
         onSuccess(user)
       } else if (mode === 'login') {
@@ -105,6 +107,20 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
                 </div>
               )}
 
+              {/* Datenschutz-Einwilligung (register only, pflicht) */}
+              {mode === 'register' && (
+                <label className="flex items-start gap-3 mb-3 cursor-pointer">
+                  <button type="button" onClick={() => setPrivacyAccepted(!privacyAccepted)}
+                    className="w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
+                    style={{ border: privacyAccepted ? 'none' : '1px solid rgba(10,10,10,0.15)', background: privacyAccepted ? '#D4A843' : '#fff', cursor: 'pointer' }}>
+                    {privacyAccepted && <Check size={14} color="#fff" />}
+                  </button>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', lineHeight: 1.5, color: 'rgba(10,10,10,0.5)' }}>
+                    Ich habe die <a href="/datenschutz" target="_blank" rel="noopener noreferrer" style={{ color: '#D4A843' }}>Datenschutzerklaerung</a> gelesen und stimme der Verarbeitung meiner Daten zu.
+                  </span>
+                </label>
+              )}
+
               {/* Newsletter (register only) */}
               {mode === 'register' && (
                 <label className="flex items-start gap-3 mb-4 cursor-pointer">
@@ -114,7 +130,7 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
                     {newsletter && <Check size={14} color="#fff" />}
                   </button>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', lineHeight: 1.5, color: 'rgba(10,10,10,0.5)' }}>
-                    Ueber Friedensveranstaltungen und Neuigkeiten informiert werden.
+                    Ueber Friedensveranstaltungen und Neuigkeiten informiert werden (freiwillig).
                   </span>
                 </label>
               )}

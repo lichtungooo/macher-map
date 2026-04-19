@@ -240,13 +240,61 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
 
+            {/* Datenschutz */}
+            <div>
+              <label style={labelStyle}>Meine Daten</label>
+              <div className="space-y-2">
+                <button
+                  onClick={async () => {
+                    try { await api.exportMyData() } catch { alert('Download fehlgeschlagen.') }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg"
+                  style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#0A0A0A', cursor: 'pointer' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5078C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Meine Daten herunterladen
+                </button>
+                <a href="/datenschutz" target="_blank" rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg"
+                  style={{ background: 'none', border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(10,10,10,0.55)', cursor: 'pointer', textDecoration: 'none' }}>
+                  Datenschutzerklaerung
+                </a>
+              </div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: 'rgba(10,10,10,0.35)', marginTop: '6px', lineHeight: 1.5 }}>
+                Du kannst jederzeit alle deine Daten als JSON-Datei herunterladen.
+              </p>
+            </div>
+
+            <hr style={{ border: 'none', borderTop: '1px solid rgba(10,10,10,0.06)', margin: '16px 0' }} />
+
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-lg"
-              style={{ background: 'none', border: '1px solid rgba(200,50,50,0.2)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#c44', cursor: 'pointer' }}
+              style={{ background: 'none', border: '1px solid rgba(10,10,10,0.15)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(10,10,10,0.6)', cursor: 'pointer' }}
             >
               <LogOut size={16} />
               Abmelden
+            </button>
+
+            {/* Konto loeschen */}
+            <button
+              onClick={async () => {
+                if (!confirm('Moechtest du dein Konto und alle deine Daten wirklich unwiderruflich loeschen? Deine Lichter, Veranstaltungen und Lichtungen werden entfernt. Das kann nicht rueckgaengig gemacht werden.')) return
+                if (!confirm('Letzter Hinweis: Diese Aktion ist endgueltig. Moechtest du wirklich loeschen?')) return
+                try {
+                  await api.deleteAccount()
+                  api.clearToken()
+                  logout()
+                  onClose()
+                  window.location.href = '/'
+                } catch (err: any) {
+                  alert(err?.message || 'Loeschen fehlgeschlagen.')
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg"
+              style={{ background: 'none', border: '1px solid rgba(200,50,50,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#c44', cursor: 'pointer' }}
+            >
+              Konto und alle Daten loeschen
             </button>
           </div>
         ) : (

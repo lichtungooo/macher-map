@@ -21,7 +21,7 @@ import {
   getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink, updateLichtungTelegramLink,
   getLichtungImages, addLichtungImage, deleteLichtungImage,
   getEventMaxParticipants,
-  getStats, getRecentUsers, getNewsletterEmails,
+  getStats, getRecentUsers, getNewsletterEmails, deleteUserCompletely, exportUserData,
   searchTags, ensureTag,
   setTelegramChatId, findUserByTelegramStart, updateNotifySettings, getUsersToNotifyForEvent, getUsersToNotifyForConnection,
   connectGroup, getGroupsForLichtung, getGroupByChatId, setGroupReminderInterval,
@@ -184,6 +184,18 @@ app.put('/api/profile', auth, (req, res) => {
   if (telegram !== undefined) fields.telegram = telegram
   updateUser(req.userId, fields)
   res.json({ ok: true })
+})
+
+app.delete('/api/profile', auth, (req, res) => {
+  deleteUserCompletely(req.userId)
+  res.json({ ok: true })
+})
+
+app.get('/api/profile/export', auth, (req, res) => {
+  const data = exportUserData(req.userId)
+  res.setHeader('Content-Disposition', 'attachment; filename="lichtung-meine-daten.json"')
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(data, null, 2))
 })
 
 app.post('/api/profile/image', auth, upload.single('image'), (req, res) => {

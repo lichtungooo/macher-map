@@ -47,8 +47,8 @@ export default function Footer() {
             <br />Gemeinnuetziger Verein
           </p>
           <div className="flex gap-4 mt-2">
-            <a href="#" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', textDecoration: 'none' }}>Impressum</a>
-            <a href="#" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', textDecoration: 'none' }}>Datenschutz</a>
+            <a href="/impressum" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', textDecoration: 'none' }}>Impressum</a>
+            <a href="/datenschutz" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', textDecoration: 'none' }}>Datenschutz</a>
           </div>
         </div>
       </div>

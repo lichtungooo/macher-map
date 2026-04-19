@@ -85,6 +85,25 @@ export async function uploadProfileImage(file: File) {
   return request('/profile/image', { method: 'POST', body: formData })
 }
 
+export async function deleteAccount() {
+  return request('/profile', { method: 'DELETE' })
+}
+
+export async function exportMyData() {
+  const token = getToken()
+  const res = await fetch('/api/profile/export', { headers: token ? { 'Authorization': `Bearer ${token}` } : {} })
+  if (!res.ok) throw new Error('Export fehlgeschlagen')
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'lichtung-meine-daten.json'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 // ─── Lights ───
 
 export async function getLights() { return request('/lights') }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, Sparkles, CalendarDays, Mail, Send, LogOut, Shield, KeyRound, Bold, Italic, Heading2, Image, Link as LinkIcon, Eye } from 'lucide-react'
+import { Users, Sparkles, CalendarDays, Mail, Send, LogOut, Shield, KeyRound, Bold, Italic, Heading2, Image, Link as LinkIcon, Eye, Trees, MessageCircle, Link2, UserCheck, ShieldCheck, ImagePlus } from 'lucide-react'
 import * as api from '../api/client'
 
 type Tab = 'overview' | 'users' | 'newsletter' | 'settings'
@@ -137,19 +137,74 @@ export default function AdminPanel() {
 
         {/* ─── Overview ─── */}
         {tab === 'overview' && stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: Users, label: 'Nutzer', value: stats.users },
-              { icon: Sparkles, label: 'Lichter', value: stats.lights },
-              { icon: CalendarDays, label: 'Events', value: stats.events },
-              { icon: Mail, label: 'Newsletter', value: stats.newsletter },
-            ].map((s, i) => (
-              <div key={i} style={card}>
-                <s.icon size={20} style={{ color: '#D4A843', marginBottom: '8px' }} />
-                <div style={{ fontSize: '1.8rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
+          <div className="space-y-6">
+            {/* Menschen */}
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>Menschen</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { icon: Users, label: 'Nutzer', value: stats.users, color: '#D4A843' },
+                  { icon: UserCheck, label: 'E-Mail bestaetigt', value: stats.verified, color: '#7BAE5E' },
+                  { icon: ShieldCheck, label: 'Admins', value: stats.admins, color: '#6B4C8A' },
+                  { icon: Mail, label: 'Newsletter', value: stats.newsletter, color: '#5078C8' },
+                ].map((s, i) => (
+                  <div key={i} style={card}>
+                    <s.icon size={18} style={{ color: s.color, marginBottom: '8px' }} />
+                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Inhalte */}
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>Inhalte</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { icon: Sparkles, label: 'Lichter', value: stats.lights, color: '#D4A843' },
+                  { icon: Trees, label: 'Lichtungen', value: stats.lichtungen, color: '#7BAE5E' },
+                  { icon: CalendarDays, label: 'Events', value: stats.events, color: '#5078C8' },
+                  { icon: ImagePlus, label: 'Galerie-Bilder', value: stats.gallery_images, color: '#C9A8E0' },
+                ].map((s, i) => (
+                  <div key={i} style={card}>
+                    <s.icon size={18} style={{ color: s.color, marginBottom: '8px' }} />
+                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Verbindungen */}
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>Verbindungen</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { icon: Link2, label: 'Mensch-zu-Mensch', value: stats.connections, color: '#D4A843' },
+                  { icon: Shield, label: 'Lichtung-Mitglieder', value: stats.lichtung_members, color: '#7BAE5E' },
+                  { icon: UserCheck, label: 'Event-Teilnahmen', value: stats.event_participants, color: '#5078C8' },
+                  { icon: MessageCircle, label: 'Telegram-Gruppen', value: stats.telegram_groups + stats.telegram_links, color: '#6BA3BE' },
+                ].map((s, i) => (
+                  <div key={i} style={card}>
+                    <s.icon size={18} style={{ color: s.color, marginBottom: '8px' }} />
+                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* DSGVO-Hinweis */}
+            <div style={{ ...card, background: 'rgba(212,168,67,0.04)', borderColor: 'rgba(212,168,67,0.2)' }}>
+              <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A', marginBottom: '6px' }}>
+                Datenschutz
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
+                Jeder Nutzer kann sein Konto loeschen und seine Daten exportieren (im Profil unter Einstellungen).
+                Bilder liegen im Volume /data/uploads, Passwoerter sind bcrypt-gehasht, alle Verbindungen sind TLS-verschluesselt.
+              </p>
+            </div>
           </div>
         )}
 
