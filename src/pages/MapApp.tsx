@@ -35,7 +35,7 @@ function MapTooltip({ label, children }: { label: string; children: React.ReactN
 }
 
 type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' | 'qr-code'
-type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung'
+type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung' | 'move-lichtung'
 
 function MapAppInner() {
   const { user, setLights, setEvents, login: loginCtx } = useApp()
@@ -57,6 +57,7 @@ function MapAppInner() {
   const [lichtungen, setLichtungen] = useState<any[]>([])
   const [selectedLichtung, setSelectedLichtung] = useState<string | null>(null)
   const [lichtungPosition, setLichtungPosition] = useState<[number, number] | undefined>()
+  const [movingLichtungId, setMovingLichtungId] = useState<string | null>(null)
   const [eventLichtung, setEventLichtung] = useState<{ id: string; name: string } | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
   const [selectedEvent, setSelectedEvent] = useState<any>(null)
@@ -332,6 +333,17 @@ function MapAppInner() {
       setLichtungPosition(position)
       setDialog('create-lichtung')
       setMode('browse')
+    } else if (mode === 'move-lichtung' && movingLichtungId) {
+      try {
+        await api.updateLichtung(movingLichtungId, { lat: position[0], lng: position[1] })
+        const updated = await api.getLichtungen()
+        setLichtungen(updated)
+        setSelectedLichtung(movingLichtungId)
+      } catch (err) {
+        console.error('Lichtung verschieben fehlgeschlagen:', err)
+      }
+      setMovingLichtungId(null)
+      setMode('browse')
     }
   }
 
@@ -419,12 +431,17 @@ function MapAppInner() {
 
       {/* Mode Indicator */}
       {mode !== 'browse' && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', textAlign: 'center' }}>
             {mode === 'place-light' && 'Setze dein Licht auf die Karte'}
             {mode === 'place-lichtung' && 'Setze deinen Ort auf die Karte'}
             {mode === 'place-event' && 'Setze deinen Termin auf die Karte'}
+            {mode === 'move-lichtung' && 'Tippe den neuen Ort der Lichtung an'}
           </p>
+          <button onClick={() => { setMode('browse'); setMovingLichtungId(null) }}
+            style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+            Abbrechen
+          </button>
         </div>
       )}
 
@@ -518,6 +535,11 @@ function MapAppInner() {
         onShowOnMap={(lat, lng) => {
           setSelectedLichtung(null)
           setFlyTo([lat, lng, 16 + Math.random() * 0.001])
+        }}
+        onMoveLichtung={(lid) => {
+          setMovingLichtungId(lid)
+          setSelectedLichtung(null)
+          setMode('move-lichtung')
         }} />}
       {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
       {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}

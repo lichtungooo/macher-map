@@ -140,6 +140,14 @@ export async function getLichtungEvents(id: string) { return request(`/lichtunge
 export async function createLichtung(data: { name: string; description: string; lat: number; lng: number }) {
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
+export async function updateLichtung(id: string, data: { name?: string; description?: string; lat?: number; lng?: number }) {
+  return request(`/lichtungen/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export async function uploadLichtungProfileImage(id: string, file: File) {
+  const formData = new FormData()
+  formData.append('image', file)
+  return request(`/lichtungen/${id}/image`, { method: 'POST', body: formData })
+}
 
 // ─── Lichtung Galerie ───
 

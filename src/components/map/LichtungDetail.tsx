@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2, Pencil, Crosshair } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Pencil, Crosshair, Move, Camera } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
@@ -20,9 +20,10 @@ interface LichtungDetailProps {
   onClose: () => void
   onCreateEvent?: (lichtungId: string, lichtungName: string, position: [number, number]) => void
   onShowOnMap?: (lat: number, lng: number) => void
+  onMoveLichtung?: (lichtungId: string) => void
 }
 
-export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap, onMoveLichtung }: LichtungDetailProps) {
   const { setEvents: setGlobalEvents, user } = useApp()
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
@@ -184,10 +185,47 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap
       <div className="overflow-y-auto p-5" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {tab === 'info' && (
           <>
-            {/* Bild */}
-            {lichtung.image_path && (
-              <img src={lichtung.image_path} alt={lichtung.name} className="w-full h-40 object-cover rounded-xl mb-4" />
-            )}
+            {/* Profilbild mit QR-Code + Upload */}
+            <div className="relative w-full h-40 rounded-xl overflow-hidden mb-4" style={{ background: 'rgba(123,174,94,0.06)', border: '1px solid rgba(10,10,10,0.04)' }}>
+              {lichtung.image_path ? (
+                <img src={lichtung.image_path} alt={lichtung.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center">
+                  <QrCode size={24} style={{ color: 'rgba(123,174,94,0.3)', marginBottom: '6px' }} />
+                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.35)' }}>Noch kein Bild</span>
+                </div>
+              )}
+
+              {/* Upload-Overlay (nur Owner/Admin) */}
+              {(myRole === 'owner' || myRole === 'admin') && (
+                <>
+                  <input type="file" accept="image/*" id={`lichtung-img-${lichtungId}`} className="hidden"
+                    onChange={async e => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      await api.uploadLichtungProfileImage(lichtungId, file)
+                      const updated = await api.getLichtung(lichtungId)
+                      setLichtung(updated)
+                    }} />
+                  <label htmlFor={`lichtung-img-${lichtungId}`}
+                    className="absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
+                    style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid rgba(10,10,10,0.08)' }}
+                    title="Bild hochladen">
+                    <Camera size={13} style={{ color: 'rgba(10,10,10,0.6)' }} />
+                  </label>
+                </>
+              )}
+
+              {/* QR-Code klein unten rechts */}
+              {qrUrl && myRole && (
+                <button onClick={() => setShowFullQR(true)}
+                  className="absolute bottom-2 right-2 rounded-lg overflow-hidden p-1"
+                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}
+                  title="QR-Code vergroessern">
+                  <QRCodeSVG value={qrUrl} size={52} bgColor="#fff" fgColor="#0A0A0A" level="M" />
+                </button>
+              )}
+            </div>
 
             {editMode ? (
               /* ─── Bearbeiten ─── */
@@ -206,9 +244,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap
                 </div>
                 <div className="flex gap-2">
                   <button onClick={async () => {
-                    await api.createLichtung({ name: editName, description: editDesc, lat: lichtung.lat, lng: lichtung.lng })
-                    // Actually use updateLichtung
-                    await fetch(`/api/lichtungen/${lichtungId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${api.getToken()}` }, body: JSON.stringify({ name: editName, description: editDesc }) })
+                    await api.updateLichtung(lichtungId, { name: editName, description: editDesc })
                     const updated = await api.getLichtung(lichtungId)
                     setLichtung(updated)
                     setEditMode(false)
@@ -238,6 +274,14 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap
                         className="w-8 h-8 rounded-lg flex items-center justify-center"
                         style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
                         <Crosshair size={13} style={{ color: '#7BAE5E' }} />
+                      </button>
+                    )}
+                    {onMoveLichtung && (myRole === 'owner' || myRole === 'admin') && (
+                      <button onClick={() => onMoveLichtung(lichtungId)}
+                        title="Position auf Karte neu setzen"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                        <Move size={13} style={{ color: '#D4A843' }} />
                       </button>
                     )}
                     {(myRole === 'owner' || myRole === 'admin') && (
@@ -390,37 +434,6 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap
               </div>
             )}
 
-            {/* QR-Code (alle Mitglieder) */}
-            {qrUrl && myRole && (
-              <div className="rounded-xl p-4 mt-4" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <QrCode size={13} style={{ color: '#7BAE5E' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#0A0A0A' }}>Einladung zur Lichtung</span>
-                </div>
-
-                <button onClick={() => setShowFullQR(true)}
-                  className="w-full flex items-center justify-center p-3 rounded-lg transition-all"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                  <div className="flex items-center gap-3">
-                    <QRCodeSVG value={qrUrl} size={70} bgColor="#fff" fgColor="#0A0A0A" level="M" />
-                    <div className="text-left">
-                      <div style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#0A0A0A' }}>Tippe zum Vergroessern</div>
-                      <div style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.4)', marginTop: '2px' }}>
-                        Wer ihn scannt, wird Mitglied
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Maximize2 size={10} style={{ color: '#7BAE5E' }} />
-                        <span style={{ ...font, fontSize: '0.6rem', color: '#7BAE5E' }}>Vollbild</span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-
-                <p style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.35)', marginTop: '8px', lineHeight: 1.5 }}>
-                  Wer durch dich beitritt, ist mit dir verbunden. Du buergst fuer ihn.
-                </p>
-              </div>
-            )}
           </>
         )}
         {tab === 'kalender' && (

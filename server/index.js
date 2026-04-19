@@ -490,7 +490,15 @@ app.post('/api/lichtungen', auth, (req, res) => {
 })
 
 app.put('/api/lichtungen/:id', auth, (req, res) => {
-  updateLichtung(req.params.id, req.body)
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Hueter/Gaertner.' })
+  const { name, description, lat, lng } = req.body
+  const fields = {}
+  if (name !== undefined) fields.name = name
+  if (description !== undefined) fields.description = description
+  if (lat !== undefined) fields.lat = lat
+  if (lng !== undefined) fields.lng = lng
+  updateLichtung(req.params.id, fields)
   res.json({ ok: true })
 })
 
