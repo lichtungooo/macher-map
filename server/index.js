@@ -77,7 +77,7 @@ function auth(req, res, next) {
 function adminAuth(req, res, next) {
   auth(req, res, () => {
     const user = findUserById(req.userId)
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user || (!user.is_admin && user.email !== ADMIN_EMAIL)) {
       return res.status(403).json({ error: 'Kein Zugriff' })
     }
     next()
