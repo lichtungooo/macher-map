@@ -163,14 +163,6 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
     api.getLichtungSlots(lichtungId, from, to).then(setMonthSlots)
   }
 
-  const handleCloseDayToggle = async () => {
-    if (!selectedDate) return
-    const dayInfo = daySlotMap[selectedDate]
-    const newStatus = dayInfo?.status === 'closed' ? 'open' : 'closed'
-    await api.setLichtungSlot(lichtungId, selectedDate, newStatus, 1, '')
-    api.getLichtungSlots(lichtungId, from, to).then(setMonthSlots)
-  }
-
   // ── Drag fuer Slot-Erstellung ──
   const startDrag = (date: string, hour: number) => {
     setDrag({ date, startHour: hour, endHour: hour + 1 })
@@ -279,12 +271,9 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
       {/* Kompakter Header: Name + Datum-Nav + Tabs + X in einer Zeile */}
       <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b flex-wrap" style={{ borderColor: 'rgba(10,10,10,0.06)', background: '#fff' }}>
         {/* Lichtung-Name */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div className="w-2 h-2 rounded-full" style={{ background: '#7BAE5E' }} />
-          <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate max-w-[150px]">
-            {lichtungName}
-          </span>
-        </div>
+        <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate max-w-[150px] shrink-0">
+          {lichtungName}
+        </span>
 
         {/* Navigation + Datum */}
         {view !== 'list' && (
@@ -317,23 +306,6 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
             </button>
           ))}
         </div>
-
-        {/* Admin-Toggle — nur Hueter/Gaertner */}
-        {isGaertner && (
-          <button onClick={() => setAdminMode(!adminMode)}
-            title={adminMode ? 'Admin-Modus beenden' : 'Administrationsmodus'}
-            className="flex items-center gap-1 rounded-lg px-2"
-            style={{
-              ...font, fontSize: '0.65rem', fontWeight: 500,
-              background: adminMode ? 'rgba(212,168,67,0.15)' : '#fff',
-              color: adminMode ? '#D4A843' : 'rgba(10,10,10,0.4)',
-              border: `1px solid ${adminMode ? 'rgba(212,168,67,0.3)' : 'rgba(10,10,10,0.08)'}`,
-              cursor: 'pointer', height: '27px',
-            }}>
-            <Shield size={11} />
-            <span className="hidden sm:inline">Admin</span>
-          </button>
-        )}
 
         <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center"
           style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
@@ -439,6 +411,27 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         {view === 'week' && (
           <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
+
+              {/* Admin-Checkbox (nur Hueter/Gaertner) */}
+              {isGaertner && (
+                <label className="flex items-center gap-2 mb-3 cursor-pointer select-none" style={{ width: 'fit-content' }}>
+                  <button type="button" onClick={() => setAdminMode(!adminMode)}
+                    className="w-4 h-4 rounded flex items-center justify-center shrink-0"
+                    style={{
+                      border: adminMode ? 'none' : '1px solid rgba(10,10,10,0.2)',
+                      background: adminMode ? '#D4A843' : '#fff',
+                      cursor: 'pointer',
+                    }}>
+                    {adminMode && <span style={{ color: '#fff', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>&#10003;</span>}
+                  </button>
+                  <Shield size={12} style={{ color: adminMode ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+                  <span onClick={() => setAdminMode(!adminMode)}
+                    style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: adminMode ? '#D4A843' : 'rgba(10,10,10,0.5)' }}>
+                    Slots verwalten
+                  </span>
+                </label>
+              )}
+
               {/* Wochen-Grid: Stunden-Spalte + 7 Tag-Spalten */}
               <div className="rounded-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
                 {/* Tag-Header */}
@@ -669,16 +662,6 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                 </div>
               )}
 
-              {/* Ganztag sperren */}
-              {isHueter && (
-                <button onClick={handleCloseDayToggle}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
-                  style={{ background: isClosed ? 'rgba(200,60,60,0.08)' : '#fff', border: `1px solid ${isClosed ? '#c44' : 'rgba(10,10,10,0.08)'}`, ...font, fontSize: '0.82rem', fontWeight: 500, color: isClosed ? '#c44' : 'rgba(10,10,10,0.5)', cursor: 'pointer' }}>
-                  {isClosed ? <Lock size={14} /> : <Unlock size={14} />}
-                  {isClosed ? 'Tag ist gesperrt — klicke zum Oeffnen' : 'Ganzen Tag sperren'}
-                </button>
-              )}
-
               {isClosed ? (
                 <div className="rounded-xl p-12 text-center" style={{ background: 'rgba(200,60,60,0.04)', border: '1px solid rgba(200,60,60,0.12)' }}>
                   <Lock size={32} style={{ color: '#c44', margin: '0 auto 12px' }} />
@@ -825,13 +808,6 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         )}
       </div>
 
-      {isGaertner && (
-        <div className="px-6 py-3 border-t" style={{ borderColor: 'rgba(10,10,10,0.06)', background: '#fff' }}>
-          <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center' }}>
-            {isHueter ? 'Als Hueter kannst du Slots oeffnen und Tage sperren.' : 'Als Gaertner kannst du Termine in offene Slots eintragen.'}
-          </p>
-        </div>
-      )}
 
       {/* Drag-Dialog: Slot-Aktion */}
       {dragDialog && (
