@@ -21,7 +21,8 @@ export default function PrivacyPage() {
           <h2 style={h2Style}>1. Verantwortlicher</h2>
           <p>
             Kollektiv Lichtung e.V.<br />
-            [Anschrift einfuegen]<br />
+            Waldstr. 9<br />
+            34587 Felsberg<br />
             E-Mail: frieden@lichtung.ooo
           </p>
 

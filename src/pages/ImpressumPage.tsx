@@ -18,7 +18,8 @@ export default function ImpressumPage() {
           <h2 style={h2Style}>Angaben gemaess &sect; 5 TMG</h2>
           <p>
             Kollektiv Lichtung e.V.<br />
-            [Anschrift einfuegen]<br />
+            Waldstr. 9<br />
+            34587 Felsberg<br />
             Deutschland
           </p>
 
