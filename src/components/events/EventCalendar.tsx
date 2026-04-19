@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { X, CalendarDays, Clock, ChevronLeft, ChevronRight, Repeat, Navigation as NavIcon, Plus } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import { EventDetail } from './EventDetail'
+import * as api from '../../api/client'
 
 function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371
@@ -47,6 +48,22 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
   const [monthOffset, setMonthOffset] = useState(0)
   const [radiusKm, setRadiusKm] = useState(100)
   const [userPos, setUserPos] = useState<[number, number] | null>(null)
+  const [moonPhases, setMoonPhases] = useState<{ type: 'neumond' | 'vollmond'; time: string }[]>([])
+  const [moonPopup, setMoonPopup] = useState<{ type: string; time: string } | null>(null)
+
+  useEffect(() => {
+    api.getMoonPhases(24).then(setMoonPhases).catch(() => {})
+  }, [])
+
+  const moonByDate = useMemo(() => {
+    const map: Record<string, { type: 'neumond' | 'vollmond'; time: string }> = {}
+    for (const p of moonPhases) {
+      const d = new Date(p.time)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      map[key] = p
+    }
+    return map
+  }, [moonPhases])
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -179,6 +196,35 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
         </div>
       </div>
 
+      {/* Mondphase-Popup */}
+      {moonPopup && (
+        <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4"
+          onClick={() => setMoonPopup(null)}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()}
+            className="rounded-2xl p-5 shadow-xl text-center"
+            style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', minWidth: '220px' }}>
+            <div className="flex justify-center mb-3">
+              <div style={{
+                width: 42, height: 42, borderRadius: '50%',
+                background: moonPopup.type === 'vollmond' ? '#F5E090' : 'transparent',
+                border: `3px solid ${moonPopup.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                boxShadow: moonPopup.type === 'vollmond' ? '0 0 16px rgba(245,224,144,0.7)' : 'none',
+              }} />
+            </div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+              {moonPopup.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+            </h3>
+            <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.55)' }}>
+              {new Date(moonPopup.time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+            </p>
+            <p style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.3)', marginTop: '6px' }}>
+              Ortszeit deines Geraets
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
         {view === 'list' ? (
@@ -238,24 +284,55 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
               ))}
             </div>
             <div className="grid grid-cols-7 gap-0.5">
-              {calendarDays.map((day, i) => (
-                <div key={i} className="aspect-square rounded-lg flex flex-col items-center justify-start pt-1"
-                  style={{ background: day.inMonth ? (day.events.length > 0 ? 'rgba(212,168,67,0.06)' : '#FAFAF8') : 'transparent', cursor: day.events.length > 0 ? 'pointer' : 'default' }}
-                  onClick={() => day.events.length > 0 && setSelectedEvent(day.events[0])}>
-                  {day.inMonth && (
-                    <>
-                      <span style={{ ...font, fontSize: '0.68rem', fontWeight: day.date === now.getDate() && monthOffset === 0 ? 700 : 400, color: day.date === now.getDate() && monthOffset === 0 ? '#D4A843' : 'rgba(10,10,10,0.45)' }}>{day.date}</span>
-                      {day.events.length > 0 && (
-                        <div className="flex gap-0.5 mt-0.5">
-                          {day.events.slice(0, 3).map((e, j) => (
-                            <div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ))}
+              {calendarDays.map((day, i) => {
+                const y = viewMonth.getFullYear(), m = viewMonth.getMonth()
+                const dateKey = day.inMonth ? `${y}-${String(m + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}` : ''
+                const moon = dateKey ? moonByDate[dateKey] : undefined
+                return (
+                  <div key={i} className="relative aspect-square rounded-lg flex flex-col items-center justify-start pt-1"
+                    style={{ background: day.inMonth ? (day.events.length > 0 ? 'rgba(212,168,67,0.06)' : '#FAFAF8') : 'transparent', cursor: day.events.length > 0 ? 'pointer' : 'default' }}
+                    onClick={() => day.events.length > 0 && setSelectedEvent(day.events[0])}>
+                    {day.inMonth && (
+                      <>
+                        <span style={{ ...font, fontSize: '0.68rem', fontWeight: day.date === now.getDate() && monthOffset === 0 ? 700 : 400, color: day.date === now.getDate() && monthOffset === 0 ? '#D4A843' : 'rgba(10,10,10,0.45)' }}>{day.date}</span>
+                        {day.events.length > 0 && (
+                          <div className="flex gap-0.5 mt-0.5">
+                            {day.events.slice(0, 3).map((e, j) => (
+                              <div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
+                            ))}
+                          </div>
+                        )}
+                        {moon && (
+                          <span
+                            onClick={(e) => { e.stopPropagation(); setMoonPopup(moon) }}
+                            title={`${moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'} um ${new Date(moon.time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`}
+                            style={{
+                              position: 'absolute', top: 2, right: 2,
+                              width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
+                              background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
+                              border: `1.2px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                              boxShadow: moon.type === 'vollmond' ? '0 0 3px rgba(245,224,144,0.6)' : 'none',
+                              cursor: 'pointer',
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Legende */}
+            <div className="flex items-center justify-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
+              <div className="flex items-center gap-1.5">
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F5E090', border: '1.5px solid #D4A843' }} />
+                <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.4)' }}>Vollmond</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'transparent', border: '1.5px solid #6B4C8A' }} />
+                <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.4)' }}>Neumond</span>
+              </div>
             </div>
           </div>
         )}
