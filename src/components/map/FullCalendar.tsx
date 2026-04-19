@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, X, Plus, Trash2, Lock, Unlock, List } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Plus, Trash2, Lock, Unlock } from 'lucide-react'
 import * as api from '../../api/client'
 
 const MONTHS = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
 const DAYS_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
-const HOURS = Array.from({ length: 18 }, (_, i) => i + 6)
+const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 interface FullCalendarProps {
   lichtungId: string
@@ -167,53 +167,93 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
   const dayInfo = selectedDate ? daySlotMap[selectedDate] : null
   const isClosed = dayInfo?.status === 'closed'
 
+  // Datum-Label je nach View
+  const dateLabel = (() => {
+    if (view === 'month') return `${MONTHS[m]} ${y}`
+    if (view === 'week') {
+      const a = weekDays[0], b = weekDays[6]
+      if (!a || !b) return ''
+      return `${a.day}. ${MONTHS[a.month]?.slice(0, 3)} \u2013 ${b.day}. ${MONTHS[b.month]?.slice(0, 3)} ${y}`
+    }
+    if (view === 'day' && selectedDate) {
+      const d = new Date(selectedDate)
+      return `${DAYS_SHORT[(d.getDay() + 6) % 7]}, ${d.getDate()}. ${MONTHS[d.getMonth()]?.slice(0, 3)} ${d.getFullYear()}`
+    }
+    return 'Kommende Termine'
+  })()
+
+  const navPrev = () => {
+    if (view === 'month') setMonthOffset(monthOffset - 1)
+    else if (view === 'week') setWeekOffset(weekOffset - 1)
+    else if (view === 'day' && selectedDate) {
+      const d = new Date(selectedDate); d.setDate(d.getDate() - 1)
+      setSelectedDate(d.toISOString().slice(0, 10))
+    }
+  }
+  const navNext = () => {
+    if (view === 'month') setMonthOffset(monthOffset + 1)
+    else if (view === 'week') setWeekOffset(weekOffset + 1)
+    else if (view === 'day' && selectedDate) {
+      const d = new Date(selectedDate); d.setDate(d.getDate() + 1)
+      setSelectedDate(d.toISOString().slice(0, 10))
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[2500] flex flex-col" style={{ background: '#FDFCF9' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'rgba(10,10,10,0.06)', background: '#fff' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full" style={{ background: '#7BAE5E' }} />
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A' }}>
-            {lichtungName} <span style={{ color: 'rgba(10,10,10,0.4)', fontSize: '1rem' }}>· Kalender</span>
-          </h2>
+      {/* Kompakter Header: Name + Datum-Nav + Tabs + X in einer Zeile */}
+      <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b flex-wrap" style={{ borderColor: 'rgba(10,10,10,0.06)', background: '#fff' }}>
+        {/* Lichtung-Name */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-2 h-2 rounded-full" style={{ background: '#7BAE5E' }} />
+          <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate max-w-[150px]">
+            {lichtungName}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          {/* View-Umschalter */}
-          <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
-            {(['month', 'week', 'day', 'list'] as const).map(v => (
-              <button key={v} onClick={() => { if (v === 'day' && !selectedDate) setSelectedDate(now.toISOString().slice(0, 10)); setView(v) }}
-                className="px-3 py-1.5 flex items-center gap-1"
-                style={{ ...font, fontSize: '0.72rem', fontWeight: 500, background: view === v ? 'rgba(123,174,94,0.1)' : '#fff', color: view === v ? '#7BAE5E' : 'rgba(10,10,10,0.4)', border: 'none', cursor: 'pointer' }}>
-                {v === 'month' ? 'Monat' : v === 'week' ? 'Woche' : v === 'day' ? 'Tag' : <><List size={13}/>Liste</>}
-              </button>
-            ))}
+
+        {/* Navigation + Datum */}
+        {view !== 'list' && (
+          <div className="flex items-center gap-1">
+            <button onClick={navPrev} className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
+              <ChevronLeft size={13} />
+            </button>
+            <span style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A', minWidth: '120px', textAlign: 'center' }}>
+              {dateLabel}
+            </span>
+            <button onClick={navNext} className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
+              <ChevronRight size={13} />
+            </button>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-            <X size={18} style={{ color: 'rgba(10,10,10,0.5)' }} />
-          </button>
+        )}
+        {view === 'list' && (
+          <span style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A' }}>{dateLabel}</span>
+        )}
+
+        <div className="flex-1" />
+
+        {/* View-Tabs */}
+        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
+          {(['month', 'week', 'day', 'list'] as const).map(v => (
+            <button key={v} onClick={() => { if (v === 'day' && !selectedDate) setSelectedDate(now.toISOString().slice(0, 10)); setView(v) }}
+              style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '4px 8px', background: view === v ? 'rgba(123,174,94,0.1)' : '#fff', color: view === v ? '#7BAE5E' : 'rgba(10,10,10,0.4)', border: 'none', cursor: 'pointer' }}>
+              {v === 'month' ? 'Monat' : v === 'week' ? 'Woche' : v === 'day' ? 'Tag' : 'Liste'}
+            </button>
+          ))}
         </div>
+
+        <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center"
+          style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
+          <X size={13} style={{ color: 'rgba(10,10,10,0.5)' }} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden flex">
         {/* Content */}
         {view === 'month' && (
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <button onClick={() => setMonthOffset(monthOffset - 1)} className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-                  <ChevronLeft size={18} />
-                </button>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', fontWeight: 500, color: '#0A0A0A' }}>
-                  {MONTHS[m]} {y}
-                </h3>
-                <button onClick={() => setMonthOffset(monthOffset + 1)} className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {DAYS_LONG.map(d => (
                   <div key={d} className="text-center py-2" style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)' }}>{d}</div>
@@ -305,26 +345,12 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         )}
 
         {view === 'week' && (
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <button onClick={() => setWeekOffset(weekOffset - 1)} className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-                  <ChevronLeft size={18} />
-                </button>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A' }}>
-                  {weekDays[0]?.day}. {MONTHS[weekDays[0]?.month]?.slice(0, 3)} - {weekDays[6]?.day}. {MONTHS[weekDays[6]?.month]?.slice(0, 3)} {y}
-                </h3>
-                <button onClick={() => setWeekOffset(weekOffset + 1)} className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-
               {/* Wochen-Grid: Stunden-Spalte + 7 Tag-Spalten */}
               <div className="rounded-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
                 {/* Tag-Header */}
-                <div className="grid" style={{ gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.08)' }}>
+                <div className="grid" style={{ gridTemplateColumns: '44px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.08)' }}>
                   <div style={{ background: '#FAFAF8' }} />
                   {weekDays.map(d => {
                     const isToday = d.date === now.toISOString().slice(0, 10)
@@ -361,7 +387,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
 
                 {/* Stunden-Grid */}
                 {HOURS.map(h => (
-                  <div key={h} className="grid" style={{ gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.04)', minHeight: '50px' }}>
+                  <div key={h} className="grid" style={{ gridTemplateColumns: '44px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.04)', minHeight: '32px' }}>
                     <div className="px-3 py-2" style={{ background: '#FAFAF8', borderRight: '1px solid rgba(10,10,10,0.06)' }}>
                       <span style={{ ...font, fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)' }}>
                         {String(h).padStart(2, '0')}:00
@@ -447,40 +473,26 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         )}
 
         {view === 'day' && selectedDate && (
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <div className="max-w-3xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <button onClick={() => {
-                  const d = new Date(selectedDate); d.setDate(d.getDate() - 1)
-                  setSelectedDate(d.toISOString().slice(0, 10))
-                }} className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-                  <ChevronLeft size={18} />
-                </button>
-                <h3 className="flex items-center gap-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.6rem', fontWeight: 500, color: '#0A0A0A' }}>
-                  {DAYS_LONG[(new Date(selectedDate).getDay() + 6) % 7]}, {new Date(selectedDate).getDate()}. {MONTHS[new Date(selectedDate).getMonth()]}
-                  {moonByDate[selectedDate] && (
-                    <span
-                      onClick={() => setSelectedMoon(moonByDate[selectedDate])}
-                      title={moonByDate[selectedDate].type === 'vollmond' ? 'Vollmond' : 'Neumond'}
-                      style={{
-                        width: 18, height: 18, borderRadius: '50%', display: 'inline-block',
-                        background: moonByDate[selectedDate].type === 'vollmond' ? '#F5E090' : 'transparent',
-                        border: `2px solid ${moonByDate[selectedDate].type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
-                        boxShadow: moonByDate[selectedDate].type === 'vollmond' ? '0 0 8px rgba(245,224,144,0.7)' : 'none',
-                        cursor: 'pointer',
-                      }}
-                    />
-                  )}
-                </h3>
-                <button onClick={() => {
-                  const d = new Date(selectedDate); d.setDate(d.getDate() + 1)
-                  setSelectedDate(d.toISOString().slice(0, 10))
-                }} className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-                  <ChevronRight size={18} />
-                </button>
-              </div>
+              {moonByDate[selectedDate] && (
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span
+                    onClick={() => setSelectedMoon(moonByDate[selectedDate])}
+                    title={moonByDate[selectedDate].type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+                    style={{
+                      width: 14, height: 14, borderRadius: '50%', display: 'inline-block',
+                      background: moonByDate[selectedDate].type === 'vollmond' ? '#F5E090' : 'transparent',
+                      border: `2px solid ${moonByDate[selectedDate].type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                      boxShadow: moonByDate[selectedDate].type === 'vollmond' ? '0 0 6px rgba(245,224,144,0.7)' : 'none',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <span style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)' }}>
+                    {moonByDate[selectedDate].type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+                  </span>
+                </div>
+              )}
 
               {/* Ganztag sperren */}
               {isHueter && (
@@ -606,11 +618,8 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         )}
 
         {view === 'list' && (
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <div className="max-w-3xl mx-auto">
-              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '20px' }}>
-                Kommende Termine
-              </h3>
               {upcomingEvents.length === 0 ? (
                 <p style={{ ...font, fontSize: '0.85rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center', padding: '40px 0' }}>
                   Noch keine Termine geplant.

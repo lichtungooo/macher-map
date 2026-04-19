@@ -23,7 +23,7 @@ interface LichtungDetailProps {
   onDeleted?: () => void
 }
 
-export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLichtung, onDeleted }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted }: LichtungDetailProps) {
   const { setEvents: setGlobalEvents, user } = useApp()
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
@@ -526,23 +526,14 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               </div>
             )}
 
-            {/* Aktionen */}
+            {/* Aktion: Kalender oeffnen (mit Slots + Termin-Erstellung darin) */}
             <div className="space-y-2 mt-4">
               {(myRole === 'owner' || myRole === 'admin') && (
                 <button onClick={() => setShowFullCalendar(true)}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
                   style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
                   <CalendarDays size={16} />
-                  Kalender verwalten
-                </button>
-              )}
-              {onCreateEvent && (myRole === 'owner' || myRole === 'admin') && (
-                <button
-                  onClick={() => onCreateEvent(lichtungId, lichtung.name, [lichtung.lat, lichtung.lng])}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
-                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
-                  <Plus size={16} />
-                  Termin erstellen
+                  Kalender oeffnen
                 </button>
               )}
             </div>
