@@ -50,11 +50,8 @@ export function LichtungMarker({ lichtung, onClick }: LichtungMarkerProps) {
     >
       <Popup className="lichtung-popup">
         <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", textAlign: 'center', padding: '4px 0' }}>
-          <p style={{ fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: '0 0 2px' }}>
+          <p style={{ fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: 0 }}>
             {lichtung.name}
-          </p>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#7BAE5E', margin: 0 }}>
-            Lichtung
           </p>
         </div>
       </Popup>
