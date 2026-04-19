@@ -23,9 +23,10 @@ export default function ImpressumPage() {
             Deutschland
           </p>
 
-          <h2 style={h2Style}>Vertreten durch</h2>
+          <h2 style={h2Style}>Vertreten durch den Vorstand</h2>
           <p>
-            [Name des Vorstands einfuegen]
+            Timo Martin<br />
+            Anton Tranelis
           </p>
 
           <h2 style={h2Style}>Kontakt</h2>
@@ -48,7 +49,7 @@ export default function ImpressumPage() {
 
           <h2 style={h2Style}>Verantwortlich fuer den Inhalt</h2>
           <p>
-            [Name einfuegen]<br />
+            Timo Martin<br />
             Anschrift wie oben
           </p>
 
