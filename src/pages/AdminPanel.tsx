@@ -21,7 +21,9 @@ export default function AdminPanel() {
   const [sending, setSending] = useState(false)
 
   // Settings
+  const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
+  const [newPw2, setNewPw2] = useState('')
   const [pwMsg, setPwMsg] = useState('')
   const [adminEmail, setAdminEmail] = useState('')
   const [adminMsg, setAdminMsg] = useState('')
@@ -61,12 +63,18 @@ export default function AdminPanel() {
 
   async function handleChangePw() {
     setPwMsg('')
-    if (newPw.length < 6) { setPwMsg('Mindestens 6 Zeichen.'); return }
+    if (!currentPw) { setPwMsg('Aktuelles Passwort fehlt.'); return }
+    if (newPw.length < 8) { setPwMsg('Neues Passwort muss mindestens 8 Zeichen haben.'); return }
+    if (newPw !== newPw2) { setPwMsg('Die neuen Passwoerter stimmen nicht ueberein.'); return }
     try {
-      const res = await fetch('/api/admin/change-password', { method: 'POST', headers: headers(), body: JSON.stringify({ newPassword: newPw }) })
-      if (!res.ok) throw new Error()
-      setPwMsg('Passwort geaendert.'); setNewPw('')
-    } catch { setPwMsg('Fehler.') }
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Fehler')
+      setPwMsg('Passwort geaendert.'); setCurrentPw(''); setNewPw(''); setNewPw2('')
+    } catch (err: any) { setPwMsg(err?.message || 'Fehler.') }
   }
 
   async function handleSetAdmin() {
@@ -211,9 +219,9 @@ export default function AdminPanel() {
         {/* ─── Users ─── */}
         {tab === 'users' && (
           <div>
-            {/* Add Admin */}
+            {/* Add Admin per E-Mail */}
             <div style={card} className="mb-6">
-              <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '10px' }}>Admin-Rechte vergeben</h3>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '10px' }}>Admin per E-Mail hinzufuegen</h3>
               <div className="flex gap-2">
                 <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} placeholder="E-Mail des Nutzers" className="flex-1 px-4 py-2 rounded-lg outline-none" style={inp} />
                 <button onClick={handleSetAdmin} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontSize: '0.78rem', cursor: 'pointer' }}>
@@ -223,26 +231,74 @@ export default function AdminPanel() {
               {adminMsg && <p style={{ fontSize: '0.75rem', color: adminMsg.includes('Fehler') ? '#c44' : '#D4A843', marginTop: '8px' }}>{adminMsg}</p>}
             </div>
 
-            {/* User List */}
+            {/* User List mit Aktionen */}
             <div style={card}>
               <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '10px' }}>Alle Nutzer ({users.length})</h3>
               <div className="overflow-x-auto">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(10,10,10,0.06)' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>Name</th>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>E-Mail</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>NL</th>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>Datum</th>
+                      <th style={{ textAlign: 'left', padding: '8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>Name</th>
+                      <th style={{ textAlign: 'left', padding: '8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>E-Mail</th>
+                      <th style={{ textAlign: 'center', padding: '8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>NL</th>
+                      <th style={{ textAlign: 'left', padding: '8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>Seit</th>
+                      <th style={{ textAlign: 'right', padding: '8px', color: 'rgba(10,10,10,0.4)', fontWeight: 500 }}>Aktionen</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((u: any) => (
                       <tr key={u.id} style={{ borderBottom: '1px solid rgba(10,10,10,0.03)' }}>
-                        <td style={{ padding: '6px 8px' }}>{u.name || '—'} {u.is_admin ? '⭐' : ''}</td>
-                        <td style={{ padding: '6px 8px', color: 'rgba(10,10,10,0.5)' }}>{u.email}</td>
-                        <td style={{ padding: '6px 8px', textAlign: 'center', color: u.newsletter ? '#D4A843' : 'rgba(10,10,10,0.15)' }}>{u.newsletter ? '●' : '○'}</td>
-                        <td style={{ padding: '6px 8px', color: 'rgba(10,10,10,0.35)' }}>{u.created_at?.slice(0, 10)}</td>
+                        <td style={{ padding: '8px' }}>
+                          <div className="flex items-center gap-1.5">
+                            {u.is_admin ? <Shield size={11} style={{ color: '#D4A843' }} /> : null}
+                            <span>{u.name || '—'}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '8px', color: 'rgba(10,10,10,0.5)' }}>{u.email}</td>
+                        <td style={{ padding: '8px', textAlign: 'center', color: u.newsletter ? '#D4A843' : 'rgba(10,10,10,0.15)' }}>{u.newsletter ? '●' : '○'}</td>
+                        <td style={{ padding: '8px', color: 'rgba(10,10,10,0.35)' }}>{u.created_at?.slice(0, 10)}</td>
+                        <td style={{ padding: '8px', textAlign: 'right' }}>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={async () => {
+                                const makeAdmin = !u.is_admin
+                                if (!confirm(makeAdmin ? `${u.email} zum Admin machen?` : `${u.email} Admin-Rechte entziehen?`)) return
+                                try {
+                                  const res = await fetch('/api/admin/set-admin', { method: 'POST', headers: headers(), body: JSON.stringify({ email: u.email, isAdmin: makeAdmin }) })
+                                  if (!res.ok) throw new Error()
+                                  loadData()
+                                } catch { alert('Fehler.') }
+                              }}
+                              title={u.is_admin ? 'Admin entfernen' : 'Zum Admin machen'}
+                              style={{
+                                background: u.is_admin ? 'rgba(212,168,67,0.12)' : 'transparent',
+                                border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer',
+                                padding: '4px 10px', borderRadius: '6px', fontSize: '0.68rem',
+                                color: u.is_admin ? '#D4A843' : 'rgba(10,10,10,0.45)',
+                                fontFamily: 'Inter, sans-serif',
+                              }}>
+                              {u.is_admin ? 'Admin ✓' : 'Admin'}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Nutzer ${u.email} wirklich loeschen? Alle Inhalte (Licht, Lichtungen, Events) werden entfernt.`)) return
+                                try {
+                                  const res = await fetch(`/api/admin/user/${u.id}`, { method: 'DELETE', headers: headers() })
+                                  const data = await res.json()
+                                  if (!res.ok) throw new Error(data.error)
+                                  loadData()
+                                } catch (err: any) { alert(err?.message || 'Fehler.') }
+                              }}
+                              title="Nutzer loeschen"
+                              style={{
+                                background: 'transparent', border: '1px solid rgba(200,50,50,0.2)',
+                                cursor: 'pointer', padding: '4px 8px', borderRadius: '6px',
+                                color: '#c44', fontSize: '0.68rem', fontFamily: 'Inter, sans-serif',
+                              }}>
+                              Loeschen
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -307,13 +363,24 @@ export default function AdminPanel() {
           <div className="space-y-6">
             <div style={card}>
               <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '12px' }}>Passwort aendern</h3>
-              <div className="flex gap-2">
-                <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Neues Passwort (min. 6 Zeichen)" className="flex-1 px-4 py-2 rounded-lg outline-none" style={inp} />
+              <div className="space-y-2">
+                <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="Aktuelles Passwort" className="w-full px-4 py-2 rounded-lg outline-none" style={inp} autoComplete="current-password" />
+                <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Neues Passwort (mindestens 8 Zeichen)" className="w-full px-4 py-2 rounded-lg outline-none" style={inp} autoComplete="new-password" />
+                <input type="password" value={newPw2} onChange={e => setNewPw2(e.target.value)} placeholder="Neues Passwort wiederholen" className="w-full px-4 py-2 rounded-lg outline-none" style={inp} autoComplete="new-password" />
                 <button onClick={handleChangePw} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontSize: '0.78rem', cursor: 'pointer' }}>
-                  <KeyRound size={14} /> Aendern
+                  <KeyRound size={14} /> Passwort aendern
                 </button>
               </div>
-              {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('Fehler') ? '#c44' : '#D4A843', marginTop: '8px' }}>{pwMsg}</p>}
+              {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('geaendert') ? '#7BAE5E' : '#c44', marginTop: '8px' }}>{pwMsg}</p>}
+            </div>
+
+            <div style={{ ...card, background: 'rgba(212,168,67,0.04)', borderColor: 'rgba(212,168,67,0.2)' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '8px' }}>Sicherheitshinweis</h3>
+              <p style={{ fontSize: '0.78rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.6)' }}>
+                Gib dein Passwort niemals per Messenger, E-Mail oder Telefon an andere weiter —
+                auch nicht an uns. Ein Admin-Konto hat vollen Zugriff auf alle Nutzerdaten.
+                Nutze ein eindeutiges, starkes Passwort.
+              </p>
             </div>
           </div>
         )}

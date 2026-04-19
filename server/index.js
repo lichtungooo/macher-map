@@ -803,11 +803,24 @@ app.post('/api/admin/set-admin', adminAuth, (req, res) => {
 })
 
 app.post('/api/admin/change-password', adminAuth, async (req, res) => {
-  const { newPassword } = req.body
-  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Passwort muss mindestens 6 Zeichen haben' })
-  const hash = await bcrypt.hash(newPassword, 10)
+  const { currentPassword, newPassword } = req.body
+  if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: 'Neues Passwort muss mindestens 8 Zeichen haben' })
+  if (!currentPassword) return res.status(400).json({ error: 'Aktuelles Passwort erforderlich' })
   const user = findUserById(req.userId)
-  if (user) setPassword(user.email, hash)
+  if (!user) return res.status(404).json({ error: 'Nutzer nicht gefunden' })
+  const valid = await bcrypt.compare(currentPassword, user.password_hash)
+  if (!valid) return res.status(400).json({ error: 'Aktuelles Passwort ist falsch' })
+  const hash = await bcrypt.hash(newPassword, 10)
+  setPassword(user.email, hash)
+  res.json({ ok: true })
+})
+
+app.delete('/api/admin/user/:userId', adminAuth, (req, res) => {
+  const { userId } = req.params
+  if (userId === req.userId) return res.status(400).json({ error: 'Du kannst dich nicht selbst loeschen.' })
+  const user = findUserById(userId)
+  if (!user) return res.status(404).json({ error: 'Nutzer nicht gefunden' })
+  deleteUserCompletely(userId)
   res.json({ ok: true })
 })
 
