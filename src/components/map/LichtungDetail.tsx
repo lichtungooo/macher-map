@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Pencil, Move, Camera } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Pencil, Move, Camera, Info, ImagePlus, Settings } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
@@ -160,27 +160,43 @@ export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted 
 
   return (
     <div className="fixed z-[1500] rounded-2xl shadow-xl overflow-hidden" style={{ top: '70px', right: '16px', width: '360px', maxHeight: 'calc(100vh - 90px)', background: '#fff', border: '1px solid rgba(10,10,10,0.06)', animation: 'fade-in-up 0.2s ease-out' }}>
-      {/* Header */}
-      <div className="flex items-center justify-end px-5 py-3" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.25)' }}>
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex px-5 pt-3 gap-0.5 overflow-x-auto" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        {[
-          { key: 'info', label: 'Info' },
-          { key: 'kalender', label: 'Kalender' },
-          { key: 'galerie', label: 'Galerie' },
-          { key: 'community', label: `Community (${members.length})` },
-          ...((myRole === 'owner' || myRole === 'admin') ? [{ key: 'settings', label: '⚙' }] : []),
-        ].map(({ key, label }) => (
-          <button key={key} onClick={() => setTab(key as any)} className="pb-2 px-2.5 shrink-0"
-            style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.35)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#7BAE5E' : 'transparent'}`, cursor: 'pointer' }}>
-            {label}
-          </button>
+      {/* Tabs (mit Icons) + X in einer Zeile */}
+      <div className="flex items-center px-3 py-2 gap-0.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
+        {([
+          { key: 'info', label: 'Info', Icon: Info, badge: '' },
+          { key: 'kalender', label: 'Kalender', Icon: CalendarDays, badge: '' },
+          { key: 'galerie', label: 'Galerie', Icon: ImagePlus, badge: '' },
+          { key: 'community', label: 'Community', Icon: Users, badge: String(members.length) },
+          ...((myRole === 'owner' || myRole === 'admin') ? [{ key: 'settings' as const, label: 'Einstellungen', Icon: Settings, badge: '' }] : []),
+        ] as { key: string; label: string; Icon: any; badge: string }[]).map(({ key, label, Icon, badge }) => (
+          <div key={key} className="relative group">
+            <button onClick={() => setTab(key as any)}
+              className="flex items-center justify-center rounded-lg"
+              style={{
+                width: 34, height: 34,
+                background: tab === key ? 'rgba(123,174,94,0.1)' : 'transparent',
+                border: 'none', cursor: 'pointer',
+              }}>
+              <Icon size={15} style={{ color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.4)' }} />
+              {badge && (
+                <span className="absolute -top-0.5 -right-0.5 rounded-full flex items-center justify-center"
+                  style={{ minWidth: 14, height: 14, padding: '0 3px', background: '#7BAE5E', color: '#fff', fontSize: '0.55rem', fontWeight: 600, ...font }}>
+                  {badge}
+                </span>
+              )}
+            </button>
+            {/* Tooltip */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+              style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+              <span style={{ ...font, fontSize: '0.6rem', color: '#fff' }}>{label}</span>
+            </div>
+          </div>
         ))}
+        <div className="flex-1" />
+        <button onClick={onClose} className="flex items-center justify-center rounded-lg"
+          style={{ width: 34, height: 34, background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
+          <X size={16} />
+        </button>
       </div>
 
       <div className="overflow-y-auto p-5" style={{ maxHeight: 'calc(100vh - 200px)' }}>
@@ -670,9 +686,6 @@ export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted 
                   <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Teilnehmen + Sehen</span>
                 </div>
               </div>
-              <p style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '6px' }}>
-                Rollen aendern: Community-Tab → Button neben dem Namen.
-              </p>
             </div>
 
             {/* Ort loeschen */}
