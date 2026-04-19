@@ -275,9 +275,14 @@ app.delete('/api/admin/global-events/:id', adminAuth, (req, res) => {
 
 // Mondphasen (on-the-fly berechnet, kein DB-Eintrag)
 app.get('/api/moon-phases', (req, res) => {
-  const from = req.query.from ? new Date(String(req.query.from)) : new Date()
+  // Standard: 2 Monate zurueck + N Monate voraus (damit aktueller Monat sicher drin ist)
+  const from = req.query.from
+    ? new Date(String(req.query.from))
+    : new Date(Date.now() - 60 * 86400000)
   const months = Math.min(Number(req.query.months) || 12, 120)
-  const to = new Date(from.getTime() + months * 30.5 * 86400000)
+  const to = req.query.to
+    ? new Date(String(req.query.to))
+    : new Date(Date.now() + months * 30.5 * 86400000)
   const phases = moonPhasesBetween(from, to)
   res.json(phases.map(p => ({ type: p.type, time: p.date.toISOString() })))
 })
