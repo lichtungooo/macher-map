@@ -144,6 +144,11 @@ try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE lichtungen ADD COLUMN tags TEXT DEFAULT ""') } catch {}
+
+// Migration: alte /uploads/ → /api/uploads/ (Traefik routet nur /api/*)
+try { db.prepare("UPDATE lichtungen SET image_path = '/api' || image_path WHERE image_path LIKE '/uploads/%'").run() } catch {}
+try { db.prepare("UPDATE users SET image_path = '/api' || image_path WHERE image_path LIKE '/uploads/%'").run() } catch {}
+try { db.prepare("UPDATE events SET image_path = '/api' || image_path WHERE image_path LIKE '/uploads/%'").run() } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN telegram_chat_id TEXT') } catch {}
 
 // ─── Telegram Gruppen ───

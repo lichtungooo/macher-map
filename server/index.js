@@ -512,7 +512,7 @@ app.delete('/api/lichtungen/:id', auth, (req, res) => {
 
 app.post('/api/lichtungen/:id/image', auth, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Kein Bild' })
-  const image_path = `/uploads/${req.file.filename}`
+  const image_path = `/api/uploads/${req.file.filename}`
   updateLichtung(req.params.id, { image_path })
   res.json({ image_path })
 })
@@ -527,7 +527,7 @@ app.post('/api/lichtungen/:id/gallery', auth, upload.single('image'), (req, res)
   if (!req.file) return res.status(400).json({ error: 'Kein Bild' })
   const caption = req.body.caption || ''
   const result = addLichtungImage(req.params.id, req.userId, req.file.filename, caption)
-  res.json({ ...result, path: `/uploads/${req.file.filename}` })
+  res.json({ ...result, path: `/api/uploads/${req.file.filename}` })
 })
 
 app.delete('/api/lichtungen/:id/gallery/:imageId', auth, (req, res) => {
