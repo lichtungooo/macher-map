@@ -223,15 +223,15 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <TrackpadFix />
 
       {showLights && lights.map(light => (
-        <LightMarker key={light.id} light={light} onShowProfile={onShowProfile} />
+        <LightMarker key={`${light.id}-${light.position[0]}-${light.position[1]}`} light={light} onShowProfile={onShowProfile} />
       ))}
 
       {showEvents && events.map(event => (
-        <EventMarker key={event.id} event={event} onShowEvent={onShowEvent} />
+        <EventMarker key={`${event.id}-${event.position[0]}-${event.position[1]}`} event={event} onShowEvent={onShowEvent} />
       ))}
 
       {lichtungen.map(l => (
-        <LichtungMarker key={l.id} lichtung={l} onClick={onLichtungClick || (() => {})} />
+        <LichtungMarker key={`${l.id}-${l.lat}-${l.lng}`} lichtung={l} onClick={onLichtungClick || (() => {})} />
       ))}
     </MapContainer>
   )
