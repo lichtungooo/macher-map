@@ -31,7 +31,8 @@ export default function ImpressumPage() {
 
           <h2 style={h2Style}>Kontakt</h2>
           <p>
-            E-Mail: <a href="mailto:frieden@lichtung.ooo" style={{ color: '#D4A843' }}>frieden@lichtung.ooo</a>
+            E-Mail: <a href="mailto:frieden@lichtung.ooo" style={{ color: '#D4A843' }}>frieden@lichtung.ooo</a><br />
+            Telefon: <a href="tel:+491778539254" style={{ color: '#D4A843' }}>+49 177 853 9254</a>
           </p>
 
           <h2 style={h2Style}>Registereintrag</h2>
