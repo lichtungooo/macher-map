@@ -532,10 +532,6 @@ function MapAppInner() {
           setEventLichtung({ id: lid, name: lname })
           setDialog('create-event')
         }}
-        onShowOnMap={(lat, lng) => {
-          setSelectedLichtung(null)
-          setFlyTo([lat, lng, 16 + Math.random() * 0.001])
-        }}
         onMoveLichtung={(lid) => {
           setMovingLichtungId(lid)
           setSelectedLichtung(null)

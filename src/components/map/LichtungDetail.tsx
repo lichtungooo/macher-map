@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Pencil, Crosshair, Move, Camera } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Pencil, Move, Camera } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
@@ -19,11 +19,10 @@ interface LichtungDetailProps {
   lichtungId: string
   onClose: () => void
   onCreateEvent?: (lichtungId: string, lichtungName: string, position: [number, number]) => void
-  onShowOnMap?: (lat: number, lng: number) => void
   onMoveLichtung?: (lichtungId: string) => void
 }
 
-export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap, onMoveLichtung }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLichtung }: LichtungDetailProps) {
   const { setEvents: setGlobalEvents, user } = useApp()
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
@@ -268,20 +267,13 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap
                     {lichtung.name}
                   </h2>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {onShowOnMap && (
-                      <button onClick={() => onShowOnMap(lichtung.lat, lichtung.lng)}
-                        title="Auf Karte zeigen"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                        <Crosshair size={13} style={{ color: '#7BAE5E' }} />
-                      </button>
-                    )}
                     {onMoveLichtung && (myRole === 'owner' || myRole === 'admin') && (
                       <button onClick={() => onMoveLichtung(lichtungId)}
-                        title="Position auf Karte neu setzen"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                        <Move size={13} style={{ color: '#D4A843' }} />
+                        title="Lichtung neu platzieren"
+                        className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg"
+                        style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)', cursor: 'pointer' }}>
+                        <Move size={13} />
+                        Platzieren
                       </button>
                     )}
                     {(myRole === 'owner' || myRole === 'admin') && (
