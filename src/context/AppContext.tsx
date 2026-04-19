@@ -30,6 +30,7 @@ export interface UserProfile {
   statement: string
   imageUrl?: string
   lightId?: string
+  isAdmin?: boolean
 }
 
 interface AppState {
@@ -69,6 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             name: data.name || '',
             statement: data.statement || '',
             imageUrl: data.image_path && data.image_path !== 'null' ? data.image_path : undefined,
+            isAdmin: !!data.is_admin,
           })
         })
         .catch(() => localStorage.removeItem('lichtung-token'))

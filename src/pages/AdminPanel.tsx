@@ -32,19 +32,30 @@ export default function AdminPanel() {
 
   const headers = () => ({ 'Authorization': `Bearer ${api.getToken()}`, 'Content-Type': 'application/json' })
 
+  const [notAdmin, setNotAdmin] = useState(false)
+
   async function loadData() {
     try {
       const sRes = await fetch('/api/admin/stats', { headers: headers() })
+      if (sRes.status === 403 || sRes.status === 401) {
+        // Eingeloggt aber kein Admin
+        const profileRes = await fetch('/api/profile', { headers: headers() })
+        if (profileRes.ok) { setNotAdmin(true); setLoggedIn(false); return }
+        throw new Error()
+      }
       if (!sRes.ok) throw new Error()
       setStats(await sRes.json())
       const uRes = await fetch('/api/admin/users?limit=100', { headers: headers() })
       setUsers(await uRes.json())
       setLoggedIn(true)
-    } catch { setLoggedIn(false) }
+      setNotAdmin(false)
+    } catch {
+      setLoggedIn(false)
+    }
   }
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault(); setError('')
+    e.preventDefault(); setError(''); setNotAdmin(false)
     try { await api.login(email, password); await loadData() }
     catch (err: any) { setError(err.message) }
   }
@@ -110,11 +121,38 @@ export default function AdminPanel() {
     padding: '8px 16px', cursor: 'pointer',
   })
 
+  if (notAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#FAFAF8' }}>
+        <div className="w-full max-w-sm p-8 rounded-2xl text-center" style={card}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.8rem' }}>Kein Admin</h1>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+            Du bist angemeldet, hast aber keine Admin-Rechte fuer dieses Panel.
+          </p>
+          <div className="flex gap-2">
+            <button onClick={() => { api.clearToken(); setNotAdmin(false); setLoggedIn(false) }}
+              className="flex-1 py-3 rounded-lg"
+              style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', cursor: 'pointer' }}>
+              Als Admin anmelden
+            </button>
+            <a href="/app" className="flex-1 py-3 rounded-lg flex items-center justify-center"
+              style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', color: '#0A0A0A', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', textDecoration: 'none' }}>
+              Zurueck zur App
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!loggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#FAFAF8' }}>
         <form onSubmit={handleLogin} className="w-full max-w-sm p-8 rounded-2xl" style={card}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '1.5rem', textAlign: 'center' }}>Admin</h1>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.3rem', textAlign: 'center' }}>Admin</h1>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center', marginBottom: '1.2rem' }}>
+            Mit deiner normalen E-Mail und Passwort anmelden
+          </p>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-Mail" required className="w-full px-4 py-3 rounded-lg outline-none mb-3" style={inp} />
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Passwort" required className="w-full px-4 py-3 rounded-lg outline-none mb-4" style={inp} />
           {error && <p style={{ color: '#c44', fontSize: '0.78rem', marginBottom: '12px', textAlign: 'center' }}>{error}</p>}

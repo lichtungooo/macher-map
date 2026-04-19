@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map, User } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map, User, ShieldCheck } from 'lucide-react'
 import { MyEvents } from '../events/MyEvents'
 import { MyConnections } from './MyConnections'
 import { useApp } from '../../context/AppContext'
@@ -145,6 +145,18 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
               </button>
               {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('Fehler') ? '#c44' : '#D4A843', marginTop: '6px' }}>{pwMsg}</p>}
             </div>
+
+            {user?.isAdmin && (
+              <div>
+                <label style={labelStyle}>Admin</label>
+                <a href="/admin" target="_blank" rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg"
+                  style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#D4A843', cursor: 'pointer', textDecoration: 'none' }}>
+                  <ShieldCheck size={16} />
+                  Admin-Panel oeffnen
+                </a>
+              </div>
+            )}
 
             <div>
               <label style={labelStyle}>Standort</label>
