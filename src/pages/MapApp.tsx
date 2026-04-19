@@ -540,7 +540,7 @@ function MapAppInner() {
       {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
       {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}
       <InfoPopup />
-      <WandCursor active={mode === 'place-light'} />
+      <WandCursor active={mode !== 'browse'} />
     </div>
   )
 }
