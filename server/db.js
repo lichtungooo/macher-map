@@ -143,6 +143,7 @@ try { db.exec('ALTER TABLE lichtung_telegram_links ADD COLUMN is_private INTEGER
 try { db.exec('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
+try { db.exec('ALTER TABLE lichtungen ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN telegram_chat_id TEXT') } catch {}
 
 // ─── Telegram Gruppen ───
@@ -583,9 +584,9 @@ export function getLichtung(id) {
   `).get(id)
 }
 
-export function createLichtung(userId, { name, description, lat, lng }) {
+export function createLichtung(userId, { name, description, lat, lng, tags }) {
   const id = randomUUID()
-  db.prepare('INSERT INTO lichtungen (id, user_id, name, description, lat, lng) VALUES (?, ?, ?, ?, ?, ?)').run(id, userId, name, description || '', lat, lng)
+  db.prepare('INSERT INTO lichtungen (id, user_id, name, description, lat, lng, tags) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, userId, name, description || '', lat, lng, tags || '')
   // Ersteller wird automatisch Owner
   db.prepare('INSERT INTO lichtung_members (lichtung_id, user_id, role) VALUES (?, ?, ?)').run(id, userId, 'owner')
   // Permanenten Code generieren

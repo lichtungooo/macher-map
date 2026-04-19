@@ -137,10 +137,10 @@ export async function getCalToken() {
 export async function getLichtungen() { return request('/lichtungen') }
 export async function getLichtung(id: string) { return request(`/lichtungen/${id}`) }
 export async function getLichtungEvents(id: string) { return request(`/lichtungen/${id}/events`) }
-export async function createLichtung(data: { name: string; description: string; lat: number; lng: number }) {
+export async function createLichtung(data: { name: string; description: string; lat: number; lng: number; tags?: string }) {
   return request('/lichtungen', { method: 'POST', body: JSON.stringify(data) })
 }
-export async function updateLichtung(id: string, data: { name?: string; description?: string; lat?: number; lng?: number }) {
+export async function updateLichtung(id: string, data: { name?: string; description?: string; lat?: number; lng?: number; tags?: string }) {
   return request(`/lichtungen/${id}`, { method: 'PUT', body: JSON.stringify(data) })
 }
 export async function uploadLichtungProfileImage(id: string, file: File) {
