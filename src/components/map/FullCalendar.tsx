@@ -53,6 +53,25 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
   // Slots fuer die ganze Woche
   const [weekSlotsByDate, setWeekSlotsByDate] = useState<Record<string, any[]>>({})
 
+  // Mondphasen (on-the-fly, 24 Monate)
+  const [moonPhases, setMoonPhases] = useState<{ type: 'neumond' | 'vollmond'; time: string }[]>([])
+  const [selectedMoon, setSelectedMoon] = useState<{ type: string; time: string } | null>(null)
+
+  useEffect(() => {
+    api.getMoonPhases(24).then(setMoonPhases).catch(() => {})
+  }, [])
+
+  // Mondphase pro Datum
+  const moonByDate = useMemo(() => {
+    const map: Record<string, { type: 'neumond' | 'vollmond'; time: string }> = {}
+    for (const p of moonPhases) {
+      const d = new Date(p.time)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      map[key] = p
+    }
+    return map
+  }, [moonPhases])
+
   useEffect(() => {
     api.getLichtungSlots(lichtungId, from, to).then(setMonthSlots).catch(() => {})
     api.getLichtungEvents(lichtungId).then(setAllEvents).catch(() => {})
@@ -218,6 +237,8 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                     else if (hasSlots) { bg = 'rgba(123,174,94,0.06)'; border = 'rgba(123,174,94,0.2)' }
                   }
 
+                  const moon = moonByDate[day.date]
+
                   return (
                     <button key={i} onClick={() => day.inMonth && (setSelectedDate(day.date), setView('day'))}
                       className="relative rounded-xl p-2 text-left transition-all hover:shadow-sm"
@@ -226,7 +247,22 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                         <>
                           <div className="flex items-center justify-between mb-1">
                             <span style={{ ...font, fontSize: '0.9rem', fontWeight: isToday ? 700 : 500, color: closed ? '#c44' : '#0A0A0A' }}>{day.day}</span>
-                            {closed && <Lock size={11} style={{ color: '#c44' }} />}
+                            <div className="flex items-center gap-1">
+                              {moon && (
+                                <span
+                                  onClick={(e) => { e.stopPropagation(); setSelectedMoon(moon) }}
+                                  title={moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+                                  style={{
+                                    width: 10, height: 10, borderRadius: '50%', display: 'inline-block',
+                                    background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
+                                    border: `1.5px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                                    boxShadow: moon.type === 'vollmond' ? '0 0 4px rgba(245,224,144,0.6)' : 'none',
+                                    cursor: 'pointer',
+                                  }}
+                                />
+                              )}
+                              {closed && <Lock size={11} style={{ color: '#c44' }} />}
+                            </div>
                           </div>
 
                           {closed && (
@@ -294,15 +330,30 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                     const isToday = d.date === now.toISOString().slice(0, 10)
                     const dayInfoFromMonth = daySlotMap[d.date]
                     const isClosed = dayInfoFromMonth?.status === 'closed' || (weekSlotsByDate[d.date]?.find(s => s.start_hour === null && s.status === 'closed'))
+                    const moon = moonByDate[d.date]
                     return (
                       <button key={d.date} onClick={() => { setSelectedDate(d.date); setView('day') }}
-                        className="text-center py-3 transition-colors hover:bg-gray-50"
+                        className="relative text-center py-3 transition-colors hover:bg-gray-50"
                         style={{ borderLeft: '1px solid rgba(10,10,10,0.06)', background: isToday ? 'rgba(212,168,67,0.06)' : isClosed ? 'rgba(200,60,60,0.04)' : '#fff', cursor: 'pointer', border: 'none', borderLeftWidth: '1px', borderLeftStyle: 'solid', borderLeftColor: 'rgba(10,10,10,0.06)' }}>
                         <div style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{d.label}</div>
                         <div style={{ ...font, fontSize: '1.1rem', fontWeight: isToday ? 700 : 500, color: isClosed ? '#c44' : isToday ? '#D4A843' : '#0A0A0A' }}>
                           {d.day}
                         </div>
                         {isClosed && <Lock size={10} style={{ color: '#c44', margin: '2px auto 0' }} />}
+                        {moon && (
+                          <span
+                            onClick={(e) => { e.stopPropagation(); setSelectedMoon(moon) }}
+                            title={moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+                            style={{
+                              position: 'absolute', top: 6, right: 6,
+                              width: 9, height: 9, borderRadius: '50%', display: 'inline-block',
+                              background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
+                              border: `1.5px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                              boxShadow: moon.type === 'vollmond' ? '0 0 4px rgba(245,224,144,0.6)' : 'none',
+                              cursor: 'pointer',
+                            }}
+                          />
+                        )}
                       </button>
                     )
                   })}
@@ -406,8 +457,21 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                   style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
                   <ChevronLeft size={18} />
                 </button>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.6rem', fontWeight: 500, color: '#0A0A0A' }}>
+                <h3 className="flex items-center gap-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.6rem', fontWeight: 500, color: '#0A0A0A' }}>
                   {DAYS_LONG[(new Date(selectedDate).getDay() + 6) % 7]}, {new Date(selectedDate).getDate()}. {MONTHS[new Date(selectedDate).getMonth()]}
+                  {moonByDate[selectedDate] && (
+                    <span
+                      onClick={() => setSelectedMoon(moonByDate[selectedDate])}
+                      title={moonByDate[selectedDate].type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+                      style={{
+                        width: 18, height: 18, borderRadius: '50%', display: 'inline-block',
+                        background: moonByDate[selectedDate].type === 'vollmond' ? '#F5E090' : 'transparent',
+                        border: `2px solid ${moonByDate[selectedDate].type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                        boxShadow: moonByDate[selectedDate].type === 'vollmond' ? '0 0 8px rgba(245,224,144,0.7)' : 'none',
+                        cursor: 'pointer',
+                      }}
+                    />
+                  )}
                 </h3>
                 <button onClick={() => {
                   const d = new Date(selectedDate); d.setDate(d.getDate() + 1)
@@ -582,6 +646,34 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
           <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center' }}>
             {isHueter ? 'Als Hueter kannst du Slots oeffnen und Tage sperren.' : 'Als Gaertner kannst du Termine in offene Slots eintragen.'}
           </p>
+        </div>
+      )}
+
+      {/* Mondphase-Popup */}
+      {selectedMoon && (
+        <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4" onClick={() => setSelectedMoon(null)}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()}
+            className="rounded-2xl p-6 shadow-xl max-w-xs text-center"
+            style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
+            <div className="flex justify-center mb-3">
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%',
+                background: selectedMoon.type === 'vollmond' ? '#F5E090' : 'transparent',
+                border: `3px solid ${selectedMoon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                boxShadow: selectedMoon.type === 'vollmond' ? '0 0 20px rgba(245,224,144,0.7)' : 'none',
+              }} />
+            </div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '6px' }}>
+              {selectedMoon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
+            </h3>
+            <p style={{ ...font, fontSize: '0.8rem', color: 'rgba(10,10,10,0.55)' }}>
+              {new Date(selectedMoon.time).toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' })}
+            </p>
+            <p style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.35)', marginTop: '10px' }}>
+              Ortszeit deines Geraets
+            </p>
+          </div>
         </div>
       )}
     </div>

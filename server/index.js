@@ -273,60 +273,13 @@ app.delete('/api/admin/global-events/:id', adminAuth, (req, res) => {
   res.json({ ok: true })
 })
 
-// Mondphasen als globale Events seeden
-app.post('/api/admin/seed-moon-events', adminAuth, (req, res) => {
-  const { years = 10, wave_mode = 'timezone_wave', hour = 21, replace = false } = req.body
-  const from = new Date()
-  const to = new Date(from.getTime() + years * 365.25 * 86400000)
-
-  let phases = moonPhasesBetween(from, to)
-
-  // Optional: bestehende Mondphasen-Events loeschen
-  if (replace) {
-    const existing = getGlobalEvents().filter(e =>
-      (e.tags || '').includes('vollmond') || (e.tags || '').includes('neumond')
-    )
-    for (const e of existing) deleteEvent(e.id)
-  } else {
-    // Duplikate vermeiden: existierende Mondphasen-Events auf Datum pruefen
-    const existing = getGlobalEvents().filter(e =>
-      (e.tags || '').includes('vollmond') || (e.tags || '').includes('neumond')
-    )
-    const existingKeys = new Set(existing.map(e => `${e.tags}-${e.start_time.slice(0, 10)}`))
-    phases = phases.filter(p => !existingKeys.has(`${p.type}-${p.date.toISOString().slice(0, 10)}`))
-  }
-
-  let created = 0
-  for (const phase of phases) {
-    // Bei timezone_wave setzen wir die lokale Stunde (hour:00) als Meditation-Zeit
-    // Bei simultaneous speichern wir die exakte Mondphasen-UTC-Zeit
-    let startTime
-    if (wave_mode === 'timezone_wave') {
-      // Datum der Mondphase + lokale Stunde (21:00 Ortszeit am Tag der Phase)
-      const d = new Date(phase.date)
-      d.setUTCHours(hour, 0, 0, 0)
-      startTime = d.toISOString()
-    } else {
-      startTime = phase.date.toISOString()
-    }
-    const title = phase.type === 'vollmond' ? 'Vollmond-Meditation' : 'Neumond-Meditation'
-    const description = phase.type === 'vollmond'
-      ? 'Gemeinsames Innehalten im Licht des Vollmondes. Eine Welle der Stille um die Erde.'
-      : 'Gemeinsames Innehalten zum Neumond. Neuanfang, Absicht, Stille.'
-    createEvent(req.userId, {
-      title,
-      description,
-      lat: 0, lng: 0,
-      start_time: startTime,
-      type: 'meditation',
-      recurring: null,
-      is_global: 1,
-      tags: `${phase.type},meditation,mond`,
-      wave_mode,
-    })
-    created++
-  }
-  res.json({ created, total_phases: phases.length, from: from.toISOString(), to: to.toISOString() })
+// Mondphasen (on-the-fly berechnet, kein DB-Eintrag)
+app.get('/api/moon-phases', (req, res) => {
+  const from = req.query.from ? new Date(String(req.query.from)) : new Date()
+  const months = Math.min(Number(req.query.months) || 12, 120)
+  const to = new Date(from.getTime() + months * 30.5 * 86400000)
+  const phases = moonPhasesBetween(from, to)
+  res.json(phases.map(p => ({ type: p.type, time: p.date.toISOString() })))
 })
 
 // Event an globales Event andocken (Lichtung-Besitzer)
