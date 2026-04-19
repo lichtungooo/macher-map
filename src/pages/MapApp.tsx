@@ -9,6 +9,7 @@ import { GuidedTutorial, type TutorialStep } from '../components/map/GuidedTutor
 import { AuthDialog } from '../components/auth/AuthDialog'
 import { ProfileDialog } from '../components/auth/ProfileDialog'
 import { QRCodeDialog } from '../components/auth/QRCodeDialog'
+import { ResetPasswordDialog } from '../components/auth/ResetPasswordDialog'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { EventCalendar } from '../components/events/EventCalendar'
 import { EventDetail } from '../components/events/EventDetail'
@@ -128,6 +129,10 @@ function MapAppInner() {
       setSearchParams({})
     }
   }, [])
+
+  // Handle password reset
+  const resetToken = searchParams.get('reset')
+  const clearResetToken = () => { setSearchParams({}) }
 
   // Auto-Standort: Beim Laden Licht automatisch setzen
   useEffect(() => {
@@ -544,6 +549,14 @@ function MapAppInner() {
       {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}
       <InfoPopup />
       <WandCursor active={mode !== 'browse'} />
+
+      {resetToken && (
+        <ResetPasswordDialog
+          token={resetToken}
+          onClose={clearResetToken}
+          onSuccess={() => { clearResetToken(); setDialog('auth') }}
+        />
+      )}
     </div>
   )
 }
