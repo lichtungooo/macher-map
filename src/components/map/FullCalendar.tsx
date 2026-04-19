@@ -140,16 +140,6 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
     [allEvents]
   )
 
-  // Mix Events und Mondphasen chronologisch fuer die Listen-Ansicht
-  const upcomingListItems = useMemo(() => {
-    const startOfToday = new Date(now.toDateString()).getTime()
-    const evs = upcomingEvents.map((e: any) => ({ kind: 'event' as const, time: e.start_time, data: e }))
-    const moons = moonPhases
-      .filter(p => new Date(p.time).getTime() >= startOfToday)
-      .map(p => ({ kind: 'moon' as const, time: p.time, data: p }))
-    return [...evs, ...moons].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
-  }, [upcomingEvents, moonPhases])
-
   const handleCreateSlot = async () => {
     if (!selectedDate) return
     await api.createTimeSlot(lichtungId, selectedDate, newSlot)
@@ -621,47 +611,13 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
               <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '20px' }}>
                 Kommende Termine
               </h3>
-              {upcomingListItems.length === 0 ? (
+              {upcomingEvents.length === 0 ? (
                 <p style={{ ...font, fontSize: '0.85rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center', padding: '40px 0' }}>
                   Noch keine Termine geplant.
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {upcomingListItems.map((item, idx) => {
-                    if (item.kind === 'moon') {
-                      const moon = item.data as any
-                      const d = new Date(moon.time)
-                      return (
-                        <button key={`moon-${idx}`} onClick={() => setSelectedMoon(moon)}
-                          className="w-full rounded-xl p-4 flex items-center gap-4 text-left"
-                          style={{
-                            background: moon.type === 'vollmond' ? 'rgba(245,224,144,0.1)' : 'rgba(107,76,138,0.05)',
-                            border: `1px solid ${moon.type === 'vollmond' ? 'rgba(212,168,67,0.2)' : 'rgba(107,76,138,0.15)'}`,
-                            cursor: 'pointer',
-                          }}>
-                          <div className="text-center" style={{ minWidth: '60px' }}>
-                            <div style={{ ...font, fontSize: '1.4rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>{d.getDate()}</div>
-                            <div style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{MONTHS[d.getMonth()].slice(0, 3)}</div>
-                          </div>
-                          <div style={{
-                            width: 28, height: 28, borderRadius: '50%',
-                            background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                            border: `2.5px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
-                            boxShadow: moon.type === 'vollmond' ? '0 0 10px rgba(245,224,144,0.7)' : 'none',
-                            flexShrink: 0,
-                          }} />
-                          <div className="flex-1">
-                            <div style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A' }}>
-                              {moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
-                            </div>
-                            <div style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.45)', marginTop: '2px' }}>
-                              {DAYS_SHORT[(d.getDay() + 6) % 7]} &middot; {d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr
-                            </div>
-                          </div>
-                        </button>
-                      )
-                    }
-                    const e = item.data as any
+                  {upcomingEvents.map((e: any) => {
                     const d = new Date(e.start_time)
                     return (
                       <div key={e.id} className="rounded-xl p-4 flex items-center gap-4" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>

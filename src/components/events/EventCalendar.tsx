@@ -97,17 +97,12 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
     return eventsWithDist.filter(e => e.dist != null && e.dist <= radiusKm)
   }, [eventsWithDist, radiusKm, userPos])
 
-  // Events und Mondphasen chronologisch mischen (nur Zukunft)
-  const sortedListItems = useMemo(() => {
-    const startOfToday = new Date(now.toDateString()).getTime()
-    const evs = filteredEvents
-      .filter(e => new Date(e.start).getTime() >= startOfToday)
-      .map(e => ({ kind: 'event' as const, time: e.start, data: e }))
-    const moons = moonPhases
-      .filter(p => new Date(p.time).getTime() >= startOfToday)
-      .map(p => ({ kind: 'moon' as const, time: p.time, data: p }))
-    return [...evs, ...moons].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
-  }, [filteredEvents, moonPhases])
+  const sortedEvents = useMemo(() =>
+    [...filteredEvents]
+      .filter(e => new Date(e.start) >= new Date(now.toDateString()))
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()),
+    [filteredEvents]
+  )
 
   const monthEvents = useMemo(() => {
     const y = viewMonth.getFullYear(), m = viewMonth.getMonth()
@@ -234,74 +229,46 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
         {view === 'list' ? (
           <div className="p-4 space-y-2">
-            {sortedListItems.length === 0 ? (
+            {sortedEvents.length === 0 ? (
               <div className="text-center py-10">
                 <CalendarDays size={28} style={{ color: 'rgba(10,10,10,0.08)', margin: '0 auto 8px' }} />
                 <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.35)' }}>
                   {userPos && radiusKm < 500 ? `Keine Veranstaltungen im Umkreis von ${radiusKm} km.` : 'Noch keine Veranstaltungen.'}
                 </p>
               </div>
-            ) : sortedListItems.map((item, idx) => {
-              if (item.kind === 'moon') {
-                const moon = item.data
-                return (
-                  <button key={`moon-${idx}`} onClick={() => setMoonPopup(moon)}
-                    className="w-full text-left rounded-xl p-3 transition-all"
-                    style={{ background: moon.type === 'vollmond' ? 'rgba(245,224,144,0.12)' : 'rgba(107,76,138,0.06)', border: `1px solid ${moon.type === 'vollmond' ? 'rgba(212,168,67,0.2)' : 'rgba(107,76,138,0.15)'}`, cursor: 'pointer' }}>
-                    <div className="flex items-center gap-3">
-                      <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{
-                        background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                        border: `2px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
-                        boxShadow: moon.type === 'vollmond' ? '0 0 6px rgba(245,224,144,0.6)' : 'none',
-                      }} />
-                      <div className="flex-1 min-w-0">
-                        <div style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A' }}>
-                          {moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
-                        </div>
-                        <div className="flex items-center gap-1" style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.45)' }}>
-                          <Clock size={10} />
-                          {new Date(moon.time).toLocaleString('de-DE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} Uhr
-                        </div>
-                      </div>
+            ) : sortedEvents.map(event => (
+              <button key={event.id} onClick={() => setSelectedEvent(event)}
+                className="w-full text-left rounded-xl p-3.5 transition-all"
+                style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)', cursor: 'pointer' }}>
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-11 h-11 rounded-lg flex flex-col items-center justify-center" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.05)' }}>
+                    <span style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>{new Date(event.start).getDate()}</span>
+                    <span style={{ ...font, fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.35)', textTransform: 'uppercase' }}>{MONTHS[new Date(event.start).getMonth()]?.slice(0, 3)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: TYPE_COLORS[event.type] || '#D4A843' }} />
+                      <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }} className="truncate">{event.title}</span>
                     </div>
-                  </button>
-                )
-              }
-              const event = item.data
-              return (
-                <button key={event.id} onClick={() => setSelectedEvent(event)}
-                  className="w-full text-left rounded-xl p-3.5 transition-all"
-                  style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)', cursor: 'pointer' }}>
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-11 h-11 rounded-lg flex flex-col items-center justify-center" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.05)' }}>
-                      <span style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>{new Date(event.start).getDate()}</span>
-                      <span style={{ ...font, fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.35)', textTransform: 'uppercase' }}>{MONTHS[new Date(event.start).getMonth()]?.slice(0, 3)}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: TYPE_COLORS[event.type] || '#D4A843' }} />
-                        <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }} className="truncate">{event.title}</span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)' }}>
-                          <Clock size={10} /> {formatTime(event.start)}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)' }}>
+                        <Clock size={10} /> {formatTime(event.start)}
+                      </span>
+                      {event.recurring && (
+                        <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)' }}>
+                          <Repeat size={9} /> {RECURRING_LABELS[event.recurring]}
                         </span>
-                        {event.recurring && (
-                          <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)' }}>
-                            <Repeat size={9} /> {RECURRING_LABELS[event.recurring]}
-                          </span>
-                        )}
-                        {(event as any).dist != null && (
-                          <span style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: '#D4A843' }}>
-                            {formatDist((event as any).dist)}
-                          </span>
-                        )}
-                      </div>
+                      )}
+                      {(event as any).dist != null && (
+                        <span style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: '#D4A843' }}>
+                          {formatDist((event as any).dist)}
+                        </span>
+                      )}
                     </div>
                   </div>
-                </button>
-              )
-            })}
+                </div>
+              </button>
+            ))}
           </div>
         ) : (
           <div className="p-4">

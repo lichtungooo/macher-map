@@ -46,8 +46,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
   const [editingTg, setEditingTg] = useState<string | null>(null)
   const [editTgLabel, setEditTgLabel] = useState('')
   const [editTgUrl, setEditTgUrl] = useState('')
-  const [moonPhases, setMoonPhases] = useState<{ type: 'neumond' | 'vollmond'; time: string }[]>([])
-  const [moonPopup, setMoonPopup] = useState<{ type: string; time: string } | null>(null)
+  // moonPhases werden nur durch Monats/Wochen-Ansichten verwendet — hier nicht noetig
   const calUrl = `${window.location.origin}/api/lichtungen/${lichtungId}/cal.ics`
 
   // Globale Events neu laden (fuer sofortige Karten-Aktualisierung)
@@ -61,10 +60,6 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
     }))
     setGlobalEvents(mapped)
   }
-
-  useEffect(() => {
-    api.getMoonPhases(12).then(setMoonPhases).catch(() => {})
-  }, [])
 
   useEffect(() => {
     api.getLichtungMembers(lichtungId).then(setMembers).catch(() => {})
@@ -455,56 +450,16 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
         )}
         {tab === 'kalender' && (
           <>
-            {/* Termine + Mondphasen chronologisch */}
-            {(() => {
-              const startOfToday = new Date(new Date().toDateString()).getTime()
-              const evs = events.filter((e: any) => new Date(e.start_time).getTime() >= startOfToday)
-                .map((e: any) => ({ kind: 'event' as const, time: e.start_time, data: e }))
-              const moons = moonPhases.filter(p => new Date(p.time).getTime() >= startOfToday)
-                .map(p => ({ kind: 'moon' as const, time: p.time, data: p }))
-              const mixed = [...evs, ...moons].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
-
-              if (mixed.length === 0) return (
-                <div className="text-center py-8">
-                  <CalendarDays size={24} style={{ color: 'rgba(10,10,10,0.08)', margin: '0 auto 8px' }} />
-                  <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.35)' }}>Noch keine Termine an diesem Ort.</p>
-                </div>
-              )
-
-              return (
-                <div className="space-y-2 mb-4">
-                  {mixed.map((item, idx) => {
-                    if (item.kind === 'moon') {
-                      const moon = item.data as any
-                      const d = new Date(moon.time)
-                      return (
-                        <button key={`moon-${idx}`} onClick={() => setMoonPopup(moon)}
-                          className="w-full rounded-xl p-3 text-left flex items-center gap-3"
-                          style={{
-                            background: moon.type === 'vollmond' ? 'rgba(245,224,144,0.1)' : 'rgba(107,76,138,0.05)',
-                            border: `1px solid ${moon.type === 'vollmond' ? 'rgba(212,168,67,0.2)' : 'rgba(107,76,138,0.15)'}`,
-                            cursor: 'pointer',
-                          }}>
-                          <div style={{
-                            width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                            background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                            border: `2px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
-                            boxShadow: moon.type === 'vollmond' ? '0 0 6px rgba(245,224,144,0.6)' : 'none',
-                          }} />
-                          <div className="flex-1 min-w-0">
-                            <div style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A' }}>
-                              {moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
-                            </div>
-                            <div style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.45)' }}>
-                              {d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })} &middot; {d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr
-                            </div>
-                          </div>
-                        </button>
-                      )
-                    }
-                    const e = item.data as any
-                    return (
-                      <div key={e.id} className="rounded-xl p-3.5" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)' }}>
+            {/* Termine */}
+            {events.length === 0 ? (
+              <div className="text-center py-8">
+                <CalendarDays size={24} style={{ color: 'rgba(10,10,10,0.08)', margin: '0 auto 8px' }} />
+                <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.35)' }}>Noch keine Termine an diesem Ort.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 mb-4">
+                {events.map((e: any) => (
+                  <div key={e.id} className="rounded-xl p-3.5" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)' }}>
                     <div className="flex items-center gap-1.5 mb-1">
                       <div className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
                       <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>{e.title}</span>
@@ -547,12 +502,10 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                         </button>
                       </div>
                     )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Kalender abonnieren */}
             {events.length > 0 && (
@@ -753,34 +706,6 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
         )}
       </div>
 
-      {/* Mondphase-Popup */}
-      {moonPopup && (
-        <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4"
-          onClick={() => setMoonPopup(null)}
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()}
-            className="rounded-2xl p-5 shadow-xl text-center"
-            style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', minWidth: '220px' }}>
-            <div className="flex justify-center mb-3">
-              <div style={{
-                width: 42, height: 42, borderRadius: '50%',
-                background: moonPopup.type === 'vollmond' ? '#F5E090' : 'transparent',
-                border: `3px solid ${moonPopup.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
-                boxShadow: moonPopup.type === 'vollmond' ? '0 0 16px rgba(245,224,144,0.7)' : 'none',
-              }} />
-            </div>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
-              {moonPopup.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
-            </h3>
-            <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.55)' }}>
-              {new Date(moonPopup.time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
-            </p>
-            <p style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.3)', marginTop: '6px' }}>
-              Ortszeit deines Geraets
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
