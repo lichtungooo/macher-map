@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation, Pencil, Trash2 } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
+import { EditEventDialog } from './EditEventDialog'
 import * as api from '../../api/client'
 
 function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -50,6 +51,11 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
   const [participantCount, setParticipantCount] = useState(data.participant_count || data.participantCount || 0)
   const [participants, setParticipants] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [coOwners, setCoOwners] = useState<any[]>([])
+  const [showAddCo, setShowAddCo] = useState(false)
+  const [newCoEmail, setNewCoEmail] = useState('')
+  const [coError, setCoError] = useState('')
 
   const tags = (data.tags || data.type || '').split(',').filter((t: string) => t.trim())
 
@@ -58,7 +64,34 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
       api.getEventStatus(event.id).then(d => { setStatus(d.status); setParticipantCount(d.count) }).catch(() => {})
     }
     api.getEventParticipants(event.id).then(setParticipants).catch(() => {})
+    api.getEventCoOwners(event.id).then(setCoOwners).catch(() => {})
   }, [event.id, user])
+
+  const isOwner = !!user && user.id === event.createdBy
+  const isCoOwner = !!user && coOwners.some(c => c.id === user.id)
+  const canEdit = isOwner || isCoOwner
+
+  const handleAddCoOwner = async () => {
+    setCoError('')
+    if (!newCoEmail.trim()) return
+    try {
+      await api.addEventCoOwner(event.id, newCoEmail.trim())
+      const updated = await api.getEventCoOwners(event.id)
+      setCoOwners(updated)
+      setNewCoEmail('')
+      setShowAddCo(false)
+    } catch (err: any) {
+      setCoError(err?.message || 'Fehler.')
+    }
+  }
+
+  const handleRemoveCoOwner = async (userId: string) => {
+    try {
+      await api.removeEventCoOwner(event.id, userId)
+      const updated = await api.getEventCoOwners(event.id)
+      setCoOwners(updated)
+    } catch {}
+  }
 
   const handleAction = async (action: 'join' | 'watch' | 'leave') => {
     if (!user || !api.getToken()) return
@@ -212,48 +245,112 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
             </p>
           )}
 
-          {/* Bearbeiten / Loeschen — nur fuer Ersteller */}
-          {user && user.id === event.createdBy && (
+          {/* Mitverantwortliche (nur Owner/Co-Owner sehen; nur Owner darf aendern) */}
+          {canEdit && (
+            <div className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
+              <div className="flex items-center justify-between mb-2">
+                <span style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)' }}>
+                  Mitverantwortliche
+                </span>
+                {isOwner && !showAddCo && (
+                  <button onClick={() => setShowAddCo(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.4)', ...font, fontSize: '0.7rem' }}>
+                    + hinzufuegen
+                  </button>
+                )}
+              </div>
+
+              {coOwners.length === 0 && !showAddCo && (
+                <p style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.35)' }}>
+                  Keine Mitverantwortlichen.
+                </p>
+              )}
+
+              <div className="space-y-1.5">
+                {coOwners.map(c => (
+                  <div key={c.id} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#FAFAF8' }}>
+                    {c.image_path ? (
+                      <img src={c.image_path} alt="" className="w-6 h-6 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.15)' }}>
+                        <span style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#D4A843' }}>{c.name?.charAt(0) || '?'}</span>
+                      </div>
+                    )}
+                    <span className="flex-1 truncate" style={{ ...font, fontSize: '0.78rem', color: '#0A0A0A' }}>{c.name || c.email}</span>
+                    {isOwner && (
+                      <button onClick={() => handleRemoveCoOwner(c.id)} title="Entfernen"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '2px' }}>
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {showAddCo && (
+                <div className="mt-2 space-y-1.5">
+                  <input type="email" value={newCoEmail} onChange={e => setNewCoEmail(e.target.value)}
+                    placeholder="E-Mail des Nutzers"
+                    className="w-full px-3 py-2 rounded-lg outline-none"
+                    style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A', background: '#fff', border: '1px solid rgba(10,10,10,0.1)' }} />
+                  <div className="flex gap-1.5">
+                    <button onClick={handleAddCoOwner}
+                      style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
+                      Hinzufuegen
+                    </button>
+                    <button onClick={() => { setShowAddCo(false); setNewCoEmail(''); setCoError('') }}
+                      style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Abbrechen
+                    </button>
+                  </div>
+                  {coError && <p style={{ ...font, fontSize: '0.65rem', color: '#c44' }}>{coError}</p>}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bearbeiten / Loeschen — Owner oder Co-Owner */}
+          {canEdit && (
             <div className="flex gap-2 mt-4 pt-3" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
               <button
-                onClick={() => {
-                  // TODO: Edit-Dialog oeffnen
-                  alert('Bearbeiten kommt bald.')
-                }}
+                onClick={() => setEditing(true)}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg"
                 style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}
               >
                 <Pencil size={12} /> Bearbeiten
               </button>
-              <button
-                onClick={async () => {
-                  const reason = prompt('Veranstaltung absagen?\n\nOptional: Grund (wird an Teilnehmer gesendet):')
-                  if (reason === null) return
-                  try {
-                    await api.deleteEvent(event.id, reason || undefined)
-                    // Globale Events aktualisieren — Pin verschwindet sofort
-                    api.getEvents().then(all => {
-                      setGlobalEvents(all.map((e: any) => ({
-                        id: e.id, title: e.title, description: e.description || '',
-                        position: [e.lat, e.lng] as [number, number],
-                        start: e.start_time, end: e.end_time,
-                        type: e.type || 'meditation', recurring: e.recurring, createdBy: e.user_id,
-                      })))
-                    })
-                    onClose()
-                  } catch (err: any) {
-                    alert(err.message || 'Fehler beim Loeschen.')
-                  }
-                }}
-                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg"
-                style={{ ...font, fontSize: '0.72rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}
-              >
-                <Trash2 size={12} /> Loeschen
-              </button>
+              {isOwner && (
+                <button
+                  onClick={async () => {
+                    const reason = prompt('Veranstaltung absagen?\n\nOptional: Grund (wird an Teilnehmer gesendet):')
+                    if (reason === null) return
+                    try {
+                      await api.deleteEvent(event.id, reason || undefined)
+                      api.getEvents().then(all => {
+                        setGlobalEvents(all.map((e: any) => ({
+                          id: e.id, title: e.title, description: e.description || '',
+                          position: [e.lat, e.lng] as [number, number],
+                          start: e.start_time, end: e.end_time,
+                          type: e.type || 'meditation', recurring: e.recurring, createdBy: e.user_id,
+                        })))
+                      })
+                      onClose()
+                    } catch (err: any) {
+                      alert(err.message || 'Fehler beim Loeschen.')
+                    }
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg"
+                  style={{ ...font, fontSize: '0.72rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}
+                >
+                  <Trash2 size={12} /> Loeschen
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {editing && <EditEventDialog event={event} onClose={() => setEditing(false)} onSaved={onClose} />}
     </div>
   )
 }

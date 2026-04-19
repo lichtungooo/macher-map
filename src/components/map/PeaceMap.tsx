@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents, Polyline } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import L from 'leaflet'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
@@ -222,17 +224,31 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
       <ZoomButtons />
       <TrackpadFix />
 
-      {showLights && lights.map(light => (
-        <LightMarker key={`${light.id}-${light.position[0]}-${light.position[1]}`} light={light} onShowProfile={onShowProfile} />
-      ))}
-
-      {showEvents && events.map(event => (
-        <EventMarker key={`${event.id}-${event.position[0]}-${event.position[1]}`} event={event} onShowEvent={onShowEvent} />
-      ))}
-
-      {lichtungen.map(l => (
-        <LichtungMarker key={`${l.id}-${l.lat}-${l.lng}`} lichtung={l} onClick={onLichtungClick || (() => {})} />
-      ))}
+      <MarkerClusterGroup
+        chunkedLoading
+        maxClusterRadius={35}
+        spiderfyOnMaxZoom={true}
+        showCoverageOnHover={false}
+        spiderfyDistanceMultiplier={1.6}
+        iconCreateFunction={(cluster: any) => {
+          const count = cluster.getChildCount()
+          const size = count < 10 ? 36 : count < 50 ? 44 : 52
+          return L.divIcon({
+            html: `<div class="lichtung-cluster-icon" style="width:${size}px;height:${size}px;">${count}</div>`,
+            className: 'lichtung-cluster-wrap',
+            iconSize: [size, size],
+          })
+        }}>
+        {showLights && lights.map(light => (
+          <LightMarker key={`${light.id}-${light.position[0]}-${light.position[1]}`} light={light} onShowProfile={onShowProfile} />
+        ))}
+        {showEvents && events.map(event => (
+          <EventMarker key={`${event.id}-${event.position[0]}-${event.position[1]}`} event={event} onShowEvent={onShowEvent} />
+        ))}
+        {lichtungen.map(l => (
+          <LichtungMarker key={`${l.id}-${l.lat}-${l.lng}`} lichtung={l} onClick={onLichtungClick || (() => {})} />
+        ))}
+      </MarkerClusterGroup>
     </MapContainer>
   )
 }

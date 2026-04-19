@@ -11,6 +11,7 @@ import {
   createVerifyToken, verifyEmailToken,
   getAllLights, getUserLight, createLight, getLightCount,
   getAllEvents, getEventById, updateEvent, createEvent, getGlobalEvents, deleteEvent,
+  getEventCoOwners, addEventCoOwner, removeEventCoOwner, isEventCoOwner,
   joinEvent, watchEvent, leaveEvent, getEventParticipants, getEventParticipantCount, isUserParticipating, getUserEvents,
   createInviteToken, verifyInviteToken,
   getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
@@ -284,7 +285,9 @@ app.post('/api/events', auth, (req, res) => {
 app.put('/api/events/:id', auth, (req, res) => {
   const event = getEventById(req.params.id)
   if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
-  if (event.user_id !== req.userId) return res.status(403).json({ error: 'Nur der Ersteller kann bearbeiten' })
+  const isOwner = event.user_id === req.userId
+  const isCoOwner = isEventCoOwner(req.params.id, req.userId)
+  if (!isOwner && !isCoOwner) return res.status(403).json({ error: 'Nur der Ersteller oder Mitverantwortliche koennen bearbeiten' })
 
   const { title, description, start_time, end_time, type, recurring, tags, max_participants } = req.body
   const fields = {}
@@ -370,6 +373,33 @@ app.delete('/api/events/:id', auth, (req, res) => {
 
 app.get('/api/events/:id/participants', (req, res) => {
   res.json(getEventParticipants(req.params.id))
+})
+
+// ─── Event Co-Owner ───
+
+app.get('/api/events/:id/co-owners', (req, res) => {
+  res.json(getEventCoOwners(req.params.id))
+})
+
+app.post('/api/events/:id/co-owners', auth, (req, res) => {
+  const event = getEventById(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
+  if (event.user_id !== req.userId) return res.status(403).json({ error: 'Nur der Ersteller kann Mitverantwortliche hinzufuegen.' })
+  const { email } = req.body
+  if (!email) return res.status(400).json({ error: 'E-Mail fehlt' })
+  const user = findUserByEmail(email)
+  if (!user) return res.status(404).json({ error: 'Nutzer mit dieser E-Mail nicht gefunden.' })
+  if (user.id === event.user_id) return res.status(400).json({ error: 'Der Ersteller ist bereits Owner.' })
+  addEventCoOwner(req.params.id, user.id)
+  res.json({ ok: true })
+})
+
+app.delete('/api/events/:id/co-owners/:userId', auth, (req, res) => {
+  const event = getEventById(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
+  if (event.user_id !== req.userId) return res.status(403).json({ error: 'Nur der Ersteller kann Mitverantwortliche entfernen.' })
+  removeEventCoOwner(req.params.id, req.params.userId)
+  res.json({ ok: true })
 })
 
 app.post('/api/events/:id/join', auth, (req, res) => {

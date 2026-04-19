@@ -144,6 +144,15 @@ export async function watchEvent(eventId: string) {
 export async function getEventParticipants(eventId: string) {
   return request(`/events/${eventId}/participants`)
 }
+export async function getEventCoOwners(eventId: string) {
+  return request(`/events/${eventId}/co-owners`)
+}
+export async function addEventCoOwner(eventId: string, email: string) {
+  return request(`/events/${eventId}/co-owners`, { method: 'POST', body: JSON.stringify({ email }) })
+}
+export async function removeEventCoOwner(eventId: string, userId: string) {
+  return request(`/events/${eventId}/co-owners/${userId}`, { method: 'DELETE' })
+}
 export async function getMyEvents() {
   return request('/my/events')
 }

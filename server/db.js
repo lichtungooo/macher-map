@@ -145,6 +145,15 @@ try { db.exec('ALTER TABLE events ADD COLUMN image_path TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 try { db.exec('ALTER TABLE lichtungen ADD COLUMN tags TEXT DEFAULT ""') } catch {}
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS event_co_owners (
+    event_id TEXT NOT NULL REFERENCES events(id),
+    user_id TEXT NOT NULL REFERENCES users(id),
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (event_id, user_id)
+  );
+`)
+
 // Migration: alte /uploads/ → /api/uploads/ (Traefik routet nur /api/*)
 try { db.prepare("UPDATE lichtungen SET image_path = '/api' || image_path WHERE image_path LIKE '/uploads/%'").run() } catch {}
 try { db.prepare("UPDATE users SET image_path = '/api' || image_path WHERE image_path LIKE '/uploads/%'").run() } catch {}
@@ -518,6 +527,28 @@ export function getLightCount() {
 
 export function getEventById(id) {
   return db.prepare('SELECT * FROM events WHERE id = ?').get(id)
+}
+
+// ─── Event Co-Owner ───
+
+export function getEventCoOwners(eventId) {
+  return db.prepare(`
+    SELECT u.id, u.name, u.email, u.image_path, o.created_at
+    FROM event_co_owners o JOIN users u ON o.user_id = u.id
+    WHERE o.event_id = ? ORDER BY o.created_at
+  `).all(eventId)
+}
+
+export function addEventCoOwner(eventId, userId) {
+  db.prepare('INSERT OR IGNORE INTO event_co_owners (event_id, user_id) VALUES (?, ?)').run(eventId, userId)
+}
+
+export function removeEventCoOwner(eventId, userId) {
+  db.prepare('DELETE FROM event_co_owners WHERE event_id = ? AND user_id = ?').run(eventId, userId)
+}
+
+export function isEventCoOwner(eventId, userId) {
+  return !!db.prepare('SELECT 1 FROM event_co_owners WHERE event_id = ? AND user_id = ?').get(eventId, userId)
 }
 
 export function updateEvent(id, fields) {
