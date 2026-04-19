@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, X, Plus, Trash2, Lock, Unlock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Plus, Trash2, Lock, Unlock, Shield, Repeat } from 'lucide-react'
 import * as api from '../../api/client'
 
 const MONTHS = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
@@ -56,6 +56,14 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
   // Mondphasen (on-the-fly, 24 Monate)
   const [moonPhases, setMoonPhases] = useState<{ type: 'neumond' | 'vollmond'; time: string }[]>([])
   const [selectedMoon, setSelectedMoon] = useState<{ type: string; time: string } | null>(null)
+
+  // Admin-Modus (Slots ziehen)
+  const [adminMode, setAdminMode] = useState(false)
+  const [drag, setDrag] = useState<{ date: string; startHour: number; endHour: number } | null>(null)
+  const [dragDialog, setDragDialog] = useState<{ date: string; startHour: number; endHour: number } | null>(null)
+  const [repeatWeeks, setRepeatWeeks] = useState(12)
+  const [repeating, setRepeating] = useState(false)
+  const [repeatMsg, setRepeatMsg] = useState('')
 
   useEffect(() => {
     api.getMoonPhases(24).then(setMoonPhases).catch(() => {})
@@ -163,6 +171,73 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
     api.getLichtungSlots(lichtungId, from, to).then(setMonthSlots)
   }
 
+  // ── Drag fuer Slot-Erstellung ──
+  const startDrag = (date: string, hour: number) => {
+    setDrag({ date, startHour: hour, endHour: hour + 1 })
+  }
+  const extendDrag = (date: string, hour: number) => {
+    if (!drag || drag.date !== date) return
+    setDrag({ date, startHour: Math.min(drag.startHour, hour), endHour: Math.max(drag.endHour, hour + 1) })
+  }
+  const endDrag = () => {
+    if (drag) {
+      setDragDialog(drag)
+      setDrag(null)
+    }
+  }
+  useEffect(() => {
+    const up = () => endDrag()
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+    return () => {
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+  }, [drag])
+
+  const applyDrag = async (status: 'open' | 'closed') => {
+    if (!dragDialog) return
+    try {
+      await api.createTimeSlot(lichtungId, dragDialog.date, {
+        startHour: dragDialog.startHour,
+        endHour: dragDialog.endHour,
+        status,
+        parallelSlots: status === 'open' ? 1 : 1,
+      })
+      const weekFrom = weekDays[0]?.date
+      const weekTo = weekDays[6]?.date
+      if (weekFrom && weekTo) {
+        const all = await api.getLichtungSlots(lichtungId, weekFrom, weekTo)
+        const map: Record<string, any[]> = {}
+        for (const s of all) { if (!map[s.date]) map[s.date] = []; map[s.date].push(s) }
+        setWeekSlotsByDate(map)
+      }
+      setMonthSlots(await api.getLichtungSlots(lichtungId, from, to))
+    } catch (err: any) {
+      alert(err?.message || 'Fehler')
+    }
+    setDragDialog(null)
+  }
+
+  // ── Woche wiederholen ──
+  const repeatCurrentWeek = async () => {
+    setRepeating(true); setRepeatMsg('')
+    try {
+      const weekStart = weekDays[0]?.date
+      if (!weekStart) return
+      const res = await fetch(`/api/lichtungen/${lichtungId}/slots/repeat-week`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${api.getToken()}` },
+        body: JSON.stringify({ weekStart, weeks: repeatWeeks }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setRepeatMsg(`${data.copied} Slots fuer ${repeatWeeks} Wochen angelegt.`)
+    } catch (err: any) {
+      setRepeatMsg(err?.message || 'Fehler')
+    } finally { setRepeating(false) }
+  }
+
   const timeSlotsSorted = daySlots.filter(s => s.start_hour !== null && s.start_hour !== undefined).sort((a, b) => a.start_hour - b.start_hour)
   const dayInfo = selectedDate ? daySlotMap[selectedDate] : null
   const isClosed = dayInfo?.status === 'closed'
@@ -242,6 +317,23 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
             </button>
           ))}
         </div>
+
+        {/* Admin-Toggle — nur Hueter/Gaertner */}
+        {isGaertner && (
+          <button onClick={() => setAdminMode(!adminMode)}
+            title={adminMode ? 'Admin-Modus beenden' : 'Administrationsmodus'}
+            className="flex items-center gap-1 rounded-lg px-2"
+            style={{
+              ...font, fontSize: '0.65rem', fontWeight: 500,
+              background: adminMode ? 'rgba(212,168,67,0.15)' : '#fff',
+              color: adminMode ? '#D4A843' : 'rgba(10,10,10,0.4)',
+              border: `1px solid ${adminMode ? 'rgba(212,168,67,0.3)' : 'rgba(10,10,10,0.08)'}`,
+              cursor: 'pointer', height: '27px',
+            }}>
+            <Shield size={11} />
+            <span className="hidden sm:inline">Admin</span>
+          </button>
+        )}
 
         <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center"
           style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
@@ -396,38 +488,57 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                     {weekDays.map(d => {
                       const dSlots = weekSlotsByDate[d.date] || []
                       const dayInfoFromMonth = daySlotMap[d.date]
-                      const dayClosed = dayInfoFromMonth?.status === 'closed'
-                      const slot = dSlots.find(s => s.start_hour !== null && h >= s.start_hour && h < s.end_hour)
+                      const dayClosed = dayInfoFromMonth?.status === 'closed' || (dSlots.find(s => s.start_hour !== null && h >= s.start_hour && h < s.end_hour && s.status === 'closed'))
+                      const slot = dSlots.find(s => s.start_hour !== null && h >= s.start_hour && h < s.end_hour && s.status !== 'closed')
                       const isFirstHour = slot && slot.start_hour === h
                       const eventsInHour = allEvents.filter((e: any) => e.start_time.startsWith(d.date) && new Date(e.start_time).getHours() === h)
                       const slotFull = slot && eventsInHour.length >= slot.parallel_slots
 
+                      // Drag-Preview
+                      const inDragPreview = drag && drag.date === d.date && h >= drag.startHour && h < drag.endHour
+
                       let bg = '#fff'
-                      if (dayClosed) bg = 'rgba(200,60,60,0.03)'
+                      if (dayClosed) bg = 'rgba(200,60,60,0.08)'
                       else if (slot) {
-                        bg = slotFull ? 'rgba(212,168,67,0.08)' : 'rgba(123,174,94,0.06)'
+                        bg = slotFull ? 'rgba(212,168,67,0.08)' : 'rgba(123,174,94,0.1)'
                       }
+                      if (inDragPreview) bg = 'rgba(212,168,67,0.3)'
 
                       const handleCellClick = () => {
+                        if (adminMode) return // im Admin-Modus kein Click-Nav, nur Drag
                         if (dayClosed) return
-                        if (!slot && isHueter) {
-                          // Hueter: Zeit-Slot oeffnen
+                        if (slot && !slotFull) {
+                          // User-Modus: Klick auf freien Slot -> Tagesansicht mit Event-Erstellung
                           setSelectedDate(d.date)
-                          setNewSlot({ startHour: h, endHour: h + 2, parallelSlots: 1, note: '' })
-                          setShowNewSlot(true)
                           setView('day')
                         } else {
-                          // Tag-Detail oeffnen
                           setSelectedDate(d.date)
                           setView('day')
                         }
                       }
 
+                      const handlePointerDown = (e: React.PointerEvent) => {
+                        if (!adminMode || !isGaertner) return
+                        e.preventDefault()
+                        startDrag(d.date, h)
+                      }
+                      const handlePointerEnter = () => {
+                        if (drag) extendDrag(d.date, h)
+                      }
+
                       return (
-                        <button key={d.date + h} onClick={handleCellClick}
-                          className="relative p-1 text-left transition-all"
-                          style={{ background: bg, borderLeft: '1px solid rgba(10,10,10,0.04)', cursor: dayClosed ? 'default' : 'pointer', border: 'none', borderLeftWidth: '1px', borderLeftStyle: 'solid', borderLeftColor: 'rgba(10,10,10,0.04)' }}>
-                          {slot && isFirstHour && (
+                        <div key={d.date + h}
+                          onClick={handleCellClick}
+                          onPointerDown={handlePointerDown}
+                          onPointerEnter={handlePointerEnter}
+                          className="relative p-1 text-left select-none"
+                          style={{
+                            background: bg,
+                            borderLeft: '1px solid rgba(10,10,10,0.04)',
+                            cursor: adminMode ? 'crosshair' : (dayClosed ? 'default' : 'pointer'),
+                            touchAction: adminMode ? 'none' : undefined,
+                          }}>
+                          {slot && isFirstHour && !inDragPreview && (
                             <div className="rounded px-1.5 py-0.5 mb-0.5" style={{ background: slotFull ? 'rgba(212,168,67,0.2)' : 'rgba(123,174,94,0.18)' }}>
                               <div style={{ ...font, fontSize: '0.55rem', fontWeight: 600, color: slotFull ? '#D4A843' : '#5A8A3C' }}>
                                 {slot.note || `${String(slot.start_hour).padStart(2, '0')}-${String(slot.end_hour).padStart(2, '0')}`}
@@ -437,36 +548,65 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                               </div>
                             </div>
                           )}
-                          {eventsInHour.map((e: any) => (
+                          {!inDragPreview && eventsInHour.map((e: any) => (
                             <div key={e.id} className="rounded px-1.5 py-0.5 mb-0.5 truncate" style={{ background: 'rgba(212,168,67,0.25)' }}>
                               <span style={{ ...font, fontSize: '0.58rem', fontWeight: 500, color: '#0A0A0A' }}>{e.title}</span>
                             </div>
                           ))}
-                        </button>
+                        </div>
                       )
                     })}
                   </div>
                 ))}
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+              {/* Admin-Modus-Box */}
+              {adminMode && isGaertner && (
+                <div className="mt-4 p-3 rounded-xl" style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.25)' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield size={13} style={{ color: '#D4A843' }} />
+                    <span style={{ ...font, fontSize: '0.75rem', fontWeight: 600, color: '#0A0A0A' }}>Administrationsmodus</span>
+                  </div>
+                  <p style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.5, marginBottom: '10px' }}>
+                    Klick + Ziehen auf der Woche: markiert einen Zeitraum. Dann kannst du den Bereich als <strong>Offen</strong> oder <strong>Gesperrt</strong> setzen.
+                  </p>
+
+                  {/* Woche wiederholen */}
+                  {isHueter && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Repeat size={12} style={{ color: '#7BAE5E' }} />
+                      <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.6)' }}>
+                        Diese Woche auf die naechsten
+                      </span>
+                      <input type="number" min="1" max="52" value={repeatWeeks}
+                        onChange={e => setRepeatWeeks(Number(e.target.value) || 1)}
+                        className="px-2 py-1 rounded"
+                        style={{ ...font, fontSize: '0.72rem', width: '50px', border: '1px solid rgba(10,10,10,0.1)', background: '#fff' }} />
+                      <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.6)' }}>Wochen uebertragen</span>
+                      <button onClick={repeatCurrentWeek} disabled={repeating}
+                        className="rounded-lg px-3 py-1"
+                        style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#fff', background: repeating ? 'rgba(10,10,10,0.4)' : '#7BAE5E', border: 'none', cursor: repeating ? 'wait' : 'pointer' }}>
+                        {repeating ? '...' : 'Uebertragen'}
+                      </button>
+                      {repeatMsg && <span style={{ ...font, fontSize: '0.65rem', color: repeatMsg.includes('Fehler') ? '#c44' : '#7BAE5E' }}>{repeatMsg}</span>}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center justify-center gap-5 text-sm flex-wrap">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded" style={{ background: 'rgba(123,174,94,0.06)', border: '1px solid rgba(123,174,94,0.2)' }} />
-                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>Offener Slot</span>
+                  <div className="w-3 h-3 rounded" style={{ background: 'rgba(123,174,94,0.1)', border: '1px solid rgba(123,174,94,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.5)' }}>Offen</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded" style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)' }} />
-                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>Belegt</span>
+                  <div className="w-3 h-3 rounded" style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.5)' }}>Belegt</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded" style={{ background: 'rgba(200,60,60,0.06)', border: '1px solid rgba(200,60,60,0.15)' }} />
-                  <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>Ruhetag</span>
+                  <div className="w-3 h-3 rounded" style={{ background: 'rgba(200,60,60,0.08)', border: '1px solid rgba(200,60,60,0.15)' }} />
+                  <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.5)' }}>Gesperrt</span>
                 </div>
-                {isHueter && (
-                  <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', marginLeft: '12px' }}>
-                    Klick auf leere Zelle = neuen Slot oeffnen
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -655,6 +795,44 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
           <p style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center' }}>
             {isHueter ? 'Als Hueter kannst du Slots oeffnen und Tage sperren.' : 'Als Gaertner kannst du Termine in offene Slots eintragen.'}
           </p>
+        </div>
+      )}
+
+      {/* Drag-Dialog: Slot-Aktion */}
+      {dragDialog && (
+        <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4"
+          onClick={() => setDragDialog(null)}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()}
+            className="rounded-2xl p-5 shadow-xl text-center"
+            style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', minWidth: '280px' }}>
+            <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>
+              Zeitraum
+            </p>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+              {new Date(dragDialog.date).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h3>
+            <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.55)', marginBottom: '16px' }}>
+              {String(dragDialog.startHour).padStart(2, '0')}:00 &ndash; {String(dragDialog.endHour).padStart(2, '0')}:00
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => applyDrag('open')}
+                className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5"
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                <Unlock size={14} /> Offen
+              </button>
+              <button onClick={() => applyDrag('closed')}
+                className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5"
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#c44', border: 'none', cursor: 'pointer' }}>
+                <Lock size={14} /> Gesperrt
+              </button>
+            </div>
+            <button onClick={() => setDragDialog(null)}
+              className="mt-2 w-full py-2 rounded-lg"
+              style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              Abbrechen
+            </button>
+          </div>
         </div>
       )}
 

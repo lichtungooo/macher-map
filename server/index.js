@@ -18,7 +18,7 @@ import {
   getAllLichtungen, getLichtung, createLichtung, updateLichtung, deleteLichtung, getLichtungEvents,
   addLichtungMember, removeLichtungMember, setLichtungRole, getLichtungMembers, getLichtungMemberRole, getLichtungMemberCount,
   getLichtungCode, findLichtungByCode,
-  getSlots, setSlot, deleteSlot, isSlotAvailable, getSlotsForDate, createTimeSlot, deleteSlotById,
+  getSlots, setSlot, deleteSlot, isSlotAvailable, getSlotsForDate, createTimeSlot, deleteSlotById, copyWeekSlots,
   createConnection, getConnections, getConnectionCount, getFullChain,
   getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink, updateLichtungTelegramLink,
   getLichtungImages, addLichtungImage, deleteLichtungImage,
@@ -732,11 +732,22 @@ app.get('/api/lichtungen/:id/slots/:date', (req, res) => {
   res.json(getSlotsForDate(req.params.id, req.params.date))
 })
 
-// Neuen Zeit-Slot anlegen (Hueter)
+// Neuen Zeit-Slot anlegen (Hueter/Gaertner)
 app.post('/api/lichtungen/:id/slots/:date', auth, (req, res) => {
   const role = getLichtungMemberRole(req.params.id, req.userId)
-  if (role !== 'owner') return res.status(403).json({ error: 'Nur der Hueter kann Slots oeffnen.' })
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Hueter oder Gaertner koennen Slots setzen.' })
   res.json(createTimeSlot(req.params.id, req.params.date, req.body, req.userId))
+})
+
+// Aktuelle Woche auf naechste N Wochen kopieren (Hueter)
+app.post('/api/lichtungen/:id/slots/repeat-week', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner') return res.status(403).json({ error: 'Nur der Hueter kann Wochen uebertragen.' })
+  const { weekStart, weeks } = req.body
+  if (!weekStart || !weeks) return res.status(400).json({ error: 'weekStart und weeks erforderlich' })
+  const n = Math.min(Math.max(1, Number(weeks)), 52)
+  const copied = copyWeekSlots(req.params.id, weekStart, n, req.userId)
+  res.json({ copied, weeks: n })
 })
 
 // Zeit-Slot loeschen

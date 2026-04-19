@@ -866,6 +866,32 @@ export function getSlot(lichtungId, date) {
   return db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date = ? AND start_hour IS NULL').get(lichtungId, date)
 }
 
+export function copyWeekSlots(lichtungId, weekStartDate, weeksAhead, createdBy) {
+  // weekStartDate ist YYYY-MM-DD (Montag). Kopiert alle Slots von Mo-So in die naechsten N Wochen.
+  const start = new Date(weekStartDate + 'T00:00:00Z')
+  const end = new Date(start.getTime() + 7 * 86400000)
+  const weekEnd = end.toISOString().slice(0, 10)
+  const srcSlots = db.prepare('SELECT * FROM lichtung_slots WHERE lichtung_id = ? AND date >= ? AND date < ?').all(lichtungId, weekStartDate, weekEnd)
+
+  let copied = 0
+  for (let w = 1; w <= weeksAhead; w++) {
+    for (const s of srcSlots) {
+      const srcDate = new Date(s.date + 'T00:00:00Z')
+      const newDate = new Date(srcDate.getTime() + w * 7 * 86400000).toISOString().slice(0, 10)
+      // Duplikate vermeiden: gleicher Slot (Datum + start_hour + end_hour) -> ueberschreiben
+      const existing = db.prepare('SELECT id FROM lichtung_slots WHERE lichtung_id = ? AND date = ? AND IFNULL(start_hour, -1) = IFNULL(?, -1) AND IFNULL(end_hour, -1) = IFNULL(?, -1)').get(lichtungId, newDate, s.start_hour, s.end_hour)
+      if (existing) {
+        db.prepare('UPDATE lichtung_slots SET status = ?, parallel_slots = ?, note = ? WHERE id = ?').run(s.status, s.parallel_slots, s.note, existing.id)
+      } else {
+        const id = randomUUID()
+        db.prepare('INSERT INTO lichtung_slots (id, lichtung_id, date, status, max_events, note, created_by, start_hour, end_hour, parallel_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, lichtungId, newDate, s.status, s.max_events, s.note, createdBy, s.start_hour, s.end_hour, s.parallel_slots)
+      }
+      copied++
+    }
+  }
+  return copied
+}
+
 export function setSlot(lichtungId, date, status, maxEvents, note, createdBy) {
   const existing = db.prepare('SELECT id FROM lichtung_slots WHERE lichtung_id = ? AND date = ? AND start_hour IS NULL').get(lichtungId, date)
   if (existing) {
