@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2, Pencil } from 'lucide-react'
+import { X, CalendarDays, Clock, Users, Navigation, Repeat, Plus, Link2, Copy, Check, QrCode, Shield, MessageCircle, Trash2, Lock, Maximize2, Pencil, Crosshair } from 'lucide-react'
+import { useApp } from '../../context/AppContext'
 import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
 import { FullCalendar } from './FullCalendar'
@@ -18,9 +19,11 @@ interface LichtungDetailProps {
   lichtungId: string
   onClose: () => void
   onCreateEvent?: (lichtungId: string, lichtungName: string, position: [number, number]) => void
+  onShowOnMap?: (lat: number, lng: number) => void
 }
 
-export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onShowOnMap }: LichtungDetailProps) {
+  const { setEvents: setGlobalEvents, user } = useApp()
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +42,22 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const [newTgUrl, setNewTgUrl] = useState('')
   const [newTgPrivate, setNewTgPrivate] = useState(false)
   const [showAddTg, setShowAddTg] = useState(false)
+  const [editingTg, setEditingTg] = useState<string | null>(null)
+  const [editTgLabel, setEditTgLabel] = useState('')
+  const [editTgUrl, setEditTgUrl] = useState('')
   const calUrl = `${window.location.origin}/api/lichtungen/${lichtungId}/cal.ics`
+
+  // Globale Events neu laden (fuer sofortige Karten-Aktualisierung)
+  const reloadGlobalEvents = async () => {
+    const all = await api.getEvents()
+    const mapped = all.map((e: any) => ({
+      id: e.id, title: e.title, description: e.description || '',
+      position: [e.lat, e.lng] as [number, number],
+      start: e.start_time, end: e.end_time,
+      type: e.type || 'meditation', recurring: e.recurring, createdBy: e.user_id,
+    }))
+    setGlobalEvents(mapped)
+  }
 
   useEffect(() => {
     api.getLichtungMembers(lichtungId).then(setMembers).catch(() => {})
@@ -63,6 +81,19 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   const handleDeleteTg = async (linkId: string) => {
     await api.deleteLichtungTelegramLink(lichtungId, linkId)
     api.getLichtungTelegramLinks(lichtungId).then(setTgLinks)
+  }
+
+  const startEditTg = (link: any) => {
+    setEditingTg(link.id)
+    setEditTgLabel(link.label)
+    setEditTgUrl(link.url)
+  }
+
+  const saveEditTg = async () => {
+    if (!editingTg || !editTgLabel.trim()) return
+    await api.updateLichtungTelegramLink(lichtungId, editingTg, { label: editTgLabel, url: editTgUrl })
+    await api.getLichtungTelegramLinks(lichtungId).then(setTgLinks)
+    setEditingTg(null)
   }
 
   useEffect(() => {
@@ -128,11 +159,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
   return (
     <div className="fixed z-[1500] rounded-2xl shadow-xl overflow-hidden" style={{ top: '70px', right: '16px', width: '360px', maxHeight: 'calc(100vh - 90px)', background: '#fff', border: '1px solid rgba(10,10,10,0.06)', animation: 'fade-in-up 0.2s ease-out' }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ background: '#7BAE5E' }} />
-          <span style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: '#7BAE5E', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Lichtung</span>
-        </div>
+      <div className="flex items-center justify-end px-5 py-3" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.25)' }}>
           <X size={18} />
         </button>
@@ -200,21 +227,29 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
             ) : (
               /* ─── Anzeige ─── */
               <>
-                <div className="flex items-start justify-between mb-1">
+                <div className="flex items-start justify-between mb-4 gap-2">
                   <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A' }}>
                     {lichtung.name}
                   </h2>
-                  {(myRole === 'owner' || myRole === 'admin') && (
-                    <button onClick={() => { setEditName(lichtung.name); setEditDesc(lichtung.description || ''); setEditMode(true) }}
-                      className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                      <Pencil size={13} style={{ color: 'rgba(10,10,10,0.35)' }} />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {onShowOnMap && (
+                      <button onClick={() => onShowOnMap(lichtung.lat, lichtung.lng)}
+                        title="Auf Karte zeigen"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                        <Crosshair size={13} style={{ color: '#7BAE5E' }} />
+                      </button>
+                    )}
+                    {(myRole === 'owner' || myRole === 'admin') && (
+                      <button onClick={() => { setEditName(lichtung.name); setEditDesc(lichtung.description || ''); setEditMode(true) }}
+                        title="Bearbeiten"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+                        <Pencil size={13} style={{ color: 'rgba(10,10,10,0.35)' }} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', marginBottom: '16px' }}>
-                  von {lichtung.creator_name}
-                </p>
 
                 {lichtung.description && (
                   <div className="rounded-xl p-4 mb-4" style={{ background: '#FAFAF8' }}>
@@ -255,10 +290,32 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                 )}
 
                 {tgLinks.map((link: any) => {
-                  const locked = link.locked // Private Gruppe, User kein Mitglied
+                  const locked = link.locked
+                  const isEditing = editingTg === link.id
                   return (
                     <div key={link.id} className="flex items-center gap-2 mb-1.5">
-                      {locked ? (
+                      {isEditing ? (
+                        <div className="flex-1 flex flex-col gap-1.5">
+                          <input type="text" value={editTgLabel} onChange={e => setEditTgLabel(e.target.value)}
+                            placeholder="Name" autoFocus
+                            className="w-full px-2.5 py-1.5 rounded-lg outline-none"
+                            style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A', background: '#fff', border: '1px solid rgba(80,120,200,0.25)' }} />
+                          <input type="text" value={editTgUrl} onChange={e => setEditTgUrl(e.target.value)}
+                            placeholder="https://t.me/..."
+                            className="w-full px-2.5 py-1.5 rounded-lg outline-none"
+                            style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.55)', background: '#fff', border: '1px solid rgba(10,10,10,0.08)' }} />
+                          <div className="flex gap-1.5">
+                            <button onClick={saveEditTg}
+                              style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: '#fff', background: '#5078C8', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}>
+                              Speichern
+                            </button>
+                            <button onClick={() => setEditingTg(null)}
+                              style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                              Abbrechen
+                            </button>
+                          </div>
+                        </div>
+                      ) : locked ? (
                         <div className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg"
                           style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)' }}>
                           <Lock size={12} style={{ color: 'rgba(10,10,10,0.3)' }} />
@@ -276,10 +333,19 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                           {link.is_private && <Lock size={10} style={{ color: '#D4A843', marginLeft: 'auto' }} />}
                         </a>
                       )}
-                      {(myRole === 'owner' || myRole === 'admin') && (
-                        <button onClick={() => handleDeleteTg(link.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '4px' }}>
-                          <Trash2 size={12} />
-                        </button>
+                      {!isEditing && (myRole === 'owner' || myRole === 'admin') && (
+                        <>
+                          <button onClick={() => startEditTg(link)}
+                            title="Bearbeiten"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '4px' }}>
+                            <Pencil size={12} />
+                          </button>
+                          <button onClick={() => handleDeleteTg(link.id)}
+                            title="Loeschen"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '4px' }}>
+                            <Trash2 size={12} />
+                          </button>
+                        </>
                       )}
                     </div>
                   )
@@ -395,13 +461,19 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                     {(myRole === 'owner' || myRole === 'admin') && (
                       <div className="flex gap-2 mt-2 pt-2" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
                         <button onClick={async () => {
-                          if (!confirm(`"${e.title}" wirklich loeschen?`)) return
-                          await api.deleteEvent(e.id)
-                          api.getLichtungEvents(lichtungId).then(setEvents)
+                          const reason = prompt(`"${e.title}" absagen?\n\nOptional: Grund fuer die Absage (wird an Teilnehmer gesendet):`)
+                          if (reason === null) return // Abgebrochen
+                          try {
+                            await api.deleteEvent(e.id, reason || undefined)
+                            api.getLichtungEvents(lichtungId).then(setEvents)
+                            reloadGlobalEvents()
+                          } catch (err: any) {
+                            alert(err.message || 'Fehler beim Loeschen.')
+                          }
                         }}
                           className="flex items-center gap-1 px-2 py-1 rounded"
                           style={{ ...font, fontSize: '0.6rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.12)', cursor: 'pointer' }}>
-                          <Trash2 size={10} /> Loeschen
+                          <Trash2 size={10} /> Absagen
                         </button>
                       </div>
                     )}
@@ -475,16 +547,34 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent }: LichtungD
                       {m.role === 'member' && 'Mitglied'}
                     </span>
                   </div>
-                  {/* Rolle aendern (nur fuer Owner) */}
-                  {myRole === 'owner' && m.role !== 'owner' && (
-                    <button
-                      onClick={() => {
-                        const newRole = m.role === 'admin' ? 'member' : 'admin'
-                        api.setMemberRole(lichtungId, m.id, newRole).then(() => api.getLichtungMembers(lichtungId).then(setMembers))
-                      }}
-                      style={{ ...font, fontSize: '0.6rem', color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer' }}>
-                      {m.role === 'admin' ? '→ Mitglied' : '→ Gaertner'}
-                    </button>
+                  {/* Rolle aendern (nur fuer Hueter) */}
+                  {myRole === 'owner' && m.id !== user?.id && (
+                    <div className="flex gap-1 shrink-0">
+                      {m.role !== 'owner' && (
+                        <button
+                          onClick={() => api.setMemberRole(lichtungId, m.id, 'owner').then(() => api.getLichtungMembers(lichtungId).then(setMembers))}
+                          title="Zum Hueter machen"
+                          style={{ ...font, fontSize: '0.58rem', color: '#7BAE5E', background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.2)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
+                          Hueter
+                        </button>
+                      )}
+                      {m.role !== 'admin' && (
+                        <button
+                          onClick={() => api.setMemberRole(lichtungId, m.id, 'admin').then(() => api.getLichtungMembers(lichtungId).then(setMembers))}
+                          title="Zum Gaertner machen"
+                          style={{ ...font, fontSize: '0.58rem', color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
+                          Gaertner
+                        </button>
+                      )}
+                      {m.role !== 'member' && (
+                        <button
+                          onClick={() => api.setMemberRole(lichtungId, m.id, 'member').then(() => api.getLichtungMembers(lichtungId).then(setMembers))}
+                          title="Zum Mitglied machen"
+                          style={{ ...font, fontSize: '0.58rem', color: 'rgba(10,10,10,0.4)', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
+                          Mitglied
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}

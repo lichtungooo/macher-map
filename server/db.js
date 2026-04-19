@@ -666,6 +666,17 @@ export function deleteLichtungTelegramLink(id) {
   db.prepare('DELETE FROM lichtung_telegram_links WHERE id = ?').run(id)
 }
 
+export function updateLichtungTelegramLink(id, label, url, isPrivate) {
+  const fields = []
+  const values = []
+  if (label !== undefined) { fields.push('label = ?'); values.push(label) }
+  if (url !== undefined) { fields.push('url = ?'); values.push(url) }
+  if (isPrivate !== undefined) { fields.push('is_private = ?'); values.push(isPrivate ? 1 : 0) }
+  if (!fields.length) return
+  values.push(id)
+  db.prepare(`UPDATE lichtung_telegram_links SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+}
+
 // ─── Verbindungen (Mensch-zu-Mensch) ───
 
 export function createConnection(userA, userB) {

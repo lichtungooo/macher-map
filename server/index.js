@@ -18,7 +18,7 @@ import {
   getLichtungCode, findLichtungByCode,
   getSlots, setSlot, deleteSlot, isSlotAvailable, getSlotsForDate, createTimeSlot, deleteSlotById,
   createConnection, getConnections, getConnectionCount, getFullChain,
-  getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink,
+  getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink, updateLichtungTelegramLink,
   getLichtungImages, addLichtungImage, deleteLichtungImage,
   getEventMaxParticipants,
   getStats, getRecentUsers, getNewsletterEmails,
@@ -321,13 +321,20 @@ app.put('/api/events/:id', auth, (req, res) => {
 app.delete('/api/events/:id', auth, (req, res) => {
   const event = getEventById(req.params.id)
   if (!event) return res.status(404).json({ error: 'Event nicht gefunden' })
-  if (event.user_id !== req.userId) return res.status(403).json({ error: 'Nur der Ersteller kann loeschen' })
+  // Ersteller oder Admin der Lichtung darf loeschen
+  let canDelete = event.user_id === req.userId
+  if (!canDelete && event.lichtung_id) {
+    const role = getLichtungMemberRole(event.lichtung_id, req.userId)
+    canDelete = role === 'owner' || role === 'admin'
+  }
+  if (!canDelete) return res.status(403).json({ error: 'Keine Berechtigung zum Loeschen.' })
 
   // Teilnehmer benachrichtigen
   const participants = getEventParticipants(req.params.id)
+  const reason = req.query.reason || req.body?.reason || ''
   if (participants.length > 0) {
     const subject = `Abgesagt: ${event.title} — Licht fuer Frieden`
-    const bodyHtml = `<p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${event.title}</strong> wurde leider abgesagt.</p>`
+    const bodyHtml = `<p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${event.title}</strong> wurde leider abgesagt.</p>${reason ? `<p style="font-size: 14px; color: rgba(10,10,10,0.55); margin-top: 12px;"><em>${reason}</em></p>` : ''}`
     sendNewsletter(participants, subject, bodyHtml).catch(err => console.error('Event-Mail-Fehler:', err))
   }
 
@@ -340,7 +347,8 @@ app.delete('/api/events/:id', auth, (req, res) => {
         deleteTelegramMessage(g.chat_id, oldMsg.message_id)
         deleteMessageRef(g.chat_id, req.params.id)
       }
-      sendTelegramMessage(g.chat_id, formatEventMessage(event, 'cancel'))
+      const cancelMsg = formatEventMessage(event, 'cancel') + (reason ? `\n\n<em>${reason}</em>` : '')
+      sendTelegramMessage(g.chat_id, cancelMsg)
     }
   }
 
@@ -556,6 +564,14 @@ app.delete('/api/lichtungen/:id/telegram/:linkId', auth, (req, res) => {
   res.json({ ok: true })
 })
 
+app.put('/api/lichtungen/:id/telegram/:linkId', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner' && role !== 'admin') return res.status(403).json({ error: 'Nur Hueter/Gaertner.' })
+  const { label, url, is_private } = req.body
+  updateLichtungTelegramLink(req.params.linkId, label, url, is_private)
+  res.json({ ok: true })
+})
+
 // ─── Verbindungen ───
 
 app.get('/api/connections', auth, (req, res) => {
@@ -664,9 +680,9 @@ app.get('/api/lichtungen/:id/code', auth, (req, res) => {
 // Rolle aendern (nur Owner)
 app.put('/api/lichtungen/:id/members/:userId/role', auth, (req, res) => {
   const myRole = getLichtungMemberRole(req.params.id, req.userId)
-  if (myRole !== 'owner') return res.status(403).json({ error: 'Nur der Eigentuemer.' })
+  if (myRole !== 'owner') return res.status(403).json({ error: 'Nur der Hueter.' })
   const { role } = req.body
-  if (!['admin', 'member'].includes(role)) return res.status(400).json({ error: 'Ungueltige Rolle.' })
+  if (!['owner', 'admin', 'member'].includes(role)) return res.status(400).json({ error: 'Ungueltige Rolle.' })
   setLichtungRole(req.params.id, req.params.userId, role)
   res.json({ ok: true })
 })

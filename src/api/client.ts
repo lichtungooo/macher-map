@@ -103,8 +103,9 @@ export async function updateEvent(id: string, data: Record<string, unknown>) {
   return request(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) })
 }
 
-export async function deleteEvent(id: string) {
-  return request(`/events/${id}`, { method: 'DELETE' })
+export async function deleteEvent(id: string, reason?: string) {
+  const query = reason ? `?reason=${encodeURIComponent(reason)}` : ''
+  return request(`/events/${id}${query}`, { method: 'DELETE' })
 }
 
 // ─── Event Teilnahme ───
@@ -163,6 +164,9 @@ export async function addLichtungTelegramLink(id: string, label: string, url: st
 }
 export async function deleteLichtungTelegramLink(lichtungId: string, linkId: string) {
   return request(`/lichtungen/${lichtungId}/telegram/${linkId}`, { method: 'DELETE' })
+}
+export async function updateLichtungTelegramLink(lichtungId: string, linkId: string, data: { label?: string; url?: string; is_private?: boolean }) {
+  return request(`/lichtungen/${lichtungId}/telegram/${linkId}`, { method: 'PUT', body: JSON.stringify(data) })
 }
 
 // ─── Verbindungen ───

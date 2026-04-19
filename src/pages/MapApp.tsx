@@ -514,6 +514,10 @@ function MapAppInner() {
           setEventPosition(pos)
           setEventLichtung({ id: lid, name: lname })
           setDialog('create-event')
+        }}
+        onShowOnMap={(lat, lng) => {
+          setSelectedLichtung(null)
+          setFlyTo([lat, lng, 16 + Math.random() * 0.001])
         }} />}
       {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
       {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}

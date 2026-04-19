@@ -45,7 +45,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
   const data = event as any
   const dist = userPos ? distanceKm(userPos[0], userPos[1], event.position[0], event.position[1]) : null
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${event.position[0]},${event.position[1]}`
-  const { user } = useApp()
+  const { user, setEvents: setGlobalEvents } = useApp()
   const [status, setStatus] = useState<string | null>(null)
   const [participantCount, setParticipantCount] = useState(data.participant_count || data.participantCount || 0)
   const [participants, setParticipants] = useState<any[]>([])
@@ -227,9 +227,19 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
               </button>
               <button
                 onClick={async () => {
-                  if (!confirm('Veranstaltung wirklich loeschen? Alle Teilnehmer werden benachrichtigt.')) return
+                  const reason = prompt('Veranstaltung absagen?\n\nOptional: Grund (wird an Teilnehmer gesendet):')
+                  if (reason === null) return
                   try {
-                    await api.deleteEvent(event.id)
+                    await api.deleteEvent(event.id, reason || undefined)
+                    // Globale Events aktualisieren — Pin verschwindet sofort
+                    api.getEvents().then(all => {
+                      setGlobalEvents(all.map((e: any) => ({
+                        id: e.id, title: e.title, description: e.description || '',
+                        position: [e.lat, e.lng] as [number, number],
+                        start: e.start_time, end: e.end_time,
+                        type: e.type || 'meditation', recurring: e.recurring, createdBy: e.user_id,
+                      })))
+                    })
                     onClose()
                   } catch (err: any) {
                     alert(err.message || 'Fehler beim Loeschen.')
