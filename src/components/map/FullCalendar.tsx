@@ -442,29 +442,48 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
               {/* Wochen-Grid: Stunden-Spalte + 7 Tag-Spalten */}
               <div className="rounded-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
                 {/* Tag-Header */}
-                <div className="grid" style={{ gridTemplateColumns: '44px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.08)' }}>
+                <div className="grid" style={{ gridTemplateColumns: '38px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.08)' }}>
                   <div style={{ background: '#FAFAF8' }} />
                   {weekDays.map(d => {
                     const isToday = d.date === now.toISOString().slice(0, 10)
                     const dayInfoFromMonth = daySlotMap[d.date]
                     const isClosed = dayInfoFromMonth?.status === 'closed' || (weekSlotsByDate[d.date]?.find(s => s.start_hour === null && s.status === 'closed'))
                     const moon = moonByDate[d.date]
+
+                    const setDayAll = async (status: 'open' | 'closed') => {
+                      try {
+                        await api.createTimeSlot(lichtungId, d.date, { startHour: 0, endHour: 24, status, parallelSlots: 1 })
+                        const weekFrom = weekDays[0]?.date, weekTo = weekDays[6]?.date
+                        if (weekFrom && weekTo) {
+                          const all = await api.getLichtungSlots(lichtungId, weekFrom, weekTo)
+                          const map: Record<string, any[]> = {}
+                          for (const s of all) { if (!map[s.date]) map[s.date] = []; map[s.date].push(s) }
+                          setWeekSlotsByDate(map)
+                        }
+                        setMonthSlots(await api.getLichtungSlots(lichtungId, from, to))
+                      } catch (err: any) { alert(err?.message || 'Fehler') }
+                    }
+
                     return (
-                      <button key={d.date} onClick={() => { setSelectedDate(d.date); setView('day') }}
-                        className="relative text-center py-3 transition-colors hover:bg-gray-50"
-                        style={{ borderLeft: '1px solid rgba(10,10,10,0.06)', background: isToday ? 'rgba(212,168,67,0.06)' : isClosed ? 'rgba(200,60,60,0.04)' : '#fff', cursor: 'pointer', border: 'none', borderLeftWidth: '1px', borderLeftStyle: 'solid', borderLeftColor: 'rgba(10,10,10,0.06)' }}>
-                        <div style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{d.label}</div>
-                        <div style={{ ...font, fontSize: '1.1rem', fontWeight: isToday ? 700 : 500, color: isClosed ? '#c44' : isToday ? '#D4A843' : '#0A0A0A' }}>
-                          {d.day}
-                        </div>
-                        {isClosed && <Lock size={10} style={{ color: '#c44', margin: '2px auto 0' }} />}
-                        {moon && (
+                      <div key={d.date}
+                        className="relative text-center py-2"
+                        style={{ borderLeft: '1px solid rgba(10,10,10,0.06)', background: isToday ? 'rgba(212,168,67,0.06)' : isClosed ? 'rgba(200,60,60,0.04)' : '#fff' }}>
+                        <button onClick={() => { setSelectedDate(d.date); setView('day') }}
+                          className="w-full hover:bg-gray-50"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                          <div style={{ ...font, fontSize: '0.6rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{d.label}</div>
+                          <div style={{ ...font, fontSize: '0.95rem', fontWeight: isToday ? 700 : 500, color: isClosed ? '#c44' : isToday ? '#D4A843' : '#0A0A0A', lineHeight: 1 }}>
+                            {d.day}
+                          </div>
+                        </button>
+                        {isClosed && !adminMode && <Lock size={9} style={{ color: '#c44', margin: '2px auto 0' }} />}
+                        {moon && !adminMode && (
                           <span
                             onClick={(e) => { e.stopPropagation(); setSelectedMoon(moon) }}
                             title={moon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
                             style={{
-                              position: 'absolute', top: 6, right: 6,
-                              width: 9, height: 9, borderRadius: '50%', display: 'inline-block',
+                              position: 'absolute', top: 4, right: 4,
+                              width: 8, height: 8, borderRadius: '50%', display: 'inline-block',
                               background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
                               border: `1.5px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
                               boxShadow: moon.type === 'vollmond' ? '0 0 4px rgba(245,224,144,0.6)' : 'none',
@@ -472,17 +491,32 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                             }}
                           />
                         )}
-                      </button>
+                        {/* Schnell-Aktionen im Admin-Modus */}
+                        {adminMode && isGaertner && (
+                          <div className="flex gap-0.5 justify-center mt-1 px-1">
+                            <button onClick={() => setDayAll('open')} title="Tag komplett offen"
+                              className="flex-1 rounded flex items-center justify-center"
+                              style={{ height: '18px', background: 'rgba(123,174,94,0.15)', border: '1px solid rgba(123,174,94,0.3)', cursor: 'pointer' }}>
+                              <Unlock size={9} style={{ color: '#7BAE5E' }} />
+                            </button>
+                            <button onClick={() => setDayAll('closed')} title="Tag komplett sperren"
+                              className="flex-1 rounded flex items-center justify-center"
+                              style={{ height: '18px', background: 'rgba(200,60,60,0.12)', border: '1px solid rgba(200,60,60,0.25)', cursor: 'pointer' }}>
+                              <Lock size={9} style={{ color: '#c44' }} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
 
                 {/* Stunden-Grid */}
                 {HOURS.map(h => (
-                  <div key={h} className="grid" style={{ gridTemplateColumns: '44px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.04)', minHeight: '32px' }}>
-                    <div className="px-3 py-2" style={{ background: '#FAFAF8', borderRight: '1px solid rgba(10,10,10,0.06)' }}>
-                      <span style={{ ...font, fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)' }}>
-                        {String(h).padStart(2, '0')}:00
+                  <div key={h} className="grid" style={{ gridTemplateColumns: '38px repeat(7, 1fr)', borderBottom: '1px solid rgba(10,10,10,0.04)', minHeight: adminMode ? '22px' : '32px' }}>
+                    <div className="px-2 flex items-center" style={{ background: '#FAFAF8', borderRight: '1px solid rgba(10,10,10,0.06)' }}>
+                      <span style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)' }}>
+                        {String(h).padStart(2, '0')}
                       </span>
                     </div>
                     {weekDays.map(d => {
@@ -531,14 +565,15 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                           onClick={handleCellClick}
                           onPointerDown={handlePointerDown}
                           onPointerEnter={handlePointerEnter}
-                          className="relative p-1 text-left select-none"
+                          className="relative text-left select-none"
                           style={{
                             background: bg,
                             borderLeft: '1px solid rgba(10,10,10,0.04)',
                             cursor: adminMode ? 'crosshair' : (dayClosed ? 'default' : 'pointer'),
                             touchAction: adminMode ? 'none' : undefined,
+                            padding: adminMode ? '0' : '4px',
                           }}>
-                          {slot && isFirstHour && !inDragPreview && (
+                          {!adminMode && slot && isFirstHour && !inDragPreview && (
                             <div className="rounded px-1.5 py-0.5 mb-0.5" style={{ background: slotFull ? 'rgba(212,168,67,0.2)' : 'rgba(123,174,94,0.18)' }}>
                               <div style={{ ...font, fontSize: '0.55rem', fontWeight: 600, color: slotFull ? '#D4A843' : '#5A8A3C' }}>
                                 {slot.note || `${String(slot.start_hour).padStart(2, '0')}-${String(slot.end_hour).padStart(2, '0')}`}
@@ -548,7 +583,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                               </div>
                             </div>
                           )}
-                          {!inDragPreview && eventsInHour.map((e: any) => (
+                          {!adminMode && !inDragPreview && eventsInHour.map((e: any) => (
                             <div key={e.id} className="rounded px-1.5 py-0.5 mb-0.5 truncate" style={{ background: 'rgba(212,168,67,0.25)' }}>
                               <span style={{ ...font, fontSize: '0.58rem', fontWeight: 500, color: '#0A0A0A' }}>{e.title}</span>
                             </div>
