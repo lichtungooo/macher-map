@@ -536,6 +536,9 @@ function MapAppInner() {
           setMovingLichtungId(lid)
           setSelectedLichtung(null)
           setMode('move-lichtung')
+        }}
+        onDeleted={() => {
+          api.getLichtungen().then(setLichtungen).catch(() => {})
         }} />}
       {selectedProfile && <ProfileDetail light={selectedProfile} onClose={() => setSelectedProfile(null)} />}
       {selectedEvent && <EventDetail event={selectedEvent} userPos={null} onClose={() => setSelectedEvent(null)} />}

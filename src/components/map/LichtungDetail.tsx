@@ -20,9 +20,10 @@ interface LichtungDetailProps {
   onClose: () => void
   onCreateEvent?: (lichtungId: string, lichtungName: string, position: [number, number]) => void
   onMoveLichtung?: (lichtungId: string) => void
+  onDeleted?: () => void
 }
 
-export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLichtung }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLichtung, onDeleted }: LichtungDetailProps) {
   const { setEvents: setGlobalEvents, user } = useApp()
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
@@ -258,6 +259,24 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                     Abbrechen
                   </button>
                 </div>
+                {/* Loeschen im Bearbeiten-Modus */}
+                {myRole === 'owner' && (
+                  <button onClick={async () => {
+                    if (!confirm(`"${lichtung.name}" wirklich loeschen? Alle Events und Mitglieder werden entfernt.`)) return
+                    try {
+                      await api.deleteLichtung(lichtungId)
+                      onDeleted?.()
+                      onClose()
+                    } catch (err: any) {
+                      alert(err?.message || 'Loeschen fehlgeschlagen.')
+                    }
+                  }}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg mt-2"
+                    style={{ ...font, fontSize: '0.72rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}>
+                    <Trash2 size={12} />
+                    Lichtung loeschen
+                  </button>
+                )}
               </div>
             ) : (
               /* ─── Anzeige ─── */
@@ -668,8 +687,13 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
             {myRole === 'owner' && (
               <button onClick={async () => {
                 if (!confirm(`"${lichtung.name}" wirklich loeschen? Alle Events und Mitglieder werden entfernt.`)) return
-                await fetch(`/api/lichtungen/${lichtungId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${api.getToken()}` } })
-                onClose()
+                try {
+                  await api.deleteLichtung(lichtungId)
+                  onDeleted?.()
+                  onClose()
+                } catch (err: any) {
+                  alert(err?.message || 'Loeschen fehlgeschlagen.')
+                }
               }}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg mt-4"
                 style={{ ...font, fontSize: '0.75rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}>

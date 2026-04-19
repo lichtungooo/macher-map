@@ -504,6 +504,8 @@ app.put('/api/lichtungen/:id', auth, (req, res) => {
 })
 
 app.delete('/api/lichtungen/:id', auth, (req, res) => {
+  const role = getLichtungMemberRole(req.params.id, req.userId)
+  if (role !== 'owner') return res.status(403).json({ error: 'Nur der Hueter darf die Lichtung loeschen.' })
   deleteLichtung(req.params.id)
   res.json({ ok: true })
 })

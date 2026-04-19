@@ -143,6 +143,9 @@ export async function createLichtung(data: { name: string; description: string; 
 export async function updateLichtung(id: string, data: { name?: string; description?: string; lat?: number; lng?: number; tags?: string }) {
   return request(`/lichtungen/${id}`, { method: 'PUT', body: JSON.stringify(data) })
 }
+export async function deleteLichtung(id: string) {
+  return request(`/lichtungen/${id}`, { method: 'DELETE' })
+}
 export async function uploadLichtungProfileImage(id: string, file: File) {
   const formData = new FormData()
   formData.append('image', file)
