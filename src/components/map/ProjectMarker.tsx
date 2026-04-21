@@ -62,21 +62,33 @@ export function ProjectMarker({ project, onClick }: ProjectMarkerProps) {
     <Marker
       position={[project.lat, project.lng]}
       icon={icon}
-      eventHandlers={{ click: () => onClick(project.id) }}
     >
       <Popup className="project-popup">
-        <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 220, textAlign: 'center' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: '#C07090', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 2px' }}>
-            Projekt
-          </p>
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', margin: '0 0 4px' }}>
+        <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 240, textAlign: 'center' }}>
+          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', margin: '0 0 8px' }}>
             {project.title}
           </p>
-          {project.goal_amount && project.goal_amount > 0 && (
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)', margin: 0 }}>
-              {Math.round(progress * 100)}% &middot; {project.current_amount || 0} / {project.goal_amount} &euro;
+          {project.goal_amount && project.goal_amount > 0 && project.current_amount && project.current_amount > 0 ? (
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)', margin: '0 0 8px' }}>
+              {Math.round(progress * 100)}% &middot; {project.current_amount} / {project.goal_amount} &euro;
             </p>
-          )}
+          ) : null}
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick(project.id) }}
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              color: '#C07090',
+              background: 'rgba(192,112,144,0.08)',
+              border: '1px solid rgba(192,112,144,0.22)',
+              borderRadius: '6px',
+              padding: '6px 18px',
+              cursor: 'pointer',
+            }}
+          >
+            Zum Projekt
+          </button>
         </div>
       </Popup>
     </Marker>

@@ -32,7 +32,6 @@ function createLichtungIcon() {
 
 function createOriginIcon() {
   // Ursprungs-Lichtung — kraftvolle, pulsierende Aura mit goldenem Herzen
-  // Drei expandierende Ringe + atmender Kern + ausgebreitete Strahlen
   const svg = `
     <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
       <defs>
@@ -49,28 +48,23 @@ function createOriginIcon() {
         </radialGradient>
       </defs>
 
-      <!-- Atmosphaerische Aussen-Aura -->
       <circle cx="60" cy="60" r="58" fill="url(#originAura)" class="origin-breathe"/>
 
-      <!-- Drei expandierende Ringe -->
       <circle cx="60" cy="60" r="22" fill="none" stroke="#D4A843" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-1"/>
       <circle cx="60" cy="60" r="22" fill="none" stroke="#D4A843" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-2"/>
       <circle cx="60" cy="60" r="22" fill="none" stroke="#D4A843" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-3"/>
 
-      <!-- Mittlerer gruener Ring -->
       <circle cx="60" cy="60" r="22" fill="none" stroke="#7BAE5E" stroke-width="2" opacity="0.75"/>
 
-      <!-- Goldener Kern mit Halo -->
       <circle cx="60" cy="60" r="14" fill="url(#originCore)" class="origin-breathe" style="animation-delay: 0.3s"/>
 
-      <!-- Innerer Licht-Kern -->
       <circle cx="60" cy="60" r="4" fill="#FFFFF8" opacity="0.95"/>
     </svg>
   `
   return L.divIcon({
     html: `<div class="origin-lichtung-marker">${svg}</div>`,
     className: '',
-    iconSize: [42, 42],       // klickbarer Bereich — nur um den gruenen Kern
+    iconSize: [42, 42],
     iconAnchor: [21, 21],
     popupAnchor: [0, -25],
   })
@@ -99,19 +93,51 @@ export function LichtungMarker({ lichtung, onClick }: LichtungMarkerProps) {
     <Marker
       position={[lichtung.lat, lichtung.lng]}
       icon={icon}
-      eventHandlers={{ click: () => onClick(lichtung.id) }}
       zIndexOffset={isOrigin ? 1000 : 0}
     >
       <Popup className="lichtung-popup">
-        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", textAlign: 'center', padding: '4px 0' }}>
-          {isOrigin && (
-            <p style={{ fontSize: '0.7rem', fontFamily: 'Inter, sans-serif', color: '#D4A843', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 500 }}>
-              Ursprung
+        <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 240, textAlign: 'center' }}>
+          {/* Name — bei Ursprungs-Lichtung markant in Serife, bei anderen in klarer Schrift */}
+          {isOrigin ? (
+            <p style={{
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: '1.35rem',
+              fontWeight: 500,
+              color: '#0A0A0A',
+              margin: '0 0 8px',
+              letterSpacing: '0.08em',
+            }}>
+              {lichtung.name}
+            </p>
+          ) : (
+            <p style={{
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: '1.05rem',
+              fontWeight: 500,
+              color: '#0A0A0A',
+              margin: '0 0 8px',
+            }}>
+              {lichtung.name}
             </p>
           )}
-          <p style={{ fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: 0 }}>
-            {lichtung.name}
-          </p>
+
+          {/* Zum Ort */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick(lichtung.id) }}
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              color: '#7BAE5E',
+              background: 'rgba(123,174,94,0.08)',
+              border: '1px solid rgba(123,174,94,0.2)',
+              borderRadius: '6px',
+              padding: '6px 18px',
+              cursor: 'pointer',
+            }}
+          >
+            Zum Ort
+          </button>
         </div>
       </Popup>
     </Marker>

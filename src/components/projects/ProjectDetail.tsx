@@ -181,57 +181,71 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
     { key: 'team', label: 'Team', Icon: Users },
   ]
 
+  const shareUrl = `${window.location.origin}/api/share/project/${projectId}`
+  const shareText = project.description ? project.description.replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Friedensprojekt auf der Lichtung.'
+
   return (
     <div className="fixed inset-0 z-[1500] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
-      <div className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', maxHeight: '90vh' }}>
+      <div className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', maxHeight: '90vh' }}>
 
-        {/* Video oder Bild im Header — Video hat Vorrang */}
-        {(() => {
-          const embedUrl = getVideoEmbedUrl(project.video_url)
-          if (embedUrl) {
-            return (
-              <div className="relative w-full" style={{ aspectRatio: '16/9', background: '#000' }}>
-                <iframe
-                  src={embedUrl}
-                  title={project.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-                />
-              </div>
-            )
-          }
-          if (project.image_path) {
-            return (
-              <div className="relative">
+        {/* ─── Media-Header (fest, nicht scrollbar) ─── */}
+        <div className="relative shrink-0">
+          {(() => {
+            const embedUrl = getVideoEmbedUrl(project.video_url)
+            if (embedUrl) {
+              return (
+                <div className="relative w-full" style={{ aspectRatio: '16/9', background: '#000' }}>
+                  <iframe
+                    src={embedUrl}
+                    title={project.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                  />
+                </div>
+              )
+            }
+            if (project.image_path) {
+              return (
                 <img src={project.image_path} alt={project.title} className="w-full h-44 object-cover" />
-                {isOwner && (
-                  <button onClick={() => fileRef.current?.click()}
-                    className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer' }}
-                    title="Bild aendern">
-                    <Camera size={14} style={{ color: '#0A0A0A' }} />
-                  </button>
-                )}
-              </div>
-            )
-          }
-          if (isOwner) {
-            return (
-              <button onClick={() => fileRef.current?.click()}
-                className="w-full h-32 flex flex-col items-center justify-center gap-1.5"
-                style={{ background: `${ACCENT}0D`, border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(10,10,10,0.06)' }}>
-                <Camera size={18} style={{ color: ACCENT }} />
-                <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: ACCENT }}>Bild hinzufuegen</span>
-              </button>
-            )
-          }
-          return null
-        })()}
+              )
+            }
+            if (isOwner) {
+              return (
+                <button onClick={() => fileRef.current?.click()}
+                  className="w-full h-32 flex flex-col items-center justify-center gap-1.5"
+                  style={{ background: `${ACCENT}0D`, border: 'none', cursor: 'pointer' }}>
+                  <Camera size={18} style={{ color: ACCENT }} />
+                  <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: ACCENT }}>Bild hinzufuegen</span>
+                </button>
+              )
+            }
+            // Nur Gast ohne Bild: kleiner Platzhalter, damit X-Button was zum Darueberschweben hat
+            return <div style={{ height: 8, background: '#FAFAF8' }} />
+          })()}
+
+          {/* X-Button: schwebt oben rechts ueber dem Media-Header */}
+          <button onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', backdropFilter: 'blur(8px)', zIndex: 5 }}>
+            <X size={15} style={{ color: '#0A0A0A' }} />
+          </button>
+
+          {/* Camera-Button fuer Bildwechsel (nur Owner, nicht wenn Video laeuft) */}
+          {isOwner && project.image_path && !getVideoEmbedUrl(project.video_url) && (
+            <button onClick={() => fileRef.current?.click()}
+              className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', backdropFilter: 'blur(8px)', zIndex: 5 }}
+              title="Bild aendern">
+              <Camera size={14} style={{ color: '#0A0A0A' }} />
+            </button>
+          )}
+        </div>
+
         <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
 
-        {/* Tab-Leiste */}
-        <div className="flex items-center px-3 py-2 gap-0.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
+        {/* ─── Tab-Leiste mit Share + QR rechts (fest) ─── */}
+        <div className="flex items-center px-3 py-2 gap-0.5 shrink-0" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
           {tabs.map(({ key, label, Icon, badge }) => (
             <div key={key} className="relative group">
               <button onClick={() => setTab(key)}
@@ -256,13 +270,20 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
             </div>
           ))}
           <div className="flex-1" />
-          <button onClick={onClose} className="flex items-center justify-center rounded-lg"
-            style={{ width: 34, height: 34, background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
-            <X size={16} />
+
+          {/* Share-Button im Header (immer sichtbar) */}
+          <ShareButton url={shareUrl} title={`Projekt: ${project.title}`} text={shareText} label="" compact />
+
+          {/* QR-Code-Button */}
+          <button onClick={() => setShowFullQR(true)} title="QR-Code"
+            className="flex items-center justify-center rounded-lg"
+            style={{ width: 34, height: 34, background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            <QrCode size={14} style={{ color: 'rgba(10,10,10,0.4)' }} />
           </button>
         </div>
 
-        <div className="overflow-y-auto px-5 py-5" style={{ maxHeight: project.image_path ? 'calc(90vh - 226px)' : 'calc(90vh - 190px)' }}>
+        {/* ─── Scroll-Content (nimmt verbleibenden Platz) ─── */}
+        <div className="flex-1 overflow-y-auto px-5 py-5" style={{ minHeight: 0 }}>
 
           {/* ─── INFO-TAB ─── */}
           {tab === 'info' && !editMode && (
@@ -275,27 +296,13 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', lineHeight: 1.25, flex: 1 }}>
                   {project.title}
                 </h2>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <ShareButton
-                    url={`${window.location.origin}/api/share/project/${projectId}`}
-                    title={`Projekt: ${project.title}`}
-                    text={project.description ? project.description.replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Friedensprojekt auf der Lichtung.'}
-                    label=""
-                    compact
-                  />
-                  <button onClick={() => setShowFullQR(true)} title="QR-Code"
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                {isOwner && (
+                  <button onClick={() => setEditMode(true)}
+                    className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                    <QrCode size={13} style={{ color: 'rgba(10,10,10,0.35)' }} />
+                    <Pencil size={13} style={{ color: 'rgba(10,10,10,0.35)' }} />
                   </button>
-                  {isOwner && (
-                    <button onClick={() => setEditMode(true)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                      <Pencil size={13} style={{ color: 'rgba(10,10,10,0.35)' }} />
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Meta-Zeile */}
