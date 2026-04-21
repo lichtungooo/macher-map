@@ -93,41 +93,64 @@ function Carousel({
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (dir: 'left' | 'right') => {
-    if (!scrollRef.current) return
-    // Exakt eine "Seite" = Containerbreite blaettern
-    const width = scrollRef.current.clientWidth
-    scrollRef.current.scrollBy({ left: dir === 'left' ? -width : width, behavior: 'smooth' })
+    const el = scrollRef.current
+    if (!el) return
+
+    // Eine Karten-Breite + Gap (12px) berechnen
+    const firstItem = el.querySelector(':scope > *') as HTMLElement | null
+    if (!firstItem) return
+    const cardWidth = firstItem.getBoundingClientRect().width + 12
+
+    const maxScroll = el.scrollWidth - el.clientWidth
+    const current = el.scrollLeft
+
+    if (dir === 'right') {
+      // Am Ende? Zurueck auf Anfang
+      if (current >= maxScroll - 2) {
+        el.scrollTo({ left: 0, behavior: 'smooth' })
+      } else {
+        el.scrollBy({ left: cardWidth, behavior: 'smooth' })
+      }
+    } else {
+      // Am Anfang? Nach ganz hinten springen
+      if (current <= 2) {
+        el.scrollTo({ left: maxScroll, behavior: 'smooth' })
+      } else {
+        el.scrollBy({ left: -cardWidth, behavior: 'smooth' })
+      }
+    }
   }
 
   if (itemCount === 0) return null
 
   return (
     <div className="mb-8 last:mb-0">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1.5">
+      {/* Header zentriert: [←] Titel [→] */}
+      <div className="flex items-center justify-center gap-3 mb-3">
+        <button
+          onClick={() => scroll('left')}
+          aria-label="Zurueck"
+          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.12)', cursor: 'pointer' }}
+        >
+          <ChevronLeft size={13} style={{ color: 'rgba(10,10,10,0.55)' }} />
+        </button>
+
+        <div className="flex items-center gap-1.5" style={{ minWidth: 'calc((100% - 2 * 12px) / 3)', justifyContent: 'center' }}>
           <Icon size={13} style={{ color: accentColor }} />
-          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(10,10,10,0.6)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
             {title}
           </h3>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => scroll('left')}
-            aria-label="Zurueck"
-            className="w-7 h-7 rounded-full flex items-center justify-center"
-            style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.1)', cursor: 'pointer' }}
-          >
-            <ChevronLeft size={13} style={{ color: 'rgba(10,10,10,0.55)' }} />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            aria-label="Weiter"
-            className="w-7 h-7 rounded-full flex items-center justify-center"
-            style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.1)', cursor: 'pointer' }}
-          >
-            <ChevronRight size={13} style={{ color: 'rgba(10,10,10,0.55)' }} />
-          </button>
-        </div>
+
+        <button
+          onClick={() => scroll('right')}
+          aria-label="Weiter"
+          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.12)', cursor: 'pointer' }}
+        >
+          <ChevronRight size={13} style={{ color: 'rgba(10,10,10,0.55)' }} />
+        </button>
       </div>
 
       <div
