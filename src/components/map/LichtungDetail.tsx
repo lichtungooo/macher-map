@@ -24,7 +24,7 @@ interface LichtungDetailProps {
   onDeleted?: () => void
 }
 
-export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted }: LichtungDetailProps) {
+export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLichtung, onDeleted }: LichtungDetailProps) {
   const { setEvents: setGlobalEvents, user } = useApp()
   const [lichtung, setLichtung] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
@@ -476,6 +476,27 @@ export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted 
         )}
         {tab === 'kalender' && (
           <>
+            {/* Neuer-Termin-Button — fuer alle Mitglieder */}
+            {onCreateEvent && myRole && (
+              <button
+                onClick={() => onCreateEvent(lichtungId, lichtung.name, [lichtung.lat, lichtung.lng])}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}
+              >
+                <Plus size={15} />
+                Termin erstellen
+              </button>
+            )}
+
+            {/* Nicht-Mitglied: Aufforderung zum Beitreten */}
+            {onCreateEvent && !myRole && user && (
+              <div className="rounded-xl p-4 mb-4 text-center" style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.15)' }}>
+                <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.55)', marginBottom: 8 }}>
+                  Werde Mitglied dieser Lichtung, um Termine zu erstellen.
+                </p>
+              </div>
+            )}
+
             {/* Termine */}
             {events.length === 0 ? (
               <div className="text-center py-8">

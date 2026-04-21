@@ -424,8 +424,22 @@ body {
 
 /* ─── Origin-Lichtung Aura (Kassel, Ursprung) ─── */
 
+/* Der Leaflet-Marker-Container ist nur 42px gross (der klickbare Bereich).
+   Die SVG-Aura waechst darueber hinaus, aber Klicks auf die Aura gehen
+   an die Karte / andere Marker durch. */
 .origin-lichtung-marker {
   position: relative;
+  width: 42px;
+  height: 42px;
+}
+
+.origin-lichtung-marker svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none; /* Aura blockiert keine anderen Marker */
+  overflow: visible;
 }
 
 .origin-breathe {

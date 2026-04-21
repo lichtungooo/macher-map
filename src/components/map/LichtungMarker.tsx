@@ -70,9 +70,9 @@ function createOriginIcon() {
   return L.divIcon({
     html: `<div class="origin-lichtung-marker">${svg}</div>`,
     className: '',
-    iconSize: [120, 120],
-    iconAnchor: [60, 60],
-    popupAnchor: [0, -40],
+    iconSize: [42, 42],       // klickbarer Bereich — nur um den gruenen Kern
+    iconAnchor: [21, 21],
+    popupAnchor: [0, -25],
   })
 }
 
