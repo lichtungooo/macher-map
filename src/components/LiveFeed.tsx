@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Trees, Sparkles } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Trees, Sparkles, CalendarDays, ChevronLeft, ChevronRight, Moon, Globe } from 'lucide-react'
 import * as api from '../api/client'
+
+// ─── Typen ───
 
 interface LightItem {
   id: string
   name: string
   statement: string
   image_path?: string
-  created_at?: string
 }
 
 interface LichtungItem {
@@ -18,30 +19,198 @@ interface LichtungItem {
   image_path?: string
 }
 
+interface EventItem {
+  id: string
+  title: string
+  description?: string
+  start_time: string
+  end_time?: string
+  type?: string
+  is_global?: boolean
+  is_placeholder?: boolean
+}
+
+// ─── Utils ───
+
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy.slice(0, n)
+}
+
+function formatDate(iso: string) {
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) +
+      ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'
+  } catch {
+    return iso
+  }
+}
+
+// Platzhalter-Events fuer globale Meditationen (falls Backend leer ist)
+const PLACEHOLDER_EVENTS: EventItem[] = (() => {
+  const out: EventItem[] = []
+  const now = new Date()
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now)
+    d.setDate(now.getDate() + i * 15)
+    d.setHours(21, 0, 0, 0)
+    const isFullMoon = i % 2 === 0
+    out.push({
+      id: `placeholder-${i}`,
+      title: isFullMoon ? 'Vollmond-Meditation' : 'Neumond-Innehalten',
+      description: isFullMoon
+        ? 'Weltweite Meditation im Licht des Vollmondes. Jeder, wo er gerade steht.'
+        : 'Neubeginn in der Stille. Gemeinsamer Puls um die Erde.',
+      start_time: d.toISOString(),
+      type: isFullMoon ? 'meditation' : 'stille',
+      is_global: true,
+      is_placeholder: true,
+    })
+  }
+  return out
+})()
+
+// ─── Scroll-Reihe ───
+
+function RowScroller({
+  title,
+  icon: Icon,
+  accentColor,
+  children,
+  count,
+}: {
+  title: string
+  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
+  accentColor: string
+  children: React.ReactNode
+  count: number
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const scroll = (dir: 'left' | 'right') => {
+    if (!scrollRef.current) return
+    const width = scrollRef.current.clientWidth
+    scrollRef.current.scrollBy({ left: dir === 'left' ? -width * 0.7 : width * 0.7, behavior: 'smooth' })
+  }
+
+  return (
+    <div className="mb-14 last:mb-0">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <Icon size={15} style={{ color: accentColor }} />
+          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            {title}
+          </h3>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.3)', marginLeft: 4 }}>
+            {count}
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center gap-1.5">
+          <button
+            onClick={() => scroll('left')}
+            aria-label="Zurueck"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+          >
+            <ChevronLeft size={14} style={{ color: 'rgba(10,10,10,0.5)' }} />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            aria-label="Weiter"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+          >
+            <ChevronRight size={14} style={{ color: 'rgba(10,10,10,0.5)' }} />
+          </button>
+        </div>
+      </div>
+
+      <div className="relative">
+        {/* Fade links/rechts */}
+        <div className="absolute left-0 top-0 bottom-0 w-10 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to right, #FAFAF8, transparent)' }}
+        />
+        <div className="absolute right-0 top-0 bottom-0 w-10 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to left, #FAFAF8, transparent)' }}
+        />
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto pb-2 px-1 snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(10,10,10,0.15) transparent' }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Haupt-Komponente ───
+
 export default function LiveFeed() {
+  const navigate = useNavigate()
   const [lights, setLights] = useState<LightItem[]>([])
   const [lichtungen, setLichtungen] = useState<LichtungItem[]>([])
+  const [events, setEvents] = useState<EventItem[]>([])
 
   useEffect(() => {
+    // Lichter: nur solche mit Name und Statement/Bild zeigen
     api.getLights().then((data: any[]) => {
-      // Nur Lichter mit Statement oder Bild zeigen, neueste zuerst
-      const filtered = (data || [])
-        .filter(l => l.name && (l.statement || l.image_path))
-        .slice(0, 6)
-      setLights(filtered)
+      const filtered = (data || []).filter(l => l.name && (l.statement || l.image_path))
+      setLights(pickRandom(filtered, 9))
     }).catch(() => {})
 
     api.getLichtungen().then((data: any[]) => {
-      setLichtungen((data || []).slice(0, 4))
+      setLichtungen(pickRandom(data || [], 9))
     }).catch(() => {})
+
+    api.getEvents().then((data: any[]) => {
+      const real = (data || []).filter(e => e.title)
+      // Vergangene rausfiltern
+      const now = Date.now()
+      const future = real.filter(e => !e.start_time || new Date(e.start_time).getTime() > now - 24 * 3600 * 1000)
+      if (future.length >= 3) {
+        setEvents(pickRandom(future, 9))
+      } else {
+        // Mix mit Placeholder-Events
+        setEvents([...future, ...PLACEHOLDER_EVENTS].slice(0, 9))
+      }
+    }).catch(() => {
+      setEvents(PLACEHOLDER_EVENTS)
+    })
   }, [])
 
-  // Wenn gar nichts da ist, die Sektion nicht anzeigen
-  if (lights.length === 0 && lichtungen.length === 0) return null
+  const openOnMap = (type: 'light' | 'lichtung' | 'event', id: string, isPlaceholder?: boolean) => {
+    if (isPlaceholder) {
+      navigate('/app')
+      return
+    }
+    navigate(`/app?${type}=${id}`)
+  }
+
+  // Komplett leer? Dann Sektion ausblenden — zumindest Events gibt es dank Placeholder
+  const hasAnything = lights.length > 0 || lichtungen.length > 0 || events.length > 0
+  if (!hasAnything) return null
+
+  const cardBase: React.CSSProperties = {
+    background: '#fff',
+    border: '1px solid rgba(10,10,10,0.05)',
+    borderRadius: 12,
+    flexShrink: 0,
+    scrollSnapAlign: 'start',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    textDecoration: 'none',
+  }
 
   return (
     <section id="stimmen" className="py-24 section-reveal" style={{ background: '#FAFAF8' }}>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center mb-14">
           <p
@@ -66,104 +235,51 @@ export default function LiveFeed() {
               marginBottom: '0.6rem',
             }}
           >
-            Menschen. Lichter. Lichtungen.
+            Menschen. Orte. Veranstaltungen.
           </h2>
           <p
             style={{
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.9rem',
               color: 'rgba(10,10,10,0.5)',
-              maxWidth: '480px',
+              maxWidth: '520px',
               margin: '0 auto',
             }}
           >
-            Das ist keine Theorie. Das sind echte Menschen und Orte, die jetzt gerade leuchten.
+            Klicke auf eine Karte und du landest direkt auf der Weltkarte —
+            beim Licht, bei der Lichtung, bei der Veranstaltung.
           </p>
         </div>
 
-        {/* Lichtungen */}
-        {lichtungen.length > 0 && (
-          <div className="mb-14">
-            <div className="flex items-center gap-2 mb-5">
-              <Trees size={15} style={{ color: '#7BAE5E' }} />
-              <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                Lichtungen
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {lichtungen.map(l => (
-                <div
-                  key={l.id}
-                  className="rounded-xl overflow-hidden"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.05)' }}
-                >
-                  {l.image_path ? (
-                    <div
-                      className="h-32 w-full"
-                      style={{
-                        backgroundImage: `url(${l.image_path})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                      }}
-                    />
-                  ) : (
-                    <div className="h-32 w-full flex items-center justify-center" style={{ background: 'rgba(123,174,94,0.06)' }}>
-                      <Trees size={28} style={{ color: 'rgba(123,174,94,0.4)' }} />
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <h4 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '0.3rem' }}>
-                      {l.name}
-                    </h4>
-                    {l.description && (
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', lineHeight: 1.55, color: 'rgba(10,10,10,0.5)' }}>
-                        {l.description.length > 90 ? l.description.slice(0, 90).trim() + '…' : l.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Lichter */}
+        {/* ─── Lichter ─── */}
         {lights.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <Sparkles size={15} style={{ color: '#D4A843' }} />
-              <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                Lichter
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {lights.map(l => (
-                <div
-                  key={l.id}
-                  className="p-5 rounded-xl flex gap-4"
-                  style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.05)' }}
-                >
+          <RowScroller title="Lichter" icon={Sparkles} accentColor="#D4A843" count={lights.length}>
+            {lights.map(l => (
+              <div
+                key={l.id}
+                onClick={() => openOnMap('light', l.id)}
+                style={{ ...cardBase, width: 280, padding: 20 }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                <div className="flex gap-3 items-start">
                   {l.image_path ? (
                     <img
                       src={l.image_path}
                       alt=""
-                      style={{
-                        width: 48, height: 48, borderRadius: '50%',
-                        objectFit: 'cover', flexShrink: 0,
-                        border: '2px solid rgba(212,168,67,0.25)',
-                      }}
+                      style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(212,168,67,0.25)' }}
                     />
                   ) : (
                     <div
                       style={{
-                        width: 48, height: 48, borderRadius: '50%',
+                        width: 44, height: 44, borderRadius: '50%',
                         background: 'rgba(212,168,67,0.08)',
                         border: '2px solid rgba(212,168,67,0.2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         flexShrink: 0,
                       }}
                     >
-                      <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', color: '#D4A843' }}>
+                      <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.1rem', color: '#D4A843' }}>
                         {l.name.charAt(0)}
                       </span>
                     </div>
@@ -173,34 +289,119 @@ export default function LiveFeed() {
                       {l.name}
                     </h4>
                     {l.statement && (
-                      <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.88rem', fontStyle: 'italic', lineHeight: 1.55, color: 'rgba(10,10,10,0.55)' }}>
-                        „{l.statement.length > 100 ? l.statement.slice(0, 100).trim() + '…' : l.statement}"
+                      <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.85rem', fontStyle: 'italic', lineHeight: 1.5, color: 'rgba(10,10,10,0.55)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                        „{l.statement}"
                       </p>
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ))}
+          </RowScroller>
+        )}
+
+        {/* ─── Lichtungen ─── */}
+        {lichtungen.length > 0 && (
+          <RowScroller title="Lichtungen" icon={Trees} accentColor="#7BAE5E" count={lichtungen.length}>
+            {lichtungen.map(l => (
+              <div
+                key={l.id}
+                onClick={() => openOnMap('lichtung', l.id)}
+                style={{ ...cardBase, width: 260, overflow: 'hidden' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                {l.image_path ? (
+                  <div
+                    style={{
+                      height: 120,
+                      backgroundImage: `url(${l.image_path})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  />
+                ) : (
+                  <div className="h-[120px] flex items-center justify-center" style={{ background: 'rgba(123,174,94,0.08)' }}>
+                    <Trees size={32} style={{ color: 'rgba(123,174,94,0.45)' }} />
+                  </div>
+                )}
+                <div className="p-4">
+                  <h4 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '0.4rem' }}>
+                    {l.name}
+                  </h4>
+                  {l.description && (
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', lineHeight: 1.55, color: 'rgba(10,10,10,0.55)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                      {l.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </RowScroller>
+        )}
+
+        {/* ─── Veranstaltungen ─── */}
+        {events.length > 0 && (
+          <RowScroller title="Veranstaltungen" icon={CalendarDays} accentColor="#5078C8" count={events.length}>
+            {events.map(ev => (
+              <div
+                key={ev.id}
+                onClick={() => openOnMap('event', ev.id, ev.is_placeholder)}
+                style={{ ...cardBase, width: 260, padding: 18 }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {ev.is_global ? (
+                    <Globe size={12} style={{ color: '#5078C8' }} />
+                  ) : ev.type === 'meditation' || ev.type === 'stille' ? (
+                    <Moon size={12} style={{ color: '#5078C8' }} />
+                  ) : (
+                    <CalendarDays size={12} style={{ color: '#5078C8' }} />
+                  )}
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.66rem', fontWeight: 500, color: '#5078C8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    {ev.is_global ? 'Global' : ev.type || 'Event'}
+                  </span>
+                  {ev.is_placeholder && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginLeft: 'auto' }}>
+                      geplant
+                    </span>
+                  )}
+                </div>
+                <h4 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '0.4rem', lineHeight: 1.3 }}>
+                  {ev.title}
+                </h4>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', marginBottom: '0.6rem' }}>
+                  {formatDate(ev.start_time)}
+                </p>
+                {ev.description && (
+                  <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.85rem', fontStyle: 'italic', lineHeight: 1.5, color: 'rgba(10,10,10,0.55)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {ev.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </RowScroller>
         )}
 
         {/* CTA */}
-        <div className="text-center mt-14">
-          <Link
-            to="/app"
+        <div className="text-center mt-10">
+          <button
+            onClick={() => navigate('/app')}
             style={{
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.85rem',
               fontWeight: 500,
               color: 'rgba(10,10,10,0.7)',
-              textDecoration: 'none',
               padding: '12px 28px',
               border: '1px solid rgba(10,10,10,0.15)',
               borderRadius: '8px',
+              background: 'transparent',
+              cursor: 'pointer',
             }}
           >
             Zur Karte
-          </Link>
+          </button>
         </div>
 
       </div>

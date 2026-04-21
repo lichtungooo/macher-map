@@ -40,7 +40,7 @@ type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' |
 type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung' | 'move-lichtung'
 
 function MapAppInner() {
-  const { user, setLights, setEvents, login: loginCtx } = useApp()
+  const { user, lights, events, setLights, setEvents, login: loginCtx } = useApp()
   const [dialog, setDialog] = useState<Dialog>('none')
   const [mode, setMode] = useState<Mode>('browse')
   const [eventPosition, setEventPosition] = useState<[number, number] | undefined>()
@@ -101,6 +101,36 @@ function MapAppInner() {
   useEffect(() => {
     api.getLichtungen().then(setLichtungen).catch(() => {})
   }, [])
+
+  // Deep-Links von der Landingpage: ?light=ID, ?lichtung=ID, ?event=ID
+  useEffect(() => {
+    const lightId = searchParams.get('light')
+    const lichtungId = searchParams.get('lichtung')
+    const eventId = searchParams.get('event')
+
+    if (lightId && lights.length > 0) {
+      const found = lights.find(l => l.id === lightId)
+      if (found) {
+        setFlyTo([found.position[0], found.position[1], 12 + Math.random() * 0.001])
+        setSelectedProfile(found)
+        setSearchParams({})
+      }
+    } else if (lichtungId && lichtungen.length > 0) {
+      const found = lichtungen.find((l: any) => l.id === lichtungId)
+      if (found) {
+        setFlyTo([found.lat, found.lng, 12 + Math.random() * 0.001])
+        setSelectedLichtung(found.id)
+        setSearchParams({})
+      }
+    } else if (eventId && events.length > 0) {
+      const found = events.find(e => e.id === eventId)
+      if (found) {
+        setFlyTo([found.position[0], found.position[1], 12 + Math.random() * 0.001])
+        setSelectedEvent(found)
+        setSearchParams({})
+      }
+    }
+  }, [lights, lichtungen, events])
 
   // Ort-QR-Code: ?place=CODE&by=USER_ID (Bringer)
   useEffect(() => {
