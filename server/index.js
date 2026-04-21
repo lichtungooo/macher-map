@@ -29,6 +29,8 @@ import {
   connectGroup, getGroupsForLichtung, getGroupByChatId, setGroupReminderInterval,
   saveMessageRef, getMessageRef, deleteMessageRef,
   getGroupsDueForReminder, markReminderSent, getUpcomingEventsForLichtung,
+  getAllProjects, getProjectById, createProject, updateProject, deleteProject, setProjectImage,
+  getProjectMilestones, createMilestone, updateMilestone, deleteMilestone, getProjectOwner,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
 import { moonPhasesBetween } from './moonphases.js'
@@ -1075,6 +1077,88 @@ async function runReminders() {
 
 setInterval(runReminders, 30 * 60 * 1000) // alle 30 Min
 setTimeout(runReminders, 10000) // 10 Sek nach Start
+
+// ─── Projekte ───
+
+app.get('/api/projects', (req, res) => {
+  res.json(getAllProjects())
+})
+
+app.get('/api/projects/:id', (req, res) => {
+  const p = getProjectById(req.params.id)
+  if (!p) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const milestones = getProjectMilestones(req.params.id)
+  res.json({ ...p, milestones })
+})
+
+app.post('/api/projects', auth, (req, res) => {
+  const { title, description, lat, lng, lichtung_id, tags, goal_amount, opencollective_url, video_url } = req.body
+  if (!title || lat == null || lng == null) return res.status(400).json({ error: 'Titel und Position noetig' })
+  const p = createProject(req.userId, { title, description, lat, lng, lichtung_id, tags, goal_amount, opencollective_url, video_url })
+  res.json(p)
+})
+
+app.put('/api/projects/:id', auth, (req, res) => {
+  const owner = getProjectOwner(req.params.id)
+  if (!owner) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const user = findUserById(req.userId)
+  if (owner !== req.userId && !user?.is_admin) return res.status(403).json({ error: 'Keine Berechtigung' })
+  const updated = updateProject(req.params.id, req.body)
+  res.json(updated)
+})
+
+app.delete('/api/projects/:id', auth, (req, res) => {
+  const owner = getProjectOwner(req.params.id)
+  if (!owner) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const user = findUserById(req.userId)
+  if (owner !== req.userId && !user?.is_admin) return res.status(403).json({ error: 'Keine Berechtigung' })
+  deleteProject(req.params.id)
+  res.json({ ok: true })
+})
+
+app.post('/api/projects/:id/image', auth, upload.single('image'), (req, res) => {
+  const owner = getProjectOwner(req.params.id)
+  if (!owner) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const user = findUserById(req.userId)
+  if (owner !== req.userId && !user?.is_admin) return res.status(403).json({ error: 'Keine Berechtigung' })
+  if (!req.file) return res.status(400).json({ error: 'Kein Bild' })
+  const imagePath = `/api/uploads/${req.file.filename}`
+  setProjectImage(req.params.id, imagePath)
+  res.json({ image_path: imagePath })
+})
+
+// ─── Meilensteine ───
+
+app.get('/api/projects/:id/milestones', (req, res) => {
+  res.json(getProjectMilestones(req.params.id))
+})
+
+app.post('/api/projects/:id/milestones', auth, (req, res) => {
+  const owner = getProjectOwner(req.params.id)
+  if (!owner) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const user = findUserById(req.userId)
+  if (owner !== req.userId && !user?.is_admin) return res.status(403).json({ error: 'Keine Berechtigung' })
+  const m = createMilestone(req.params.id, req.body)
+  res.json(m)
+})
+
+app.put('/api/projects/:id/milestones/:mid', auth, (req, res) => {
+  const owner = getProjectOwner(req.params.id)
+  if (!owner) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const user = findUserById(req.userId)
+  if (owner !== req.userId && !user?.is_admin) return res.status(403).json({ error: 'Keine Berechtigung' })
+  const m = updateMilestone(req.params.mid, req.body)
+  res.json(m)
+})
+
+app.delete('/api/projects/:id/milestones/:mid', auth, (req, res) => {
+  const owner = getProjectOwner(req.params.id)
+  if (!owner) return res.status(404).json({ error: 'Projekt nicht gefunden' })
+  const user = findUserById(req.userId)
+  if (owner !== req.userId && !user?.is_admin) return res.status(403).json({ error: 'Keine Berechtigung' })
+  deleteMilestone(req.params.mid)
+  res.json({ ok: true })
+})
 
 app.listen(PORT, () => {
   console.log(`Lichtung API laeuft auf Port ${PORT}`)

@@ -147,6 +147,39 @@ try { db.exec('ALTER TABLE lichtungen ADD COLUMN tags TEXT DEFAULT ""') } catch 
 try { db.exec('ALTER TABLE events ADD COLUMN wave_mode TEXT') } catch {}
 try { db.exec('ALTER TABLE events ADD COLUMN docked_to_event_id TEXT') } catch {}
 
+// ─── Projekte ───
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    lichtung_id TEXT,
+    image_path TEXT,
+    tags TEXT DEFAULT '',
+    goal_amount INTEGER DEFAULT 0,
+    current_amount INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    opencollective_url TEXT,
+    video_url TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS project_milestones (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    goal_amount INTEGER DEFAULT 0,
+    sort_order INTEGER DEFAULT 0,
+    reached INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`)
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS event_co_owners (
     event_id TEXT NOT NULL REFERENCES events(id),
@@ -972,6 +1005,116 @@ export function deleteLichtungImage(imageId, userId) {
   }
   db.prepare('DELETE FROM lichtung_images WHERE id = ?').run(imageId)
   return img.filename
+}
+
+// ─── Projekte ───
+
+export function getAllProjects() {
+  return db.prepare(`
+    SELECT p.*, u.name as creator_name, u.image_path as creator_image,
+           l.name as lichtung_name,
+           (SELECT COUNT(*) FROM project_milestones WHERE project_id = p.id) as milestone_count
+    FROM projects p
+    LEFT JOIN users u ON p.user_id = u.id
+    LEFT JOIN lichtungen l ON p.lichtung_id = l.id
+    ORDER BY p.created_at DESC
+  `).all()
+}
+
+export function getProjectById(id) {
+  return db.prepare(`
+    SELECT p.*, u.name as creator_name, u.image_path as creator_image,
+           l.name as lichtung_name
+    FROM projects p
+    LEFT JOIN users u ON p.user_id = u.id
+    LEFT JOIN lichtungen l ON p.lichtung_id = l.id
+    WHERE p.id = ?
+  `).get(id)
+}
+
+export function createProject(userId, data) {
+  const id = randomUUID()
+  db.prepare(`
+    INSERT INTO projects (id, user_id, title, description, lat, lng, lichtung_id, tags, goal_amount, opencollective_url, video_url, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id, userId,
+    data.title,
+    data.description || '',
+    data.lat,
+    data.lng,
+    data.lichtung_id || null,
+    data.tags || '',
+    data.goal_amount || 0,
+    data.opencollective_url || null,
+    data.video_url || null,
+    data.status || 'active',
+  )
+  return getProjectById(id)
+}
+
+export function updateProject(id, data) {
+  const fields = []
+  const values = []
+  for (const key of ['title', 'description', 'lat', 'lng', 'lichtung_id', 'image_path', 'tags', 'goal_amount', 'current_amount', 'status', 'opencollective_url', 'video_url']) {
+    if (data[key] !== undefined) {
+      fields.push(`${key} = ?`)
+      values.push(data[key])
+    }
+  }
+  if (fields.length === 0) return getProjectById(id)
+  values.push(id)
+  db.prepare(`UPDATE projects SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+  return getProjectById(id)
+}
+
+export function deleteProject(id) {
+  db.prepare('DELETE FROM project_milestones WHERE project_id = ?').run(id)
+  db.prepare('DELETE FROM projects WHERE id = ?').run(id)
+}
+
+export function setProjectImage(id, imagePath) {
+  db.prepare('UPDATE projects SET image_path = ? WHERE id = ?').run(imagePath, id)
+}
+
+export function getProjectMilestones(projectId) {
+  return db.prepare(`
+    SELECT * FROM project_milestones WHERE project_id = ?
+    ORDER BY sort_order ASC, goal_amount ASC
+  `).all(projectId)
+}
+
+export function createMilestone(projectId, data) {
+  const id = randomUUID()
+  db.prepare(`
+    INSERT INTO project_milestones (id, project_id, title, description, goal_amount, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(id, projectId, data.title, data.description || '', data.goal_amount || 0, data.sort_order || 0)
+  return db.prepare('SELECT * FROM project_milestones WHERE id = ?').get(id)
+}
+
+export function updateMilestone(id, data) {
+  const fields = []
+  const values = []
+  for (const key of ['title', 'description', 'goal_amount', 'sort_order', 'reached']) {
+    if (data[key] !== undefined) {
+      fields.push(`${key} = ?`)
+      values.push(data[key])
+    }
+  }
+  if (fields.length === 0) return null
+  values.push(id)
+  db.prepare(`UPDATE project_milestones SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+  return db.prepare('SELECT * FROM project_milestones WHERE id = ?').get(id)
+}
+
+export function deleteMilestone(id) {
+  db.prepare('DELETE FROM project_milestones WHERE id = ?').run(id)
+}
+
+export function getProjectOwner(projectId) {
+  const row = db.prepare('SELECT user_id FROM projects WHERE id = ?').get(projectId)
+  return row?.user_id || null
 }
 
 export default db

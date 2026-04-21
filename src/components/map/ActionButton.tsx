@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, X, CalendarDays, Sparkles, Trees } from 'lucide-react'
+import { Plus, X, CalendarDays, Sparkles, Trees, HeartHandshake } from 'lucide-react'
 
 const BTN_SIZE = 46
 
@@ -7,12 +7,14 @@ interface ActionButtonProps {
   onSetLight: () => void
   onCreateEvent: () => void
   onCreateLichtung?: () => void
+  onCreateProject?: () => void
 }
 
-export function ActionButton({ onSetLight, onCreateEvent, onCreateLichtung }: ActionButtonProps) {
+export function ActionButton({ onSetLight, onCreateEvent, onCreateLichtung, onCreateProject }: ActionButtonProps) {
   const [open, setOpen] = useState(false)
 
   const SUB_BUTTONS = [
+    ...(onCreateProject ? [{ icon: HeartHandshake, label: 'Projekt erstellen', color: '#C07090', onClick: onCreateProject }] : []),
     ...(onCreateLichtung ? [{ icon: Trees, label: 'Ort platzieren', color: '#7BAE5E', onClick: onCreateLichtung }] : []),
     { icon: CalendarDays, label: 'Veranstaltung erstellen', color: '#5078C8', onClick: onCreateEvent },
     { icon: Sparkles, label: 'Licht platzieren', color: '#D4A843', onClick: onSetLight },

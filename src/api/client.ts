@@ -168,6 +168,45 @@ export async function getCalToken() {
   return request('/my/cal-token')
 }
 
+// ─── Projekte ───
+
+export async function getProjects() { return request('/projects') }
+export async function getProject(id: string) { return request(`/projects/${id}`) }
+export async function createProject(data: {
+  title: string
+  description?: string
+  lat: number
+  lng: number
+  lichtung_id?: string | null
+  tags?: string
+  goal_amount?: number
+  opencollective_url?: string
+  video_url?: string
+}) {
+  return request('/projects', { method: 'POST', body: JSON.stringify(data) })
+}
+export async function updateProject(id: string, data: Record<string, unknown>) {
+  return request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export async function deleteProject(id: string) {
+  return request(`/projects/${id}`, { method: 'DELETE' })
+}
+export async function uploadProjectImage(id: string, file: File) {
+  const formData = new FormData()
+  formData.append('image', file)
+  return request(`/projects/${id}/image`, { method: 'POST', body: formData })
+}
+export async function getProjectMilestones(id: string) { return request(`/projects/${id}/milestones`) }
+export async function createMilestone(projectId: string, data: { title: string; description?: string; goal_amount?: number; sort_order?: number }) {
+  return request(`/projects/${projectId}/milestones`, { method: 'POST', body: JSON.stringify(data) })
+}
+export async function updateMilestone(projectId: string, milestoneId: string, data: Record<string, unknown>) {
+  return request(`/projects/${projectId}/milestones/${milestoneId}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export async function deleteMilestone(projectId: string, milestoneId: string) {
+  return request(`/projects/${projectId}/milestones/${milestoneId}`, { method: 'DELETE' })
+}
+
 // ─── Lichtungen ───
 
 export async function getLichtungen() { return request('/lichtungen') }

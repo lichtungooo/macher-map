@@ -6,6 +6,7 @@ import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
 import { LichtungMarker } from './LichtungMarker'
+import { ProjectMarker } from './ProjectMarker'
 import { ZoomButtons } from './ZoomButtons'
 import { TrackpadFix } from './TrackpadFix'
 import type { LatLngExpression } from 'leaflet'
@@ -21,7 +22,9 @@ interface PeaceMapProps {
   flyTo?: [number, number, number] | null // [lat, lng, zoom]
   zoomToRadius?: number | null // Radius in km -> Karte zoomt
   lichtungen?: any[]
+  projects?: any[]
   onLichtungClick?: (id: string) => void
+  onProjectClick?: (id: string) => void
   onShowProfile?: (light: any) => void
   onShowEvent?: (event: any) => void
   chainData?: any[]
@@ -178,7 +181,7 @@ const TILE_LAYERS = {
   },
 }
 
-export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], onLichtungClick, onShowProfile, onShowEvent, chainData = [], showChain }: PeaceMapProps) {
+export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], projects = [], onLichtungClick, onProjectClick, onShowProfile, onShowEvent, chainData = [], showChain }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
   const tileKey = (localStorage.getItem('lichtung-tile-layer') || 'osm_de') as keyof typeof TILE_LAYERS
@@ -248,6 +251,10 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
         {/* Alle Lichtungen ausser der Ursprungs-Lichtung in den Cluster */}
         {lichtungen.filter(l => l.id !== '24615195-da9f-4fd4-956a-8aceb374bfc3').map(l => (
           <LichtungMarker key={`${l.id}-${l.lat}-${l.lng}`} lichtung={l} onClick={onLichtungClick || (() => {})} />
+        ))}
+        {/* Projekte */}
+        {projects.map(p => (
+          <ProjectMarker key={`${p.id}-${p.lat}-${p.lng}`} project={p} onClick={onProjectClick || (() => {})} />
         ))}
       </MarkerClusterGroup>
 

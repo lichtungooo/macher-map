@@ -14,6 +14,8 @@ import { GlobalEventBanner } from '../components/map/GlobalEventBanner'
 import { CreateEventDialog } from '../components/events/CreateEventDialog'
 import { EventCalendar } from '../components/events/EventCalendar'
 import { EventDetail } from '../components/events/EventDetail'
+import { CreateProjectDialog } from '../components/projects/CreateProjectDialog'
+import { ProjectDetail } from '../components/projects/ProjectDetail'
 import { Logo } from '../components/Logo'
 import { WandCursor } from '../components/map/WandCursor'
 import { InfoPopup } from '../components/map/InfoPopup'
@@ -36,8 +38,8 @@ function MapTooltip({ label, children }: { label: string; children: React.ReactN
   )
 }
 
-type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' | 'qr-code'
-type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung' | 'move-lichtung'
+type Dialog = 'none' | 'auth' | 'profile' | 'create-event' | 'create-lichtung' | 'create-project' | 'qr-code'
+type Mode = 'browse' | 'place-light' | 'place-event' | 'place-lichtung' | 'place-project' | 'move-lichtung'
 
 function MapAppInner() {
   const { user, lights, events, setLights, setEvents, login: loginCtx } = useApp()
@@ -67,6 +69,10 @@ function MapAppInner() {
   const [showChain, setShowChain] = useState(false)
   const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
+  const [projects, setProjects] = useState<any[]>([])
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
+  const [projectPosition, setProjectPosition] = useState<[number, number] | undefined>()
+  const [projectLichtung, setProjectLichtung] = useState<{ id: string; name: string } | null>(null)
 
   // Capture invite parameter
   useEffect(() => {
@@ -102,6 +108,15 @@ function MapAppInner() {
     api.getLichtungen().then(setLichtungen).catch(() => {})
   }, [])
 
+  // Projekte laden
+  useEffect(() => {
+    api.getProjects().then(setProjects).catch(() => {})
+  }, [])
+
+  const reloadProjects = () => {
+    api.getProjects().then(setProjects).catch(() => {})
+  }
+
   // Deep-Links von der Landingpage: ?light=ID, ?lichtung=ID, ?event=ID
   useEffect(() => {
     const lightId = searchParams.get('light')
@@ -129,8 +144,18 @@ function MapAppInner() {
         setSelectedEvent(found)
         setSearchParams({})
       }
+    } else {
+      const projectId = searchParams.get('project')
+      if (projectId && projects.length > 0) {
+        const found = projects.find((p: any) => p.id === projectId)
+        if (found) {
+          setFlyTo([found.lat, found.lng, 12 + Math.random() * 0.001])
+          setSelectedProject(found.id)
+          setSearchParams({})
+        }
+      }
     }
-  }, [lights, lichtungen, events])
+  }, [lights, lichtungen, events, projects])
 
   // Ort-QR-Code: ?place=CODE&by=USER_ID (Bringer)
   useEffect(() => {
@@ -342,6 +367,12 @@ function MapAppInner() {
     setMode('place-lichtung')
   }
 
+  const handleCreateProject = () => {
+    if (!user) { setDialog('auth'); return }
+    setProjectLichtung(null)
+    setMode('place-project')
+  }
+
   const handleMapClick = async (position: [number, number]) => {
     if (mode === 'place-light') {
       try {
@@ -369,6 +400,10 @@ function MapAppInner() {
       setLichtungPosition(position)
       setDialog('create-lichtung')
       setMode('browse')
+    } else if (mode === 'place-project') {
+      setProjectPosition(position)
+      setDialog('create-project')
+      setMode('browse')
     } else if (mode === 'move-lichtung' && movingLichtungId) {
       try {
         await api.updateLichtung(movingLichtungId, { lat: position[0], lng: position[1] })
@@ -394,7 +429,9 @@ function MapAppInner() {
         flyTo={flyTo}
         zoomToRadius={desiredZoomRadius}
         lichtungen={lichtungen}
+        projects={projects}
         onLichtungClick={id => setSelectedLichtung(id)}
+        onProjectClick={id => setSelectedProject(id)}
         onShowProfile={light => setSelectedProfile(light)}
         onShowEvent={event => setSelectedEvent(event)}
         chainData={chainData}
@@ -472,6 +509,7 @@ function MapAppInner() {
             {mode === 'place-light' && 'Setze dein Licht auf die Karte'}
             {mode === 'place-lichtung' && 'Setze deinen Ort auf die Karte'}
             {mode === 'place-event' && 'Setze deinen Termin auf die Karte'}
+            {mode === 'place-project' && 'Setze dein Projekt auf die Karte'}
             {mode === 'move-lichtung' && 'Tippe den neuen Ort der Lichtung an'}
           </p>
           <button onClick={() => { setMode('browse'); setMovingLichtungId(null) }}
@@ -494,7 +532,7 @@ function MapAppInner() {
         </MapTooltip>
       </div>
 
-      <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} />
+      <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} onCreateProject={handleCreateProject} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
       {dialog === 'auth' && <AuthDialog onClose={() => setDialog('none')} onSuccess={handleAuthSuccess} />}
       {dialog === 'profile' && <ProfileDialog onClose={handleProfileClose} onShowChainOnMap={() => {
@@ -506,6 +544,8 @@ function MapAppInner() {
       {dialog === 'qr-code' && user && <QRCodeDialog userId={user.id} userName={user.name} onClose={() => setDialog('none')} />}
       {dialog === 'create-event' && <CreateEventDialog position={eventPosition} lichtungId={eventLichtung?.id} lichtungName={eventLichtung?.name} onClose={() => { setDialog('none'); setEventPosition(undefined); setEventLichtung(null) }} />}
       {dialog === 'create-lichtung' && <CreateLichtungDialog position={lichtungPosition} onClose={() => { setDialog('none'); setLichtungPosition(undefined) }} onCreated={() => api.getLichtungen().then(setLichtungen)} />}
+      {dialog === 'create-project' && <CreateProjectDialog position={projectPosition} lichtungId={projectLichtung?.id} lichtungName={projectLichtung?.name} onClose={() => { setDialog('none'); setProjectPosition(undefined); setProjectLichtung(null) }} onCreated={(pid) => { reloadProjects(); setSelectedProject(pid) }} />}
+      {selectedProject && <ProjectDetail projectId={selectedProject} onClose={() => setSelectedProject(null)} onDeleted={() => { reloadProjects(); setSelectedProject(null) }} />}
       {showCalendar && <EventCalendar onClose={() => setShowCalendar(false)} mapRadius={mapRadius} onRadiusSlide={setDesiredZoomRadius} onCreateEvent={() => { setShowCalendar(false); handleCreateEvent() }} />}
       {showSettings && <MapSettings showLights={showLights} showEvents={showEvents} onToggleLights={() => setShowLights(!showLights)} onToggleEvents={() => setShowEvents(!showEvents)} onClose={() => setShowSettings(false)} />}
 
