@@ -88,37 +88,66 @@ function Carousel({
   icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
   accentColor: string
   children: React.ReactNode
-  itemCount: number
+  itemCount: number // Original-Anzahl (nicht verdreifachte)
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const initialized = useRef(false)
+
+  const getCardWidth = () => {
+    const el = scrollRef.current
+    if (!el) return 0
+    const firstItem = el.querySelector(':scope > *') as HTMLElement | null
+    if (!firstItem) return 0
+    return firstItem.getBoundingClientRect().width + 12 // + gap
+  }
+
+  // Beim ersten Render: in die mittlere Kopie scrollen (ohne Animation)
+  useEffect(() => {
+    if (initialized.current || itemCount === 0) return
+    const el = scrollRef.current
+    if (!el) return
+
+    // Kleiner Delay, damit Browser die Breite berechnet hat
+    const timer = setTimeout(() => {
+      const cardWidth = getCardWidth()
+      if (cardWidth > 0) {
+        el.scrollLeft = cardWidth * itemCount
+        initialized.current = true
+      }
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [itemCount])
+
+  // Nach Animation pruefen, ob wir in der Rand-Zone sind → ohne Animation zur Mitte teleportieren
+  const rebalance = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const cardWidth = getCardWidth()
+    if (cardWidth === 0) return
+
+    const oneSet = cardWidth * itemCount
+    const current = el.scrollLeft
+
+    // Wenn im ersten Drittel → zur Mitte springen (addiere oneSet)
+    if (current < oneSet * 0.5) {
+      el.scrollLeft = current + oneSet
+    }
+    // Wenn im letzten Drittel → zur Mitte springen (subtrahiere oneSet)
+    else if (current > oneSet * 2.5) {
+      el.scrollLeft = current - oneSet
+    }
+  }
 
   const scroll = (dir: 'left' | 'right') => {
     const el = scrollRef.current
     if (!el) return
+    const cardWidth = getCardWidth()
+    if (cardWidth === 0) return
 
-    // Eine Karten-Breite + Gap (12px) berechnen
-    const firstItem = el.querySelector(':scope > *') as HTMLElement | null
-    if (!firstItem) return
-    const cardWidth = firstItem.getBoundingClientRect().width + 12
+    el.scrollBy({ left: dir === 'right' ? cardWidth : -cardWidth, behavior: 'smooth' })
 
-    const maxScroll = el.scrollWidth - el.clientWidth
-    const current = el.scrollLeft
-
-    if (dir === 'right') {
-      // Am Ende? Zurueck auf Anfang
-      if (current >= maxScroll - 2) {
-        el.scrollTo({ left: 0, behavior: 'smooth' })
-      } else {
-        el.scrollBy({ left: cardWidth, behavior: 'smooth' })
-      }
-    } else {
-      // Am Anfang? Nach ganz hinten springen
-      if (current <= 2) {
-        el.scrollTo({ left: maxScroll, behavior: 'smooth' })
-      } else {
-        el.scrollBy({ left: -cardWidth, behavior: 'smooth' })
-      }
-    }
+    // Nach der smooth-Scroll-Animation (ca. 400ms) umpositionieren, falls noetig
+    setTimeout(rebalance, 450)
   }
 
   if (itemCount === 0) return null
@@ -248,9 +277,9 @@ export default function LiveFeed() {
 
         {/* ─── Menschen (Lichter) ─── */}
         <Carousel title="Menschen" icon={Sparkles} accentColor="#D4A843" itemCount={lights.length}>
-          {lights.map(l => (
+          {[...lights, ...lights, ...lights].map((l, i) => (
             <div
-              key={l.id}
+              key={`${l.id}-${Math.floor(i / Math.max(lights.length, 1))}`}
               className="carousel-item"
               onClick={() => openOnMap('light', l.id)}
               style={{ ...itemStyle, padding: 14 }}
@@ -296,9 +325,9 @@ export default function LiveFeed() {
 
         {/* ─── Orte (Lichtungen) ─── */}
         <Carousel title="Orte" icon={Trees} accentColor="#7BAE5E" itemCount={lichtungen.length}>
-          {lichtungen.map(l => (
+          {[...lichtungen, ...lichtungen, ...lichtungen].map((l, i) => (
             <div
-              key={l.id}
+              key={`${l.id}-${Math.floor(i / Math.max(lichtungen.length, 1))}`}
               className="carousel-item"
               onClick={() => openOnMap('lichtung', l.id)}
               style={{ ...itemStyle, overflow: 'hidden' }}
@@ -335,9 +364,9 @@ export default function LiveFeed() {
 
         {/* ─── Veranstaltungen ─── */}
         <Carousel title="Veranstaltungen" icon={CalendarDays} accentColor="#5078C8" itemCount={events.length}>
-          {events.map(ev => (
+          {[...events, ...events, ...events].map((ev, i) => (
             <div
-              key={ev.id}
+              key={`${ev.id}-${Math.floor(i / Math.max(events.length, 1))}`}
               className="carousel-item"
               onClick={() => openOnMap('event', ev.id, ev.is_placeholder)}
               style={{ ...itemStyle, padding: 12 }}
