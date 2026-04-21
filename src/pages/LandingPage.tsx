@@ -1,10 +1,8 @@
 import Header from '../components/Header'
 import Hero from '../components/Hero'
-import Vision from '../components/Vision'
+import Kunstprojekt from '../components/Kunstprojekt'
 import MapPreview from '../components/MapPreview'
-import HowItWorks from '../components/HowItWorks'
-import Calendar from '../components/Calendar'
-import Network from '../components/Network'
+import LiveFeed from '../components/LiveFeed'
 import Support from '../components/Support'
 import Footer from '../components/Footer'
 import { useReveal } from '../hooks/useReveal'
@@ -17,11 +15,9 @@ export default function LandingPage() {
       <Header />
       <main>
         <Hero />
-        <Vision />
+        <Kunstprojekt />
         <MapPreview />
-        <HowItWorks />
-        <Calendar />
-        <Network />
+        <LiveFeed />
         <Support />
       </main>
       <Footer />

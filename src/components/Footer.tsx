@@ -20,10 +20,11 @@ export default function Footer() {
           </h3>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {[
-              { href: '#vision', label: 'Vision' },
-              { href: '#karte', label: 'Karte' },
-              { href: '#kalender', label: 'Kalender' },
-              { href: 'https://github.com/real-life-network/rln', label: 'Real Life Network', ext: true },
+              { href: '#kunst', label: 'Kunstprojekt' },
+              { href: '#karte', label: 'Friedenskette' },
+              { href: '#stimmen', label: 'Stimmen' },
+              { href: '#unterstuetzen', label: 'Unterstuetzen' },
+              { href: 'https://real-life-stack.de', label: 'Real Life Network', ext: true },
             ].map((link, i) => (
               <li key={i}>
                 <a

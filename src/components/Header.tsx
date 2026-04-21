@@ -3,12 +3,10 @@ import { Menu, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { href: '#vision', label: 'Vision' },
-  { href: '#karte', label: 'Karte' },
-  { href: '#so-gehts', label: 'So gehts' },
-  { href: '#kalender', label: 'Kalender' },
-  { href: '#netzwerk', label: 'Netzwerk' },
-  { href: '#unterstuetzen', label: 'Mitmachen' },
+  { href: '#kunst', label: 'Kunst' },
+  { href: '#karte', label: 'Kette' },
+  { href: '#stimmen', label: 'Stimmen' },
+  { href: '#unterstuetzen', label: 'Unterstuetzen' },
 ]
 
 export default function Header() {
