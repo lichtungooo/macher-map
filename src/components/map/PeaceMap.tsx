@@ -245,10 +245,16 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
         {showEvents && events.map(event => (
           <EventMarker key={`${event.id}-${event.position[0]}-${event.position[1]}`} event={event} onShowEvent={onShowEvent} />
         ))}
-        {lichtungen.map(l => (
+        {/* Alle Lichtungen ausser der Ursprungs-Lichtung in den Cluster */}
+        {lichtungen.filter(l => l.id !== '24615195-da9f-4fd4-956a-8aceb374bfc3').map(l => (
           <LichtungMarker key={`${l.id}-${l.lat}-${l.lng}`} lichtung={l} onClick={onLichtungClick || (() => {})} />
         ))}
       </MarkerClusterGroup>
+
+      {/* Ursprungs-Lichtung ausserhalb des Clusters — immer sichtbar, immer pulsierend */}
+      {lichtungen.filter(l => l.id === '24615195-da9f-4fd4-956a-8aceb374bfc3').map(l => (
+        <LichtungMarker key={`${l.id}-origin`} lichtung={l} onClick={onLichtungClick || (() => {})} />
+      ))}
     </MapContainer>
   )
 }

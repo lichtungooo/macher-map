@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation, Pencil, Trash2 } from 'lucide-react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import { EditEventDialog } from './EditEventDialog'
+import { renderMarkdown as renderMd } from '../../lib/markdown'
+import { ShareButton } from '../ShareButton'
 import * as api from '../../api/client'
 
 function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -31,9 +33,7 @@ function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
-function renderMarkdown(text: string) {
-  return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br/>')
-}
+const renderMarkdown = renderMd
 
 interface EventDetailProps {
   event: EventItem
@@ -141,10 +141,19 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
             </div>
           )}
 
-          {/* Title */}
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.35rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '12px', lineHeight: 1.3 }}>
-            {event.title}
-          </h2>
+          {/* Title + Share */}
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.35rem', fontWeight: 500, color: '#0A0A0A', lineHeight: 1.3, flex: 1 }}>
+              {event.title}
+            </h2>
+            <ShareButton
+              url={`${window.location.origin}/app?event=${event.id}`}
+              title={`Veranstaltung: ${event.title}`}
+              text={event.description ? event.description.replace(/[#*>]/g, '').trim().slice(0, 140) : `${formatDate(event.start)} · ${formatTime(event.start)}`}
+              label=""
+              compact
+            />
+          </div>
 
           {/* Meta — kompakt */}
           <div className="space-y-2 mb-4">

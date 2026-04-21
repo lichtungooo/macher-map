@@ -340,6 +340,88 @@ body {
 }
 
 
+/* ─── Markdown-Prose fuer Lichtungen und Events ─── */
+
+.prose-lichtung {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(10, 10, 10, 0.65);
+}
+
+.prose-lichtung h1,
+.prose-lichtung h2,
+.prose-lichtung h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: #0A0A0A;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  margin: 1.4em 0 0.5em;
+}
+
+.prose-lichtung h1 { font-size: 1.55rem; line-height: 1.25; }
+.prose-lichtung h2 { font-size: 1.2rem; line-height: 1.3; margin-top: 1.6em; }
+.prose-lichtung h3 { font-size: 1rem; line-height: 1.35; margin-top: 1.4em; }
+
+.prose-lichtung h1:first-child,
+.prose-lichtung h2:first-child,
+.prose-lichtung h3:first-child { margin-top: 0; }
+
+.prose-lichtung p {
+  margin: 0.8em 0;
+}
+
+.prose-lichtung strong { color: #0A0A0A; font-weight: 600; }
+.prose-lichtung em { color: rgba(10, 10, 10, 0.7); font-style: italic; }
+
+.prose-lichtung a {
+  color: #D4A843;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(212, 168, 67, 0.4);
+}
+
+.prose-lichtung hr {
+  border: none;
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+  margin: 1.6em auto;
+  width: 40%;
+}
+
+.prose-lichtung blockquote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: rgba(10, 10, 10, 0.55);
+  border-left: 2px solid rgba(212, 168, 67, 0.35);
+  padding: 0.1em 0 0.1em 1em;
+  margin: 1.2em 0;
+}
+
+.prose-lichtung blockquote p { margin: 0.4em 0; }
+
+.prose-lichtung ul,
+.prose-lichtung ol {
+  margin: 0.9em 0;
+  padding-left: 1.3em;
+}
+
+.prose-lichtung li {
+  margin: 0.3em 0;
+}
+
+.prose-lichtung ul li::marker { color: #D4A843; }
+
+.prose-lichtung code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85em;
+  background: rgba(212, 168, 67, 0.08);
+  color: #0A0A0A;
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+}
+
 /* ─── Origin-Lichtung Aura (Kassel, Ursprung) ─── */
 
 .origin-lichtung-marker {

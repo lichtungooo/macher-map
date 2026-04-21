@@ -4,6 +4,8 @@ import { useApp } from '../../context/AppContext'
 import { LichtungGallery } from './LichtungGallery'
 import { QRCodeSVG } from 'qrcode.react'
 import { FullCalendar } from './FullCalendar'
+import { renderMarkdown } from '../../lib/markdown'
+import { ShareButton } from '../ShareButton'
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -13,7 +15,6 @@ const TYPE_COLORS: Record<string, string> = {
 
 function formatDate(d: string) { return new Date(d).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) }
 function formatTime(d: string) { return new Date(d).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) }
-function renderMd(t: string) { return t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br/>') }
 
 interface LichtungDetailProps {
   lichtungId: string
@@ -303,6 +304,13 @@ export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted 
                     {lichtung.name}
                   </h2>
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <ShareButton
+                      url={`${window.location.origin}/app?lichtung=${lichtungId}`}
+                      title={`Lichtung: ${lichtung.name}`}
+                      text={lichtung.description ? lichtung.description.split('\n')[0].replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Ort auf der Lichtungs-Karte.'}
+                      label=""
+                      compact
+                    />
                     {onMoveLichtung && (myRole === 'owner' || myRole === 'admin') && (
                       <button onClick={() => onMoveLichtung(lichtungId)}
                         title="Lichtung neu platzieren"
@@ -324,9 +332,11 @@ export function LichtungDetail({ lichtungId, onClose, onMoveLichtung, onDeleted 
                 </div>
 
                 {lichtung.description && (
-                  <div className="rounded-xl p-4 mb-4" style={{ background: '#FAFAF8' }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.6)' }}
-                      dangerouslySetInnerHTML={{ __html: renderMd(lichtung.description) }} />
+                  <div className="rounded-xl p-5 mb-4" style={{ background: '#FAFAF8' }}>
+                    <div
+                      className="prose-lichtung"
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(lichtung.description) }}
+                    />
                   </div>
                 )}
               </>
