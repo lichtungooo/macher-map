@@ -23,12 +23,17 @@
   <line x1="680" y1="220" x2="700" y2="220" stroke="#D4A843" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
 
   <!-- Title -->
-  <text x="600" y="400" text-anchor="middle" font-family="Georgia, serif" font-size="42" fill="#0A0A0A" font-weight="400">
-    Licht fuer Frieden
+  <text x="600" y="400" text-anchor="middle" font-family="Georgia, serif" font-size="54" fill="#0A0A0A" font-weight="400" letter-spacing="8">
+    LICHTUNG
   </text>
 
   <!-- Subtitle -->
-  <text x="600" y="455" text-anchor="middle" font-family="Georgia, serif" font-size="26" fill="#0A0A0A" opacity="0.45" font-style="italic">
+  <text x="600" y="445" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#0A0A0A" opacity="0.5" font-style="italic">
+    Dein Licht fuer den Frieden
+  </text>
+
+  <!-- Invite note -->
+  <text x="600" y="500" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#0A0A0A" opacity="0.4" font-style="italic">
     Du wirst eingeladen, ein Licht zu entzuenden.
   </text>
 

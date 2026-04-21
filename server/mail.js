@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-const FROM = '"Licht fuer Frieden" <frieden@lichtung.ooo>'
+const FROM = '"Lichtung" <frieden@lichtung.ooo>'
 const BASE = process.env.BASE_URL || 'https://lichtung.ooo'
 
 function footer() {
@@ -23,7 +23,7 @@ function footer() {
       Frieden kommt aus dem Herzen.
     </p>
     <p style="font-size: 12px; color: rgba(10,10,10,0.3);">
-      Licht fuer Frieden — <a href="${BASE}" style="color: #D4A843; text-decoration: none;">lichtung.ooo</a><br/>
+      Lichtung — <a href="${BASE}" style="color: #D4A843; text-decoration: none;">lichtung.ooo</a><br/>
       Traeger: Kollektiv Lichtung e.V.
     </p>
   `
@@ -33,10 +33,10 @@ export async function sendVerifyEmail(email, token) {
   const link = `${BASE}/app?verify=${token}`
   await transporter.sendMail({
     from: FROM, to: email,
-    subject: 'Bestaetigung deiner E-Mail — Licht fuer Frieden',
+    subject: 'Bestaetigung deiner E-Mail — Lichtung',
     html: `
       <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #FDFCF9;">
-        <p style="font-size: 20px; color: #0A0A0A;">Willkommen bei Licht fuer Frieden.</p>
+        <p style="font-size: 20px; color: #0A0A0A;">Willkommen bei Lichtung.</p>
         <p style="font-size: 15px; color: rgba(10,10,10,0.55); line-height: 1.7; margin-bottom: 28px;">
           Bitte bestaetigen deine E-Mail-Adresse, damit wir dich ueber Friedensveranstaltungen informieren koennen.
         </p>
@@ -56,7 +56,7 @@ export async function sendResetEmail(email, token) {
   const link = `${BASE}/app?reset=${token}`
   await transporter.sendMail({
     from: FROM, to: email,
-    subject: 'Passwort zuruecksetzen — Licht fuer Frieden',
+    subject: 'Passwort zuruecksetzen — Lichtung',
     html: `
       <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #FDFCF9;">
         <p style="font-size: 20px; color: #0A0A0A;">Passwort zuruecksetzen</p>

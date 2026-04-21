@@ -19,36 +19,37 @@ export default function Hero() {
           <BlazingO size={200} />
         </div>
 
-        {/* Badge */}
-        <div
-          className="hero-subtitle inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
-          style={{
-            background: 'rgba(212,168,67,0.08)',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.78rem',
-            fontWeight: 500,
-            color: '#D4A843',
-          }}
-        >
-          Ein Licht. Ein Herz. Ein Frieden.
-        </div>
-
-        {/* Headline */}
+        {/* Headline — Lichtung */}
         <h1
           className="hero-title"
           style={{
             fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-            fontWeight: 400,
+            fontSize: 'clamp(2.5rem, 7vw, 5rem)',
+            fontWeight: 300,
             color: '#0A0A0A',
-            lineHeight: 1.2,
-            marginBottom: '1rem',
-            letterSpacing: '-0.01em',
+            lineHeight: 1,
+            marginBottom: '0.8rem',
+            letterSpacing: '0.25em',
+            textTransform: 'uppercase',
           }}
         >
-          Dein Licht fuer den{' '}
-          <span style={{ color: '#D4A843' }}>Frieden</span>
+          Lichtung
         </h1>
+
+        {/* Untertitel — Dein Licht fuer den Frieden */}
+        <p
+          className="hero-subtitle"
+          style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 'clamp(1rem, 2.2vw, 1.35rem)',
+            fontStyle: 'italic',
+            color: 'rgba(10,10,10,0.45)',
+            marginBottom: '2rem',
+            letterSpacing: '0.04em',
+          }}
+        >
+          Dein Licht fuer den Frieden.
+        </p>
 
         {/* Subline */}
         <p

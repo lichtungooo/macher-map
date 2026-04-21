@@ -1,20 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Globe, Clock, Trash2, Plus, Waves, Zap } from 'lucide-react'
 import * as api from '../../api/client'
+import { TagInput } from '../events/TagInput'
+import { MarkdownToolbar } from '../auth/MarkdownToolbar'
+
+type MoonPhase = { type: 'vollmond' | 'neumond'; time: string }
 
 export function GlobalEventsTab() {
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [phases, setPhases] = useState<MoonPhase[]>([])
 
-  // Form state
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [waveMode, setWaveMode] = useState<'simultaneous' | 'timezone_wave'>('timezone_wave')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('21:00')
-  const [recurring, setRecurring] = useState('')
-  const [tags, setTags] = useState('meditation')
+  const [recurring, setRecurring] = useState<'' | 'vollmond' | 'neumond' | 'woechentlich' | 'monatlich'>('vollmond')
+  const [tags, setTags] = useState<string[]>(['meditation'])
+  const descRef = useRef<HTMLTextAreaElement>(null)
 
   const load = async () => {
     try {
@@ -24,6 +29,35 @@ export function GlobalEventsTab() {
   }
 
   useEffect(() => { load() }, [])
+  useEffect(() => {
+    api.getMoonPhases(6).then(p => setPhases(p as MoonPhase[])).catch(() => {})
+  }, [])
+
+  // Die naechsten 6 Mondphasen ab heute
+  const upcoming = useMemo(() => {
+    const now = Date.now()
+    return phases.filter(p => new Date(p.time).getTime() >= now).slice(0, 6)
+  }, [phases])
+
+  const nextOf = (type: 'vollmond' | 'neumond') =>
+    upcoming.find(p => p.type === type)
+
+  // Auto-Fill: wenn recurring auf vollmond/neumond wechselt und kein Datum gesetzt
+  useEffect(() => {
+    if (!date && (recurring === 'vollmond' || recurring === 'neumond')) {
+      const next = nextOf(recurring)
+      if (next) applyPhase(next)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recurring, upcoming])
+
+  const applyPhase = (p: MoonPhase) => {
+    const d = new Date(p.time)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    setDate(`${yyyy}-${mm}-${dd}`)
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,11 +72,11 @@ export function GlobalEventsTab() {
           start_time: `${date}T${time}:00`,
           wave_mode: waveMode,
           recurring: recurring || null,
-          tags,
+          tags: tags.join(','),
         }),
       })
       if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
-      setTitle(''); setDescription(''); setDate(''); setShowCreate(false)
+      setTitle(''); setDescription(''); setDate(''); setTags(['meditation']); setShowCreate(false)
       const listRes = await fetch('/api/events/global')
       setEvents(await listRes.json())
     } catch (err: any) {
@@ -63,106 +97,69 @@ export function GlobalEventsTab() {
   }
 
   const font = { fontFamily: 'Inter, sans-serif' }
-  const card = { background: '#fff', border: '1px solid rgba(10,10,10,0.06)', borderRadius: '12px', padding: '20px' }
-  const inp = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.85rem', color: '#0A0A0A', background: '#fff' }
-  const labelStyle = { ...font, fontSize: '0.68rem', fontWeight: 500 as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.4)', display: 'block', marginBottom: '6px' }
+  const card = { background: '#fff', border: '1px solid rgba(10,10,10,0.06)', borderRadius: '12px', padding: '14px' }
+  const inp = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }
+  const labelStyle = { ...font, fontSize: '0.64rem', fontWeight: 500 as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.4)', display: 'block', marginBottom: '4px' }
 
   const fmtDate = (s: string) => new Date(s).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })
+  const fmtShort = (s: string) => new Date(s).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })
 
   return (
-    <div className="space-y-4">
-      {/* Erklaerung */}
-      <div style={{ ...card, background: 'rgba(212,168,67,0.04)', borderColor: 'rgba(212,168,67,0.2)' }}>
-        <h3 style={{ ...font, fontSize: '0.9rem', fontWeight: 600, marginBottom: '6px' }}>Globale Veranstaltungen</h3>
-        <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.6)', lineHeight: 1.65 }}>
-          Weltweit sichtbare Meditationen und Gebete. Nutzer bekommen sie im Kalender,
-          Lichtungen koennen sich andocken und vor Ort mitfeiern.
-        </p>
-        <div className="mt-3 space-y-1.5 text-xs" style={font}>
-          <div className="flex items-start gap-2">
-            <Zap size={14} style={{ color: '#D4A843', flexShrink: 0, marginTop: '2px' }} />
-            <span style={{ color: 'rgba(10,10,10,0.6)' }}>
-              <strong style={{ color: '#0A0A0A' }}>Gleichzeitig</strong> — alle zur gleichen Sekunde.
-              Die Startzeit ist weltweit identisch (z.B. 21:00 Berlin = 15:00 New York = 05:00 Tokio naechster Tag).
-            </span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Waves size={14} style={{ color: '#5078C8', flexShrink: 0, marginTop: '2px' }} />
-            <span style={{ color: 'rgba(10,10,10,0.6)' }}>
-              <strong style={{ color: '#0A0A0A' }}>Welle (Ortszeit)</strong> — 21:00 ueberall lokal.
-              Die Welle wandert mit den Zeitzonen um die Erde.
-            </span>
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-3">
       {/* Create */}
       {!showCreate ? (
         <button onClick={() => setShowCreate(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl"
           style={{ ...font, fontSize: '0.82rem', color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
           <Plus size={16} /> Neue globale Veranstaltung
         </button>
       ) : (
-        <form onSubmit={handleCreate} style={card} className="space-y-3">
-          <div>
-            <label style={labelStyle}>Titel</label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="z.B. Vollmond-Meditation" required
-              className="w-full px-3 py-2 rounded-lg outline-none" style={inp} />
-          </div>
+        <form onSubmit={handleCreate} style={card} className="space-y-2.5">
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+            placeholder="Titel — z.B. Vollmond-Meditation" required autoFocus
+            className="w-full px-3 py-2 rounded-lg outline-none"
+            style={{ ...inp, fontSize: '0.95rem', fontWeight: 500 }} />
 
-          <div>
-            <label style={labelStyle}>Modus</label>
-            <div className="grid grid-cols-2 gap-2">
+          {/* Modus als Segmented Control */}
+          <div className="flex items-center gap-2">
+            <label style={{ ...labelStyle, marginBottom: 0, flexShrink: 0 }}>Modus</label>
+            <div className="flex rounded-lg p-0.5" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)' }}>
               <button type="button" onClick={() => setWaveMode('timezone_wave')}
-                className="flex items-center gap-2 p-3 rounded-lg text-left"
+                className="flex items-center gap-1 px-2.5 py-1 rounded"
                 style={{
-                  ...font, fontSize: '0.8rem', cursor: 'pointer',
-                  background: waveMode === 'timezone_wave' ? 'rgba(80,120,200,0.06)' : '#FAFAF8',
-                  border: waveMode === 'timezone_wave' ? '1px solid rgba(80,120,200,0.35)' : '1px solid rgba(10,10,10,0.06)',
-                  color: waveMode === 'timezone_wave' ? '#5078C8' : 'rgba(10,10,10,0.6)',
+                  ...font, fontSize: '0.74rem', cursor: 'pointer', border: 'none',
+                  background: waveMode === 'timezone_wave' ? '#fff' : 'transparent',
+                  color: waveMode === 'timezone_wave' ? '#5078C8' : 'rgba(10,10,10,0.5)',
+                  fontWeight: waveMode === 'timezone_wave' ? 600 : 400,
+                  boxShadow: waveMode === 'timezone_wave' ? '0 1px 2px rgba(0,0,0,0.04)' : 'none',
                 }}>
-                <Waves size={16} />
-                <div>
-                  <div style={{ fontWeight: 600 }}>Welle</div>
-                  <div style={{ fontSize: '0.65rem', marginTop: '2px', opacity: 0.7 }}>Ortszeit</div>
-                </div>
+                <Waves size={12} /> Welle
               </button>
               <button type="button" onClick={() => setWaveMode('simultaneous')}
-                className="flex items-center gap-2 p-3 rounded-lg text-left"
+                className="flex items-center gap-1 px-2.5 py-1 rounded"
                 style={{
-                  ...font, fontSize: '0.8rem', cursor: 'pointer',
-                  background: waveMode === 'simultaneous' ? 'rgba(212,168,67,0.06)' : '#FAFAF8',
-                  border: waveMode === 'simultaneous' ? '1px solid rgba(212,168,67,0.35)' : '1px solid rgba(10,10,10,0.06)',
-                  color: waveMode === 'simultaneous' ? '#D4A843' : 'rgba(10,10,10,0.6)',
+                  ...font, fontSize: '0.74rem', cursor: 'pointer', border: 'none',
+                  background: waveMode === 'simultaneous' ? '#fff' : 'transparent',
+                  color: waveMode === 'simultaneous' ? '#D4A843' : 'rgba(10,10,10,0.5)',
+                  fontWeight: waveMode === 'simultaneous' ? 600 : 400,
+                  boxShadow: waveMode === 'simultaneous' ? '0 1px 2px rgba(0,0,0,0.04)' : 'none',
                 }}>
-                <Zap size={16} />
-                <div>
-                  <div style={{ fontWeight: 600 }}>Gleichzeitig</div>
-                  <div style={{ fontSize: '0.65rem', marginTop: '2px', opacity: 0.7 }}>Berlin-Zeit</div>
-                </div>
+                <Zap size={12} /> Gleichzeitig
               </button>
             </div>
+            <span style={{ ...font, fontSize: '0.66rem', color: 'rgba(10,10,10,0.4)', marginLeft: 'auto' }}>
+              {waveMode === 'timezone_wave' ? 'Ortszeit rollt um die Erde' : 'Berlin-Zeit fuer alle'}
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label style={labelStyle}>Datum</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required
-                className="w-full px-3 py-2 rounded-lg outline-none" style={inp} />
-            </div>
-            <div>
-              <label style={labelStyle}>Uhrzeit {waveMode === 'timezone_wave' && <span style={{ fontSize: '0.56rem', color: '#5078C8' }}>(lokal)</span>}</label>
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} required
-                className="w-full px-3 py-2 rounded-lg outline-none" style={inp} />
-            </div>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Wiederholung</label>
-            <select value={recurring} onChange={e => setRecurring(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg outline-none" style={inp}>
+          {/* Datum + Uhrzeit + Wiederholung */}
+          <div className="grid grid-cols-3 gap-1.5">
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} required
+              className="px-2 py-2 rounded-lg outline-none" style={inp} />
+            <input type="time" value={time} onChange={e => setTime(e.target.value)} required
+              className="px-2 py-2 rounded-lg outline-none" style={inp} />
+            <select value={recurring} onChange={e => setRecurring(e.target.value as any)}
+              className="px-2 py-2 rounded-lg outline-none" style={inp}>
               <option value="">Einmalig</option>
               <option value="vollmond">Jeden Vollmond</option>
               <option value="neumond">Jeden Neumond</option>
@@ -171,27 +168,59 @@ export function GlobalEventsTab() {
             </select>
           </div>
 
+          {/* Mondphasen-Chips */}
+          {upcoming.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span style={{ ...font, fontSize: '0.64rem', color: 'rgba(10,10,10,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                Mondphasen
+              </span>
+              {upcoming.map((p, i) => {
+                const iso = new Date(p.time).toISOString().slice(0, 10)
+                const active = date === iso
+                const full = p.type === 'vollmond'
+                return (
+                  <button key={i} type="button" onClick={() => applyPhase(p)}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                    style={{
+                      ...font, fontSize: '0.68rem', cursor: 'pointer',
+                      background: active ? (full ? 'rgba(212,168,67,0.15)' : 'rgba(80,80,120,0.12)') : '#FAFAF8',
+                      border: active ? `1px solid ${full ? 'rgba(212,168,67,0.4)' : 'rgba(80,80,120,0.35)'}` : '1px solid rgba(10,10,10,0.06)',
+                      color: active ? (full ? '#B48830' : '#4a4a70') : 'rgba(10,10,10,0.55)',
+                    }}
+                    title={new Date(p.time).toLocaleString('de-DE', { dateStyle: 'full', timeStyle: 'short' })}>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: full ? '#E8C873' : '#1F1F2E',
+                      border: full ? '1px solid rgba(212,168,67,0.5)' : '1px solid rgba(255,255,255,0.6)',
+                      display: 'inline-block',
+                    }} />
+                    {fmtShort(p.time)}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
           <div>
-            <label style={labelStyle}>Tags (kommagetrennt)</label>
-            <input type="text" value={tags} onChange={e => setTags(e.target.value)}
-              placeholder="meditation, gebet, stille"
-              className="w-full px-3 py-2 rounded-lg outline-none" style={inp} />
+            <label style={labelStyle}>Tags</label>
+            <TagInput value={tags} onChange={setTags} />
           </div>
 
           <div>
             <label style={labelStyle}>Beschreibung</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
-              placeholder="Einleitung, Intention, Anweisungen..."
+            <MarkdownToolbar textareaRef={descRef} value={description} onChange={setDescription} />
+            <textarea ref={descRef} value={description} onChange={e => setDescription(e.target.value)} rows={3}
+              placeholder="Intention, Ablauf..."
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-              style={{ ...inp, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.6 }} />
+              style={{ ...inp, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.55 }} />
           </div>
 
-          <div className="flex gap-2 pt-1">
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg"
+          <div className="flex gap-2 pt-0.5">
+            <button type="submit" disabled={loading} className="flex-1 py-2 rounded-lg"
               style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', border: 'none', cursor: loading ? 'wait' : 'pointer' }}>
               {loading ? 'Wird erstellt...' : 'Erstellen'}
             </button>
-            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2.5 rounded-lg"
+            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-lg"
               style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.5)', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
               Abbrechen
             </button>
@@ -202,28 +231,31 @@ export function GlobalEventsTab() {
       {/* Liste */}
       {events.length === 0 ? (
         <div style={card} className="text-center">
-          <Globe size={24} style={{ color: 'rgba(10,10,10,0.2)', margin: '0 auto 8px' }} />
-          <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.4)' }}>Noch keine globalen Veranstaltungen.</p>
+          <Globe size={22} style={{ color: 'rgba(10,10,10,0.2)', margin: '0 auto 6px' }} />
+          <p style={{ ...font, fontSize: '0.8rem', color: 'rgba(10,10,10,0.4)' }}>Noch keine globalen Veranstaltungen.</p>
         </div>
       ) : (
         <div style={card}>
-          <h3 style={{ ...font, fontSize: '0.9rem', fontWeight: 600, marginBottom: '12px' }}>Bestehende globale Events ({events.length})</h3>
-          <div className="space-y-2">
+          <div className="flex items-center justify-between mb-2">
+            <h3 style={{ ...font, fontSize: '0.82rem', fontWeight: 600 }}>Bestehende ({events.length})</h3>
+            <div className="flex items-center gap-3" style={{ ...font, fontSize: '0.64rem', color: 'rgba(10,10,10,0.45)' }}>
+              <span className="flex items-center gap-1"><Waves size={10} style={{ color: '#5078C8' }} /> Welle</span>
+              <span className="flex items-center gap-1"><Zap size={10} style={{ color: '#D4A843' }} /> Gleichzeitig</span>
+            </div>
+          </div>
+          <div className="space-y-1.5">
             {events.map((e: any) => (
-              <div key={e.id} className="flex items-start gap-3 p-3 rounded-lg" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: e.wave_mode === 'timezone_wave' ? 'rgba(80,120,200,0.08)' : 'rgba(212,168,67,0.08)' }}>
-                  {e.wave_mode === 'timezone_wave' ? <Waves size={16} style={{ color: '#5078C8' }} /> : <Zap size={16} style={{ color: '#D4A843' }} />}
+              <div key={e.id} className="flex items-start gap-2.5 p-2.5 rounded-lg" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: e.wave_mode === 'timezone_wave' ? 'rgba(80,120,200,0.08)' : 'rgba(212,168,67,0.08)' }}>
+                  {e.wave_mode === 'timezone_wave' ? <Waves size={14} style={{ color: '#5078C8' }} /> : <Zap size={14} style={{ color: '#D4A843' }} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#0A0A0A' }}>{e.title}</div>
-                  <div className="flex items-center gap-1.5 mt-0.5" style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>
+                  <div style={{ ...font, fontSize: '0.84rem', fontWeight: 600, color: '#0A0A0A' }}>{e.title}</div>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap" style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.5)' }}>
                     <Clock size={10} /> {fmtDate(e.start_time)}
-                    {e.recurring && <span> &middot; {e.recurring}</span>}
-                    <span style={{ color: e.wave_mode === 'timezone_wave' ? '#5078C8' : '#D4A843', fontWeight: 500 }}>
-                      &middot; {e.wave_mode === 'timezone_wave' ? 'Welle' : 'Gleichzeitig'}
-                    </span>
+                    {e.recurring && <span>&middot; {e.recurring}</span>}
                   </div>
-                  {e.description && <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', marginTop: '4px', lineHeight: 1.5 }}>{e.description}</p>}
+                  {e.description && <p style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)', marginTop: '3px', lineHeight: 1.5 }}>{e.description}</p>}
                 </div>
                 <button onClick={() => handleDelete(e.id)} title="Loeschen"
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(200,50,50,0.6)', padding: '4px' }}>

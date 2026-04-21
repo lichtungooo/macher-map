@@ -69,7 +69,7 @@ export default function InvitePage() {
         </Link>
 
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.25)', marginTop: '2rem' }}>
-          Licht fuer Frieden — lichtung.ooo
+          Lichtung — lichtung.ooo
           <br />Kollektiv Lichtung e.V.
         </p>
       </div>

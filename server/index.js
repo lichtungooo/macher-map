@@ -367,7 +367,7 @@ app.put('/api/events/:id', auth, (req, res) => {
   const participants = getEventParticipants(req.params.id)
   if (participants.length > 0) {
     const updatedEvent = getEventById(req.params.id)
-    const subject = `Aenderung: ${updatedEvent.title} — Licht fuer Frieden`
+    const subject = `Aenderung: ${updatedEvent.title} — Lichtung`
     const bodyHtml = `
       <p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${updatedEvent.title}</strong> wurde aktualisiert.</p>
       <p style="font-size: 14px; color: rgba(10,10,10,0.55);">Neuer Termin: ${updatedEvent.start_time ? new Date(updatedEvent.start_time).toLocaleString('de-DE') : 'unveraendert'}</p>
@@ -409,7 +409,7 @@ app.delete('/api/events/:id', auth, (req, res) => {
   const participants = getEventParticipants(req.params.id)
   const reason = req.query.reason || req.body?.reason || ''
   if (participants.length > 0) {
-    const subject = `Abgesagt: ${event.title} — Licht fuer Frieden`
+    const subject = `Abgesagt: ${event.title} — Lichtung`
     const bodyHtml = `<p style="font-size: 16px; color: #0A0A0A;">Die Veranstaltung <strong>${event.title}</strong> wurde leider abgesagt.</p>${reason ? `<p style="font-size: 14px; color: rgba(10,10,10,0.55); margin-top: 12px;"><em>${reason}</em></p>` : ''}`
     sendNewsletter(participants, subject, bodyHtml).catch(err => console.error('Event-Mail-Fehler:', err))
   }
@@ -516,10 +516,10 @@ app.get('/api/cal/:token.ics', (req, res) => {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Lichtung//Licht fuer Frieden//DE',
+    'PRODID:-//Lichtung//Lichtung//DE',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:Licht fuer Frieden',
+    'X-WR-CALNAME:Lichtung',
   ]
   for (const e of events) {
     const start = e.start_time.replace(/[-:]/g, '').replace('T', 'T').split('.')[0] + 'Z'
@@ -868,18 +868,19 @@ app.get('/api/invite-page', (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Licht fuer Frieden — ${inviterName} laedt dich ein</title>
-  <meta property="og:title" content="Licht fuer Frieden">
-  <meta property="og:description" content="${inviterName} laedt dich ein, ein Licht fuer den Frieden zu entzuenden.">
+  <title>Lichtung — ${inviterName} laedt dich ein</title>
+  <meta property="og:title" content="Lichtung — Dein Licht fuer den Frieden">
+  <meta property="og:description" content="${inviterName} laedt dich ein, dein Licht fuer den Frieden zu entzuenden.">
   <meta property="og:image" content="${ogImage}">
   <meta property="og:url" content="${appUrl}">
   <meta property="og:type" content="website">
-  <meta name="description" content="${inviterName} laedt dich ein, ein Licht fuer den Frieden zu entzuenden.">
+  <meta name="description" content="${inviterName} laedt dich ein, dein Licht fuer den Frieden zu entzuenden.">
   <meta http-equiv="refresh" content="0;url=${appUrl}">
 </head>
 <body style="font-family: Georgia, serif; text-align: center; padding: 60px 20px; background: #FDFCF9; color: #0A0A0A;">
-  <p style="font-size: 24px;">Licht fuer Frieden</p>
-  <p style="font-size: 16px; color: rgba(10,10,10,0.5); font-style: italic;">${inviterName} laedt dich ein, ein Licht zu entzuenden.</p>
+  <p style="font-size: 28px; letter-spacing: 0.15em;">Lichtung</p>
+  <p style="font-size: 14px; color: rgba(10,10,10,0.45); font-style: italic; margin-top: 4px;">Dein Licht fuer den Frieden</p>
+  <p style="font-size: 16px; color: rgba(10,10,10,0.5); font-style: italic; margin-top: 28px;">${inviterName} laedt dich ein, dein Licht zu entzuenden.</p>
   <p><a href="${appUrl}" style="color: #D4A843;">Weiter zur Karte</a></p>
 </body>
 </html>`)
@@ -946,12 +947,12 @@ app.post('/api/telegram/webhook', (req, res) => {
         const user = findUserByTelegramStart(userId)
         if (user) {
           setTelegramChatId(userId, String(chatId))
-          sendTelegramMessage(chatId, `✨ <b>Willkommen bei Licht fuer Frieden!</b>\n\nDu bist jetzt verbunden als <b>${user.name || 'Anonym'}</b>.\n\nDu erhaeltst Benachrichtigungen ueber:\n• Neue Veranstaltungen in deiner Naehe\n• Neue Verbindungen in deiner Kette\n• Neuigkeiten deiner Lichtungen\n\nEinstellungen: lichtung.ooo`)
+          sendTelegramMessage(chatId, `✨ <b>Willkommen bei Lichtung!</b>\n\nDu bist jetzt verbunden als <b>${user.name || 'Anonym'}</b>.\n\nDu erhaeltst Benachrichtigungen ueber:\n• Neue Veranstaltungen in deiner Naehe\n• Neue Verbindungen in deiner Kette\n• Neuigkeiten deiner Lichtungen\n\nEinstellungen: lichtung.ooo`)
         } else {
           sendTelegramMessage(chatId, 'Verbindung fehlgeschlagen. Bitte ueber lichtung.ooo erneut versuchen.')
         }
       } else {
-        sendTelegramMessage(chatId, '✨ <b>Licht fuer Frieden</b>\n\nVerbinde dich ueber dein Profil auf lichtung.ooo mit diesem Bot.')
+        sendTelegramMessage(chatId, '✨ <b>Lichtung</b>\n\nVerbinde dich ueber dein Profil auf lichtung.ooo mit diesem Bot.')
       }
     } else if (text === '/status') {
       sendTelegramMessage(chatId, '🔗 Bot aktiv. Einstellungen auf lichtung.ooo.')

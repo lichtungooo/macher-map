@@ -199,7 +199,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                       setPushEnabled(true)
                       setPushStatus('Aktiviert.')
                       // Test-Notification
-                      new Notification('Licht fuer Frieden', { body: 'Push-Nachrichten sind aktiv.', icon: '/favicon.svg' })
+                      new Notification('Lichtung', { body: 'Push-Nachrichten sind aktiv.', icon: '/favicon.svg' })
                     } else {
                       setPushStatus('Berechtigung verweigert.')
                     }
