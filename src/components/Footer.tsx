@@ -20,9 +20,9 @@ export default function Footer() {
           </h3>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {[
-              { href: '#kunst', label: 'Kunstprojekt' },
-              { href: '#karte', label: 'Friedenskette' },
-              { href: '#stimmen', label: 'Stimmen' },
+              { href: '#kunst', label: 'Bewegung' },
+              { href: '#karte', label: 'Verbindung' },
+              { href: '#stimmen', label: 'Gemeinschaft' },
               { href: '#unterstuetzen', label: 'Unterstuetzen' },
               { href: 'https://real-life-stack.de', label: 'Real Life Network', ext: true },
             ].map((link, i) => (

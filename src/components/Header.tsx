@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 
 const NAV_ITEMS = [
-  { href: '#kunst', label: 'Kunst' },
-  { href: '#karte', label: 'Kette' },
-  { href: '#stimmen', label: 'Stimmen' },
+  { href: '#kunst', label: 'Bewegung' },
+  { href: '#karte', label: 'Verbindung' },
+  { href: '#stimmen', label: 'Gemeinschaft' },
   { href: '#unterstuetzen', label: 'Unterstuetzen' },
 ]
 
