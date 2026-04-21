@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ArrowDown } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { MapContainer, TileLayer } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
 import { BlazingO } from './BlazingO'
@@ -129,71 +128,44 @@ export default function Hero() {
               fontSize: 'clamp(0.95rem, 2vw, 1.2rem)',
               fontStyle: 'italic',
               color: 'rgba(10,10,10,0.55)',
-              marginBottom: '0.8rem',
+              marginBottom: '0.6rem',
               letterSpacing: '0.04em',
             }}
           >
             Dein Licht fuer den Frieden.
           </p>
 
-          {/* Mini-Beschreibung */}
+          {/* Poetischer Zusatz */}
           <p
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.82rem',
-              lineHeight: 1.65,
-              color: 'rgba(10,10,10,0.55)',
-              maxWidth: 400,
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: 'clamp(0.85rem, 1.7vw, 1rem)',
+              color: 'rgba(10,10,10,0.5)',
               marginBottom: '1.8rem',
+              maxWidth: 380,
+              lineHeight: 1.5,
             }}
           >
-            Verbindungskunst auf einer Weltkarte. Setze dein Licht, begegne Menschen,
-            trage den Frieden weiter.
+            Lichter fuer den Frieden aus den Herzen der Menschen.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="hero-ctas flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
-            <Link
-              to="/app"
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '0.85rem',
-                fontWeight: 500,
-                color: '#fff',
-                textDecoration: 'none',
-                padding: '13px 30px',
-                background: '#0A0A0A',
-                borderRadius: '8px',
-                transition: 'all 0.2s',
-              }}
-            >
-              Setze dein Licht
-            </Link>
-            <a
-              href="#kunst"
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '0.85rem',
-                fontWeight: 400,
-                color: 'rgba(10,10,10,0.7)',
-                textDecoration: 'none',
-                padding: '13px 30px',
-                border: '1px solid rgba(10,10,10,0.15)',
-                borderRadius: '8px',
-                background: 'rgba(255,255,255,0.6)',
-              }}
-            >
-              Erfahre mehr
-            </a>
-          </div>
-
-          {/* Live-Counter */}
-          <div className="flex items-center gap-2 mt-5">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#D4A843', boxShadow: '0 0 8px rgba(212,168,67,0.6)' }} />
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>
-              {lights.length > 0 ? `${lights.length} Lichter, ${lichtungen.length} Lichtungen` : 'Live — Karte laedt'}
-            </span>
-          </div>
+          {/* Ein Button */}
+          <a
+            href="#kunst"
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.85rem',
+              fontWeight: 400,
+              color: 'rgba(10,10,10,0.7)',
+              textDecoration: 'none',
+              padding: '13px 30px',
+              border: '1px solid rgba(10,10,10,0.15)',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.6)',
+            }}
+          >
+            Erfahre mehr
+          </a>
         </div>
 
       </div>
