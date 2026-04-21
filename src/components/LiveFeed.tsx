@@ -193,10 +193,6 @@ export default function LiveFeed() {
     navigate(`/app?${type}=${id}`)
   }
 
-  // Komplett leer? Dann Sektion ausblenden — zumindest Events gibt es dank Placeholder
-  const hasAnything = lights.length > 0 || lichtungen.length > 0 || events.length > 0
-  if (!hasAnything) return null
-
   const cardBase: React.CSSProperties = {
     background: '#fff',
     border: '1px solid rgba(10,10,10,0.05)',
