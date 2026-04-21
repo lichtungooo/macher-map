@@ -99,13 +99,6 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
         {/* Scroll-Bereich */}
         <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-3" style={{ maxHeight: 'calc(85vh - 60px)' }}>
 
-          {lichtungName && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(123,174,94,0.06)' }}>
-              <div className="w-2 h-2 rounded-full" style={{ background: '#7BAE5E' }} />
-              <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: '#7BAE5E' }}>{lichtungName}</span>
-            </div>
-          )}
-
           {/* Titel */}
           <div>
             <label style={labelStyle}>Titel</label>

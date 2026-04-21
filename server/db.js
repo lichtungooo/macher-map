@@ -606,12 +606,12 @@ export function getAllEvents() {
   `).all()
 }
 
-export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id }) {
+export function createEvent(userId, { title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id, lichtung_id, max_participants }) {
   const id = randomUUID()
   db.prepare(`
-    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0, image_path || null, tags || '', wave_mode || null, docked_to_event_id || null)
+    INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id, lichtung_id, max_participants)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0, image_path || null, tags || '', wave_mode || null, docked_to_event_id || null, lichtung_id || null, max_participants || null)
   return { id }
 }
 
