@@ -147,7 +147,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
               {event.title}
             </h2>
             <ShareButton
-              url={`${window.location.origin}/app?event=${event.id}`}
+              url={`${window.location.origin}/api/share/event/${event.id}`}
               title={`Veranstaltung: ${event.title}`}
               text={event.description ? event.description.replace(/[#*>]/g, '').trim().slice(0, 140) : `${formatDate(event.start)} · ${formatTime(event.start)}`}
               label=""

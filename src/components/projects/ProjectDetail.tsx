@@ -3,6 +3,7 @@ import { X, ExternalLink, Camera, Pencil, Trash2, Plus, Check, Video, Hash, Tree
 import { QRCodeSVG } from 'qrcode.react'
 import { useApp } from '../../context/AppContext'
 import { renderMarkdown } from '../../lib/markdown'
+import { getVideoEmbedUrl } from '../../lib/videoEmbed'
 import { ShareButton } from '../ShareButton'
 import { MarkdownToolbar } from '../auth/MarkdownToolbar'
 import * as api from '../../api/client'
@@ -184,27 +185,49 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
     <div className="fixed inset-0 z-[1500] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
       <div className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', maxHeight: '90vh' }}>
 
-        {/* Bild-Header oder Upload-Einladung */}
-        {project.image_path ? (
-          <div className="relative">
-            <img src={project.image_path} alt={project.title} className="w-full h-44 object-cover" />
-            {isOwner && (
+        {/* Video oder Bild im Header — Video hat Vorrang */}
+        {(() => {
+          const embedUrl = getVideoEmbedUrl(project.video_url)
+          if (embedUrl) {
+            return (
+              <div className="relative w-full" style={{ aspectRatio: '16/9', background: '#000' }}>
+                <iframe
+                  src={embedUrl}
+                  title={project.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                />
+              </div>
+            )
+          }
+          if (project.image_path) {
+            return (
+              <div className="relative">
+                <img src={project.image_path} alt={project.title} className="w-full h-44 object-cover" />
+                {isOwner && (
+                  <button onClick={() => fileRef.current?.click()}
+                    className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer' }}
+                    title="Bild aendern">
+                    <Camera size={14} style={{ color: '#0A0A0A' }} />
+                  </button>
+                )}
+              </div>
+            )
+          }
+          if (isOwner) {
+            return (
               <button onClick={() => fileRef.current?.click()}
-                className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer' }}
-                title="Bild aendern">
-                <Camera size={14} style={{ color: '#0A0A0A' }} />
+                className="w-full h-32 flex flex-col items-center justify-center gap-1.5"
+                style={{ background: `${ACCENT}0D`, border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(10,10,10,0.06)' }}>
+                <Camera size={18} style={{ color: ACCENT }} />
+                <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: ACCENT }}>Bild hinzufuegen</span>
               </button>
-            )}
-          </div>
-        ) : isOwner ? (
-          <button onClick={() => fileRef.current?.click()}
-            className="w-full h-32 flex flex-col items-center justify-center gap-1.5"
-            style={{ background: `${ACCENT}0D`, border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(10,10,10,0.06)' }}>
-            <Camera size={18} style={{ color: ACCENT }} />
-            <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: ACCENT }}>Bild hinzufuegen</span>
-          </button>
-        ) : null}
+            )
+          }
+          return null
+        })()}
         <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
 
         {/* Tab-Leiste */}
@@ -254,7 +277,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 </h2>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <ShareButton
-                    url={`${window.location.origin}/app?project=${projectId}`}
+                    url={`${window.location.origin}/api/share/project/${projectId}`}
                     title={`Projekt: ${project.title}`}
                     text={project.description ? project.description.replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Friedensprojekt auf der Lichtung.'}
                     label=""
@@ -329,8 +352,8 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 </div>
               )}
 
-              {/* Video */}
-              {project.video_url && (
+              {/* Video-Link nur wenn nicht-einbettbar (z.B. direkter mp4 oder anderes) */}
+              {project.video_url && !getVideoEmbedUrl(project.video_url) && (
                 <a href={project.video_url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg mb-4"
                   style={{ ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>

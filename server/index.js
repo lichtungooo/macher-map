@@ -888,6 +888,134 @@ app.get('/api/invite-page', (req, res) => {
 </html>`)
 })
 
+// ─── Reichhaltige Share-Previews ───
+
+// Markdown entfernen + auf 200 Zeichen kuerzen
+function cleanTextForShare(text, maxLen = 200) {
+  if (!text) return ''
+  return text
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')   // Bilder
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // Links → nur Text
+    .replace(/[#*>_~`-]/g, '')               // Markdown-Syntax
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLen)
+}
+
+// HTML-escape fuer Attribute-Werte
+function htmlEscape(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function buildShareHtml({ title, description, image, url, appUrl, kind }) {
+  const site = process.env.BASE_URL || 'https://lichtung.ooo'
+  const absImage = image
+    ? (image.startsWith('http') ? image : `${site}${image}`)
+    : `${site}/og-invite.png`
+  const t = htmlEscape(title)
+  const d = htmlEscape(description)
+  const k = htmlEscape(kind)
+  return `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${t} — Lichtung</title>
+  <meta name="description" content="${d}">
+
+  <!-- Open Graph (Telegram, WhatsApp, Facebook, LinkedIn) -->
+  <meta property="og:title" content="${t}">
+  <meta property="og:description" content="${d}">
+  <meta property="og:image" content="${absImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="${htmlEscape(url)}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Lichtung">
+  <meta property="og:locale" content="de_DE">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${t}">
+  <meta name="twitter:description" content="${d}">
+  <meta name="twitter:image" content="${absImage}">
+
+  <meta http-equiv="refresh" content="0;url=${htmlEscape(appUrl)}">
+</head>
+<body style="font-family: Georgia, serif; text-align: center; padding: 60px 20px; background: #FDFCF9; color: #0A0A0A; margin: 0;">
+  <p style="font-size: 28px; letter-spacing: 0.15em; margin: 0;">LICHTUNG</p>
+  <p style="font-size: 13px; color: rgba(10,10,10,0.45); font-style: italic; margin: 4px 0 32px;">Dein Licht fuer den Frieden</p>
+  <p style="font-size: 12px; color: #C07090; letter-spacing: 0.2em; text-transform: uppercase; margin: 0;">${k}</p>
+  <p style="font-family: Georgia, serif; font-size: 22px; color: #0A0A0A; margin: 8px 0 16px;">${t}</p>
+  ${image ? `<img src="${absImage}" alt="" style="max-width: 400px; width: 100%; border-radius: 12px; margin: 0 auto 16px; display: block;" />` : ''}
+  <p style="font-size: 14px; font-style: italic; color: rgba(10,10,10,0.55); max-width: 480px; margin: 0 auto 24px; line-height: 1.6;">${d}</p>
+  <p><a href="${htmlEscape(appUrl)}" style="color: #D4A843; font-size: 14px;">Weiter zur Lichtung</a></p>
+</body>
+</html>`
+}
+
+// Projekt-Share
+app.get('/api/share/project/:id', (req, res) => {
+  const p = getProjectById(req.params.id)
+  if (!p) return res.status(404).send('Projekt nicht gefunden')
+  const site = process.env.BASE_URL || 'https://lichtung.ooo'
+  const desc = cleanTextForShare(p.description, 240) ||
+    (p.goal_amount ? `Friedensprojekt mit ${p.goal_amount} Euro Ziel.` : 'Ein Friedensprojekt auf der Lichtung.')
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.send(buildShareHtml({
+    title: p.title,
+    description: desc,
+    image: p.image_path,
+    url: `${site}/api/share/project/${p.id}`,
+    appUrl: `${site}/app?project=${p.id}`,
+    kind: 'Projekt',
+  }))
+})
+
+// Lichtung-Share
+app.get('/api/share/lichtung/:id', (req, res) => {
+  const l = getLichtung(req.params.id)
+  if (!l) return res.status(404).send('Lichtung nicht gefunden')
+  const site = process.env.BASE_URL || 'https://lichtung.ooo'
+  const desc = cleanTextForShare(l.description, 240) || 'Ein Ort auf der Lichtungs-Karte — Raum fuer Begegnung, Frieden und Verbindung.'
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.send(buildShareHtml({
+    title: l.name,
+    description: desc,
+    image: l.image_path,
+    url: `${site}/api/share/lichtung/${l.id}`,
+    appUrl: `${site}/app?lichtung=${l.id}`,
+    kind: 'Ort',
+  }))
+})
+
+// Event-Share
+app.get('/api/share/event/:id', (req, res) => {
+  const e = getEventById(req.params.id)
+  if (!e) return res.status(404).send('Event nicht gefunden')
+  const site = process.env.BASE_URL || 'https://lichtung.ooo'
+  const dateStr = e.start_time
+    ? new Date(e.start_time).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) +
+      ', ' + new Date(e.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr'
+    : ''
+  const baseDesc = cleanTextForShare(e.description, 180) || 'Eine Veranstaltung auf der Lichtungs-Karte.'
+  const desc = dateStr ? `${dateStr} — ${baseDesc}` : baseDesc
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.send(buildShareHtml({
+    title: e.title,
+    description: desc,
+    image: e.image_path,
+    url: `${site}/api/share/event/${e.id}`,
+    appUrl: `${site}/app?event=${e.id}`,
+    kind: 'Veranstaltung',
+  }))
+})
+
 // ─── Public Profile (fuer Einladungsseite) ───
 
 app.get('/api/user/:id/public', (req, res) => {

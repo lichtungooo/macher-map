@@ -305,7 +305,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                   </h2>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <ShareButton
-                      url={`${window.location.origin}/app?lichtung=${lichtungId}`}
+                      url={`${window.location.origin}/api/share/lichtung/${lichtungId}`}
                       title={`Lichtung: ${lichtung.name}`}
                       text={lichtung.description ? lichtung.description.split('\n')[0].replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Ort auf der Lichtungs-Karte.'}
                       label=""
