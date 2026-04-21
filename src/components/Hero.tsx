@@ -1,99 +1,210 @@
+import { useEffect, useState } from 'react'
 import { ArrowDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { MapContainer, TileLayer } from 'react-leaflet'
+import type { LatLngExpression } from 'leaflet'
 import { BlazingO } from './BlazingO'
+import { LightMarker } from './map/LightMarker'
+import { LichtungMarker } from './map/LichtungMarker'
+import * as api from '../api/client'
+
+interface LightData {
+  id: string
+  lat: number
+  lng: number
+  name: string
+  statement: string
+  image_path?: string
+}
+
+interface LichtungData {
+  id: string
+  name: string
+  description: string
+  lat: number
+  lng: number
+  creator_name: string
+  image_path?: string
+}
 
 export default function Hero() {
+  const [lights, setLights] = useState<LightData[]>([])
+  const [lichtungen, setLichtungen] = useState<LichtungData[]>([])
+
+  useEffect(() => {
+    api.getLights().then(setLights).catch(() => {})
+    api.getLichtungen().then(setLichtungen).catch(() => {})
+  }, [])
+
+  // LightMarker erwartet ein LightPin-Shape mit position
+  const lightsForMarker = lights.map(l => ({
+    id: l.id,
+    position: [l.lat, l.lng] as [number, number],
+    name: l.name,
+    statement: l.statement,
+    image_path: l.image_path,
+    createdAt: '',
+  }))
+
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-12 overflow-hidden" style={{ background: '#FFFFFF' }}>
-      {/* Subtle warm radiance */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 55% 45% at 50% 42%, rgba(212, 168, 67, 0.07) 0%, transparent 70%)',
-        }}
+    <section className="relative w-full overflow-hidden" style={{ height: '100vh' }}>
+
+      {/* Live-Karte als Hintergrund */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer
+          center={[35, 15] as LatLngExpression}
+          zoom={3}
+          minZoom={2}
+          maxZoom={8}
+          scrollWheelZoom={false}
+          dragging={true}
+          zoomControl={false}
+          attributionControl={false}
+          doubleClickZoom={false}
+          touchZoom={true}
+          className="w-full h-full"
+          style={{ background: '#F5F4F0' }}
+        >
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+          />
+          {lightsForMarker.map(l => (
+            <LightMarker key={l.id} light={l as any} />
+          ))}
+          {lichtungen.map(l => (
+            <LichtungMarker key={l.id} lichtung={l} onClick={() => {}} />
+          ))}
+        </MapContainer>
+      </div>
+
+      {/* Weicher Fade-Overlay oben und unten, damit Text lesbar ist */}
+      <div className="absolute inset-x-0 top-0 h-40 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.4) 60%, rgba(255,255,255,0) 100%)' }}
+      />
+      <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)' }}
       />
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-3xl mx-auto">
-        {/* BlazingO — kleiner, mit mehr Abstand nach unten, damit nix in den Header reinragt */}
-        <div className="hero-light mb-8">
-          <BlazingO size={150} />
-        </div>
+      {/* Hero-Inhalt im Zentrum */}
+      <div className="relative z-20 h-full flex flex-col items-center justify-center pt-16 pb-20 px-6 pointer-events-none">
 
-        {/* Headline — Lichtung */}
-        <h1
-          className="hero-title"
+        <div
+          className="flex flex-col items-center text-center rounded-2xl px-8 py-8 md:px-12 md:py-10 pointer-events-auto"
           style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 'clamp(1.8rem, 4.5vw, 3.2rem)',
-            fontWeight: 300,
-            color: '#0A0A0A',
-            lineHeight: 1,
-            marginBottom: '0.6rem',
-            letterSpacing: '0.25em',
-            textTransform: 'uppercase',
+            background: 'rgba(255,255,255,0.82)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.6)',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(10,10,10,0.03)',
+            maxWidth: 520,
           }}
         >
-          Lichtung
-        </h1>
+          {/* BlazingO */}
+          <div className="hero-light mb-5">
+            <BlazingO size={110} />
+          </div>
 
-        {/* Untertitel */}
-        <p
-          className="hero-subtitle"
-          style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 'clamp(0.95rem, 2vw, 1.2rem)',
-            fontStyle: 'italic',
-            color: 'rgba(10,10,10,0.45)',
-            marginBottom: '2.5rem',
-            letterSpacing: '0.04em',
-          }}
-        >
-          Dein Licht fuer den Frieden.
-        </p>
-
-        {/* CTA Buttons */}
-        <div className="hero-ctas flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            to="/app"
+          {/* Titel */}
+          <h1
+            className="hero-title"
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              color: '#fff',
-              textDecoration: 'none',
-              padding: '14px 32px',
-              background: '#0A0A0A',
-              borderRadius: '8px',
-              transition: 'all 0.2s',
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: 'clamp(1.8rem, 4.5vw, 3rem)',
+              fontWeight: 300,
+              color: '#0A0A0A',
+              lineHeight: 1,
+              marginBottom: '0.6rem',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
             }}
           >
-            Setze dein Licht
-          </Link>
-          <a
-            href="#kunst"
+            Lichtung
+          </h1>
+
+          {/* Untertitel */}
+          <p
+            className="hero-subtitle"
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.85rem',
-              fontWeight: 400,
-              color: 'rgba(10,10,10,0.6)',
-              textDecoration: 'none',
-              padding: '14px 32px',
-              border: '1px solid rgba(10,10,10,0.15)',
-              borderRadius: '8px',
-              transition: 'all 0.2s',
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: 'clamp(0.95rem, 2vw, 1.2rem)',
+              fontStyle: 'italic',
+              color: 'rgba(10,10,10,0.55)',
+              marginBottom: '0.8rem',
+              letterSpacing: '0.04em',
             }}
           >
-            Erfahre mehr
-          </a>
+            Dein Licht fuer den Frieden.
+          </p>
+
+          {/* Mini-Beschreibung */}
+          <p
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.82rem',
+              lineHeight: 1.65,
+              color: 'rgba(10,10,10,0.55)',
+              maxWidth: 400,
+              marginBottom: '1.8rem',
+            }}
+          >
+            Verbindungskunst auf einer Weltkarte. Setze dein Licht, begegne Menschen,
+            trage den Frieden weiter.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="hero-ctas flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+            <Link
+              to="/app"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '0.85rem',
+                fontWeight: 500,
+                color: '#fff',
+                textDecoration: 'none',
+                padding: '13px 30px',
+                background: '#0A0A0A',
+                borderRadius: '8px',
+                transition: 'all 0.2s',
+              }}
+            >
+              Setze dein Licht
+            </Link>
+            <a
+              href="#kunst"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '0.85rem',
+                fontWeight: 400,
+                color: 'rgba(10,10,10,0.7)',
+                textDecoration: 'none',
+                padding: '13px 30px',
+                border: '1px solid rgba(10,10,10,0.15)',
+                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.6)',
+              }}
+            >
+              Erfahre mehr
+            </a>
+          </div>
+
+          {/* Live-Counter */}
+          <div className="flex items-center gap-2 mt-5">
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#D4A843', boxShadow: '0 0 8px rgba(212,168,67,0.6)' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>
+              {lights.length > 0 ? `${lights.length} Lichter, ${lichtungen.length} Lichtungen` : 'Live — Karte laedt'}
+            </span>
+          </div>
         </div>
+
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 scroll-hint">
-        <a href="#kunst" style={{ color: 'rgba(10,10,10,0.2)', transition: 'color 0.2s' }}>
-          <ArrowDown size={24} />
+      {/* Scroll-Pfeil */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 scroll-hint pointer-events-auto">
+        <a href="#kunst" style={{ color: 'rgba(10,10,10,0.35)' }}>
+          <ArrowDown size={22} />
         </a>
       </div>
+
     </section>
   )
 }

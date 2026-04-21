@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Logo } from './Logo'
 
 const NAV_ITEMS = [
   { href: '#kunst', label: 'Kunst' },
@@ -11,22 +12,53 @@ const NAV_ITEMS = [
 
 export default function Header() {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Beim Scrollen wird der Header opak, oben ist er ueber der Karte transparent
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const headerBg = scrolled
+    ? 'rgba(255,255,255,0.88)'
+    : 'rgba(255,255,255,0.35)'
+
+  const borderColor = scrolled
+    ? 'rgba(10,10,10,0.06)'
+    : 'rgba(255,255,255,0.4)'
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(10,10,10,0.06)' }}>
+    <header
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      style={{
+        background: headerBg,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${borderColor}`,
+      }}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         <a
           href="#"
-          style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: '1.3rem',
-            fontWeight: 500,
-            color: '#0A0A0A',
-            textDecoration: 'none',
-            letterSpacing: '0.08em',
-          }}
+          className="flex items-center gap-2"
+          style={{ textDecoration: 'none' }}
         >
-          Lichtung
+          <Logo size={26} />
+          <span
+            style={{
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: '1.2rem',
+              fontWeight: 500,
+              color: '#0A0A0A',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Lichtung
+          </span>
         </a>
 
         {/* Desktop Nav */}
@@ -37,14 +69,14 @@ export default function Header() {
               href={item.href}
               style={{
                 fontFamily: 'Inter, sans-serif',
-                fontSize: '0.8rem',
-                fontWeight: 400,
-                color: 'rgba(10,10,10,0.5)',
+                fontSize: '0.78rem',
+                fontWeight: 500,
+                color: '#0A0A0A',
                 textDecoration: 'none',
                 transition: 'color 0.2s',
               }}
               onMouseEnter={e => e.currentTarget.style.color = '#D4A843'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(10,10,10,0.5)'}
+              onMouseLeave={e => e.currentTarget.style.color = '#0A0A0A'}
             >
               {item.label}
             </a>
@@ -55,10 +87,10 @@ export default function Header() {
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.75rem',
               fontWeight: 500,
-              color: '#0A0A0A',
+              color: '#fff',
               textDecoration: 'none',
               padding: '8px 20px',
-              border: '1px solid #0A0A0A',
+              background: '#0A0A0A',
               borderRadius: '6px',
               transition: 'all 0.2s',
             }}
@@ -80,7 +112,14 @@ export default function Header() {
 
       {/* Mobile Nav */}
       {open && (
-        <nav className="md:hidden px-4 pb-4 space-y-3" style={{ borderTop: '1px solid rgba(10,10,10,0.06)' }}>
+        <nav
+          className="md:hidden px-4 pb-4 space-y-3"
+          style={{
+            borderTop: '1px solid rgba(10,10,10,0.06)',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
           {NAV_ITEMS.map(item => (
             <a
               key={item.href}
