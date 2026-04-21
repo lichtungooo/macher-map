@@ -128,25 +128,13 @@ export default function Hero() {
               fontSize: 'clamp(0.95rem, 2vw, 1.2rem)',
               fontStyle: 'italic',
               color: 'rgba(10,10,10,0.55)',
-              marginBottom: '0.6rem',
-              letterSpacing: '0.04em',
-            }}
-          >
-            Dein Licht fuer den Frieden.
-          </p>
-
-          {/* Poetischer Zusatz */}
-          <p
-            style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(0.85rem, 1.7vw, 1rem)',
-              color: 'rgba(10,10,10,0.5)',
               marginBottom: '1.8rem',
               maxWidth: 380,
               lineHeight: 1.5,
+              letterSpacing: '0.02em',
             }}
           >
-            Lichter fuer den Frieden aus den Herzen der Menschen.
+            Licht fuer den Frieden aus den Herzen der Menschen.
           </p>
 
           {/* Ein Button */}

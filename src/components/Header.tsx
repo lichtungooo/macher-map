@@ -6,8 +6,8 @@ import { Logo } from './Logo'
 const NAV_ITEMS = [
   { href: '#kunst', label: 'Bewegung' },
   { href: '#karte', label: 'Verbindung' },
-  { href: '#stimmen', label: 'Gemeinschaft' },
-  { href: '#unterstuetzen', label: 'Unterstuetzen' },
+  { href: '#stimmen', label: 'Sichtbar' },
+  { href: '#unterstuetzen', label: 'Getragen' },
 ]
 
 export default function Header() {

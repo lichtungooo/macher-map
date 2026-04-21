@@ -22,8 +22,8 @@ export default function Footer() {
             {[
               { href: '#kunst', label: 'Bewegung' },
               { href: '#karte', label: 'Verbindung' },
-              { href: '#stimmen', label: 'Gemeinschaft' },
-              { href: '#unterstuetzen', label: 'Unterstuetzen' },
+              { href: '#stimmen', label: 'Sichtbar' },
+              { href: '#unterstuetzen', label: 'Getragen' },
               { href: 'https://real-life-stack.de', label: 'Real Life Network', ext: true },
             ].map((link, i) => (
               <li key={i}>
