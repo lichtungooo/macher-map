@@ -154,14 +154,14 @@ const TILE_LAYERS = {
   osm_de: {
     url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    tileSize: isRetina ? 128 : 256,
-    zoomOffset: isRetina ? 1 : 0,
+    tileSize: 256,
+    zoomOffset: 0,
   },
   osm: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    tileSize: isRetina ? 128 : 256,
-    zoomOffset: isRetina ? 1 : 0,
+    tileSize: 256,
+    zoomOffset: 0,
   },
   voyager: {
     url: isRetina
