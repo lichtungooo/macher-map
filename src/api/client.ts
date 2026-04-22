@@ -260,6 +260,12 @@ export async function updateLichtungTelegramLink(lichtungId: string, linkId: str
 export async function getConnections() { return request('/connections') }
 export async function getConnectionCount() { return (await request('/connections/count')).count as number }
 export async function getChain() { return request('/chain') }
+
+export async function getPendingConnections() { return request('/connections/pending') }
+export async function getPendingConnectionCount() { return (await request('/connections/pending/count')).count as number }
+export async function getOutgoingPending() { return request('/connections/pending/outgoing') }
+export async function confirmPending(id: string) { return request(`/connections/pending/${id}/confirm`, { method: 'POST' }) }
+export async function rejectPending(id: string) { return request(`/connections/pending/${id}/reject`, { method: 'POST' }) }
 export async function setTelegram(telegram: string) {
   return request('/profile/telegram', { method: 'PUT', body: JSON.stringify({ telegram }) })
 }
@@ -304,6 +310,14 @@ export async function setMemberRole(lichtungId: string, userId: string, role: st
 
 export async function createInvite() {
   return request('/invite/create', { method: 'POST' })
+}
+
+export async function verifyInvite(token: string): Promise<{ invited_by: string }> {
+  return request(`/invite/verify/${token}`)
+}
+
+export async function getPublicUser(id: string) {
+  return request(`/user/${id}/public`)
 }
 
 // ─── Notifications ───

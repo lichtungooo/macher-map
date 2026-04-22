@@ -69,19 +69,34 @@ function MapAppInner() {
   const [showChain, setShowChain] = useState(false)
   const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
+  const [inviterName, setInviterName] = useState<string | null>(null)
   const [projects, setProjects] = useState<any[]>([])
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [projectPosition, setProjectPosition] = useState<[number, number] | undefined>()
   const [projectLichtung, setProjectLichtung] = useState<{ id: string; name: string } | null>(null)
 
-  // Capture invite parameter
+  // Capture invite parameter — Token aufloesen in User-ID
   useEffect(() => {
     const invite = searchParams.get('invite')
-    if (invite) {
-      setInvitedBy(invite)
-      setSearchParams({})
-      if (!api.getToken()) setDialog('auth')
+    if (!invite) return
+    setSearchParams({})
+
+    const loadInviterName = (userId: string) => {
+      api.getPublicUser(userId).then(u => { if (u?.name) setInviterName(u.name) }).catch(() => {})
     }
+
+    // 1. Versuch: als 60s-QR-Token verifizieren
+    api.verifyInvite(invite)
+      .then(data => { setInvitedBy(data.invited_by); loadInviterName(data.invited_by) })
+      .catch(() => {
+        // 2. Fallback: als direkte User-ID (Share-Link aus InvitePage)
+        api.getPublicUser(invite)
+          .then(u => { if (u?.id) { setInvitedBy(u.id); if (u.name) setInviterName(u.name) } })
+          .catch(() => {})
+      })
+      .finally(() => {
+        if (!api.getToken()) setDialog('auth')
+      })
   }, [])
 
   // Load lights and events from backend
@@ -142,6 +157,16 @@ function MapAppInner() {
       if (found) {
         setFlyTo([found.position[0], found.position[1], 12 + Math.random() * 0.001])
         setSelectedEvent(found)
+        // ?event=ID&join=1 → automatisch teilnehmen
+        const shouldJoin = searchParams.get('join') === '1'
+        if (shouldJoin) {
+          if (api.getToken()) {
+            api.joinEvent(found.id).catch(() => {})
+          } else {
+            sessionStorage.setItem('event-join-id', found.id)
+            setDialog('auth')
+          }
+        }
         setSearchParams({})
       }
     } else {
@@ -189,6 +214,26 @@ function MapAppInner() {
   // Handle password reset
   const resetToken = searchParams.get('reset')
   const clearResetToken = () => { setSearchParams({}) }
+
+  // Nach Login: aufgeschobene Lichtung-/Event-Joins ausfuehren
+  useEffect(() => {
+    if (!user || !api.getToken()) return
+    const joinCode = sessionStorage.getItem('lichtung-join-code')
+    const joinBy = sessionStorage.getItem('lichtung-join-by')
+    if (joinCode) {
+      sessionStorage.removeItem('lichtung-join-code')
+      sessionStorage.removeItem('lichtung-join-by')
+      api.joinLichtungByCode(joinCode, joinBy || undefined).then(data => {
+        setSelectedLichtung(data.lichtung_id)
+        api.getLichtungen().then(setLichtungen)
+      }).catch(() => {})
+    }
+    const eventJoinId = sessionStorage.getItem('event-join-id')
+    if (eventJoinId) {
+      sessionStorage.removeItem('event-join-id')
+      api.joinEvent(eventJoinId).catch(() => {})
+    }
+  }, [user])
 
   // Auto-Standort: Beim Laden Licht automatisch setzen
   useEffect(() => {
@@ -420,6 +465,16 @@ function MapAppInner() {
 
   return (
     <div className={`fixed inset-0 ${mode === 'place-light' ? 'cursor-wand' : ''}`} style={{ background: '#F5F4F0' }}>
+      {/* Einladungs-Hinweis */}
+      {invitedBy && inviterName && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1050] px-4 py-2.5 rounded-full shadow-lg"
+          style={{ background: 'rgba(124,179,66,0.95)', backdropFilter: 'blur(4px)', maxWidth: 'calc(100vw - 32px)' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#fff', textAlign: 'center' }}>
+            <b>{inviterName}</b> laedt dich ein — {user ? 'entzuende dein Licht, um euch zu verbinden.' : 'melde dich an, um euch zu verbinden.'}
+          </p>
+        </div>
+      )}
+
       <PeaceMap
         onMapClick={handleMapClick}
         placingLight={mode !== 'browse'}

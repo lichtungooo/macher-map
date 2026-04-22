@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, MessageCircle, Link2, ChevronRight, Map } from 'lucide-react'
+import { Users, MessageCircle, Link2, ChevronRight, Map, Check, X as XIcon } from 'lucide-react'
 import * as api from '../../api/client'
 
 interface ConnectionProfile {
@@ -9,6 +9,17 @@ interface ConnectionProfile {
   image_path?: string
   telegram?: string
   created_at?: string
+}
+
+interface PendingProfile {
+  id: string
+  initiator_id: string
+  name: string
+  image_path?: string
+  statement?: string
+  context: string
+  context_ref?: string
+  created_at: string
 }
 
 function ConnectionDetail({ connection, onClose }: { connection: ConnectionProfile; onClose: () => void }) {
@@ -68,19 +79,33 @@ interface MyConnectionsProps {
 
 export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
   const [connections, setConnections] = useState<ConnectionProfile[]>([])
+  const [pending, setPending] = useState<PendingProfile[]>([])
   const [chain, setChain] = useState<any[]>([])
   const [connectionCount, setConnectionCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [selectedConnection, setSelectedConnection] = useState<ConnectionProfile | null>(null)
   const font = { fontFamily: 'Inter, sans-serif' as const }
 
+  const reload = () => Promise.all([
+    api.getConnections().then(setConnections).catch(() => {}),
+    api.getConnectionCount().then(setConnectionCount).catch(() => {}),
+    api.getPendingConnections().then(setPending).catch(() => {}),
+    api.getChain().then(setChain).catch(() => {}),
+  ])
+
   useEffect(() => {
-    Promise.all([
-      api.getConnections().then(setConnections).catch(() => {}),
-      api.getConnectionCount().then(setConnectionCount).catch(() => {}),
-      api.getChain().then(setChain).catch(() => {}),
-    ]).finally(() => setLoading(false))
+    reload().finally(() => setLoading(false))
   }, [])
+
+  const handleConfirm = async (id: string) => {
+    try { await api.confirmPending(id) } catch {}
+    await reload()
+  }
+
+  const handleReject = async (id: string) => {
+    try { await api.rejectPending(id) } catch {}
+    await reload()
+  }
 
   if (loading) return <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center', padding: '20px' }}>Laden...</p>
 
@@ -118,6 +143,49 @@ export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
           </button>
         )}
       </div>
+
+      {/* Pending — Gruenes Licht */}
+      {pending.length > 0 && (
+        <div className="space-y-1.5">
+          <p style={{ ...font, fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7CB342', marginBottom: '4px' }}>
+            Gruenes Licht · {pending.length} {pending.length === 1 ? 'Anfrage' : 'Anfragen'}
+          </p>
+          {pending.map(p => (
+            <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl"
+              style={{ background: 'rgba(124,179,66,0.06)', border: '1px solid rgba(124,179,66,0.25)' }}>
+              {p.image_path ? (
+                <img src={p.image_path} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" style={{ border: '2px solid rgba(124,179,66,0.4)' }} />
+              ) : (
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,179,66,0.12)', border: '2px solid rgba(124,179,66,0.3)' }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', color: '#7CB342' }}>{p.name?.charAt(0) || '?'}</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{p.name}</span>
+                <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)' }} className="truncate block">
+                  {p.context === 'lichtung' ? 'ist einer Lichtung beigetreten' : 'hat dich gescannt'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button onClick={() => handleConfirm(p.id)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: '#7CB342', border: 'none', cursor: 'pointer' }}
+                  title="Bestaetigen"
+                >
+                  <Check size={16} style={{ color: '#fff' }} />
+                </button>
+                <button onClick={() => handleReject(p.id)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(10,10,10,0.04)', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+                  title="Ablehnen"
+                >
+                  <XIcon size={14} style={{ color: 'rgba(10,10,10,0.4)' }} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Direkte Verbindungen */}
       {connections.length === 0 ? (

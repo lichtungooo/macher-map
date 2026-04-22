@@ -49,12 +49,13 @@ export function QRCodeDialog({ userName, onClose }: QRCodeDialogProps) {
   const handleNFC = async () => {
     if (!inviteUrl || expired) return
     try {
-      setNfcStatus('Halte ein Geraet an dein Handy...')
+      setNfcStatus('Halte ein NFC-Tag an dein Handy...')
       const ndef = new (window as any).NDEFReader()
       await ndef.write({ records: [{ recordType: 'url', data: inviteUrl }] })
-      setNfcStatus('Gesendet!')
-      setTimeout(() => setNfcStatus(''), 2000)
+      if ('vibrate' in navigator) navigator.vibrate([80, 40, 80])
+      setNfcStatus('✓ Auf NFC-Tag geschrieben')
     } catch (err: any) {
+      if ('vibrate' in navigator) navigator.vibrate(200)
       setNfcStatus(err.message || 'NFC-Fehler')
     }
   }

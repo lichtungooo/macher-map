@@ -20,6 +20,8 @@ import {
   getLichtungCode, findLichtungByCode,
   getSlots, setSlot, deleteSlot, isSlotAvailable, getSlotsForDate, createTimeSlot, deleteSlotById, copyWeekSlots,
   createConnection, getConnections, getConnectionCount, getFullChain,
+  createPendingConnection, getPendingIncoming, getPendingOutgoing,
+  confirmPendingConnection, rejectPendingConnection, getPendingIncomingCount,
   getLichtungTelegramLinks, addLichtungTelegramLink, deleteLichtungTelegramLink, updateLichtungTelegramLink,
   getLichtungImages, addLichtungImage, deleteLichtungImage,
   getEventMaxParticipants,
@@ -221,12 +223,12 @@ app.post('/api/lights', auth, (req, res) => {
   // createLight loescht automatisch das alte Licht des Users
   const light = createLight(req.userId, lat, lng, invited_by)
 
-  // Telegram: Einladenden benachrichtigen bei neuer Verbindung
-  if (invited_by && invited_by !== req.userId) {
+  // Telegram: Einladenden benachrichtigen bei neuer Verbindungsanfrage
+  if (light.pending_connection_id && invited_by && invited_by !== req.userId) {
     const toNotify = getUsersToNotifyForConnection(invited_by)
     const newUser = findUserById(req.userId)
     for (const u of toNotify) {
-      sendTelegramMessage(u.telegram_chat_id, `🔗 <b>Neue Verbindung!</b>\n\n<b>${newUser?.name || 'Jemand'}</b> ist durch dich auf die Karte gekommen.\n\n👉 lichtung.ooo/app`)
+      sendTelegramMessage(u.telegram_chat_id, `🟢 <b>Neue Verbindungsanfrage!</b>\n\n<b>${newUser?.name || 'Jemand'}</b> hat deinen QR-Code gescannt und ist auf die Karte gekommen.\n\nBestätige im Profil → lichtung.ooo/app`)
     }
   }
 
@@ -698,6 +700,37 @@ app.get('/api/connections/count', auth, (req, res) => {
   res.json({ count: getConnectionCount(req.userId) })
 })
 
+// Eingehende Bestaetigungs-Anfragen ("gruenes Licht")
+app.get('/api/connections/pending', auth, (req, res) => {
+  res.json(getPendingIncoming(req.userId))
+})
+
+app.get('/api/connections/pending/count', auth, (req, res) => {
+  res.json({ count: getPendingIncomingCount(req.userId) })
+})
+
+app.get('/api/connections/pending/outgoing', auth, (req, res) => {
+  res.json(getPendingOutgoing(req.userId))
+})
+
+app.post('/api/connections/pending/:id/confirm', auth, (req, res) => {
+  const result = confirmPendingConnection(req.params.id, req.userId)
+  if (!result) return res.status(404).json({ error: 'Anfrage nicht gefunden.' })
+  // Telegram an den Initiator: Verbindung bestaetigt
+  const toNotify = getUsersToNotifyForConnection(result.initiator_id)
+  const me = findUserById(req.userId)
+  for (const u of toNotify) {
+    sendTelegramMessage(u.telegram_chat_id, `🔗 <b>Verbindung bestaetigt!</b>\n\n<b>${me?.name || 'Jemand'}</b> hat eure Verbindung bestaetigt.\n\n👉 lichtung.ooo/app`)
+  }
+  res.json({ ok: true })
+})
+
+app.post('/api/connections/pending/:id/reject', auth, (req, res) => {
+  const ok = rejectPendingConnection(req.params.id, req.userId)
+  if (!ok) return res.status(404).json({ error: 'Anfrage nicht gefunden.' })
+  res.json({ ok: true })
+})
+
 app.get('/api/chain', auth, (req, res) => {
   res.json(getFullChain(req.userId))
 })
@@ -782,16 +815,25 @@ app.post('/api/lichtungen/join/:code', auth, (req, res) => {
   const lichtungId = findLichtungByCode(req.params.code)
   if (!lichtungId) return res.status(404).json({ error: 'Unbekannter Code.' })
   const existing = getLichtungMemberRole(lichtungId, req.userId)
+  let pendingId = null
   if (!existing) {
     addLichtungMember(lichtungId, req.userId, 'member')
-    // Buergschaft: wer den Link geteilt hat -> Verbindung Mensch-zu-Mensch
+    // Buergschaft: wer den Link geteilt hat -> pending_connection (gruenes Licht)
     const inviter = req.body?.invitedBy
     if (inviter && inviter !== req.userId) {
-      createConnection(req.userId, inviter)
+      pendingId = createPendingConnection(req.userId, inviter, 'lichtung', lichtungId)
+      if (pendingId) {
+        const toNotify = getUsersToNotifyForConnection(inviter)
+        const me = findUserById(req.userId)
+        const l = getLichtung(lichtungId)
+        for (const u of toNotify) {
+          sendTelegramMessage(u.telegram_chat_id, `🟢 <b>Neue Verbindungsanfrage!</b>\n\n<b>${me?.name || 'Jemand'}</b> ist über dich der Lichtung <b>${l?.name || ''}</b> beigetreten.\n\nBestätige im Profil → lichtung.ooo/app`)
+        }
+      }
     }
   }
   const l = getLichtung(lichtungId)
-  res.json({ lichtung_id: lichtungId, name: l?.name, role: existing || 'member' })
+  res.json({ lichtung_id: lichtungId, name: l?.name, role: existing || 'member', pending_connection_id: pendingId })
 })
 
 // QR-Code abrufen — fuer alle Mitglieder, mit eigenem Bringer-Tag
@@ -1011,7 +1053,7 @@ app.get('/api/share/event/:id', (req, res) => {
     description: desc,
     image: e.image_path,
     url: `${site}/api/share/event/${e.id}`,
-    appUrl: `${site}/app?event=${e.id}`,
+    appUrl: `${site}/app?event=${e.id}&join=1`,
     kind: 'Veranstaltung',
   }))
 })
@@ -1021,7 +1063,7 @@ app.get('/api/share/event/:id', (req, res) => {
 app.get('/api/user/:id/public', (req, res) => {
   const user = findUserById(req.params.id)
   if (!user) return res.status(404).json({ error: 'Nicht gefunden' })
-  res.json({ name: user.name || 'Ein Mensch', image_path: user.image_path || null })
+  res.json({ id: user.id, name: user.name || 'Ein Mensch', image_path: user.image_path || null })
 })
 
 // ─── Admin: User Management ───

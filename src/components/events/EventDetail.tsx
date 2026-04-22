@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation, Pencil, Trash2 } from 'lucide-react'
+import { X, ArrowLeft, CalendarDays, Clock, MapPin, Repeat, Users, Heart, Eye, Navigation, Pencil, Trash2, QrCode } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useApp, type EventItem } from '../../context/AppContext'
 import { EditEventDialog } from './EditEventDialog'
 import { renderMarkdown as renderMd } from '../../lib/markdown'
@@ -56,6 +57,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
   const [showAddCo, setShowAddCo] = useState(false)
   const [newCoEmail, setNewCoEmail] = useState('')
   const [coError, setCoError] = useState('')
+  const [showQR, setShowQR] = useState(false)
 
   const tags = (data.tags || data.type || '').split(',').filter((t: string) => t.trim())
 
@@ -141,19 +143,58 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
             </div>
           )}
 
-          {/* Title + Share */}
+          {/* Title + Share + QR */}
           <div className="flex items-start justify-between gap-2 mb-3">
             <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.35rem', fontWeight: 500, color: '#0A0A0A', lineHeight: 1.3, flex: 1 }}>
               {event.title}
             </h2>
-            <ShareButton
-              url={`${window.location.origin}/api/share/event/${event.id}`}
-              title={`Veranstaltung: ${event.title}`}
-              text={event.description ? event.description.replace(/[#*>]/g, '').trim().slice(0, 140) : `${formatDate(event.start)} · ${formatTime(event.start)}`}
-              label=""
-              compact
-            />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button onClick={() => setShowQR(true)} title="QR-Code fuer Teilnahme"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 10px', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', borderRadius: 8, cursor: 'pointer' }}>
+                <QrCode size={14} style={{ color: '#D4A843' }} />
+              </button>
+              <ShareButton
+                url={`${window.location.origin}/api/share/event/${event.id}`}
+                title={`Veranstaltung: ${event.title}`}
+                text={event.description ? event.description.replace(/[#*>]/g, '').trim().slice(0, 140) : `${formatDate(event.start)} · ${formatTime(event.start)}`}
+                label=""
+                compact
+              />
+            </div>
           </div>
+
+          {/* QR-Code Overlay */}
+          {showQR && (
+            <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+              onClick={() => setShowQR(false)}>
+              <div className="relative rounded-2xl p-8 shadow-xl text-center"
+                style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', maxWidth: 'calc(100vw - 32px)' }}
+                onClick={e => e.stopPropagation()}>
+                <button onClick={() => setShowQR(false)} className="absolute top-4 right-4" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
+                  <X size={20} />
+                </button>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', color: '#0A0A0A', marginBottom: '6px' }}>
+                  Teilnahme per QR-Code
+                </h3>
+                <p style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.5)', marginBottom: '16px' }}>
+                  Wer diesen Code scannt, nimmt teil.
+                </p>
+                <div className="p-4 rounded-xl inline-block" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
+                  <QRCodeSVG
+                    value={`${window.location.origin}/app?event=${event.id}&join=1`}
+                    size={Math.min(280, window.innerWidth - 120)}
+                    bgColor="#FAFAF8"
+                    fgColor="#0A0A0A"
+                    level="H"
+                  />
+                </div>
+                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', color: '#0A0A0A', marginTop: '14px' }}>
+                  {event.title}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Meta — kompakt */}
           <div className="space-y-2 mb-4">

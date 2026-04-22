@@ -77,6 +77,15 @@ db.exec(`
     PRIMARY KEY (user_a, user_b)
   );
 
+  CREATE TABLE IF NOT EXISTS pending_connections (
+    id TEXT PRIMARY KEY,
+    initiator_id TEXT NOT NULL,
+    receiver_id TEXT NOT NULL,
+    context TEXT DEFAULT 'scan',
+    context_ref TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS lichtung_slots (
     id TEXT PRIMARY KEY,
     lichtung_id TEXT NOT NULL,
@@ -188,6 +197,25 @@ db.exec(`
     PRIMARY KEY (event_id, user_id)
   );
 `)
+
+// Migration: Kaputte connections loeschen (Tokens statt User-IDs aus altem Invite-Bug)
+try {
+  const result = db.prepare(`
+    DELETE FROM connections
+    WHERE user_a NOT IN (SELECT id FROM users)
+       OR user_b NOT IN (SELECT id FROM users)
+  `).run()
+  if (result.changes > 0) console.log(`[migration] ${result.changes} kaputte connections entfernt`)
+} catch (err) { console.error('Connections-Cleanup fehlgeschlagen:', err.message) }
+
+// Migration: invited_by in lights, die keine echten User sind, auf null setzen
+try {
+  const result = db.prepare(`
+    UPDATE lights SET invited_by = NULL
+    WHERE invited_by IS NOT NULL AND invited_by NOT IN (SELECT id FROM users)
+  `).run()
+  if (result.changes > 0) console.log(`[migration] ${result.changes} kaputte invited_by entfernt`)
+} catch (err) { console.error('Lights-Cleanup fehlgeschlagen:', err.message) }
 
 // Migration: alte /uploads/ → /api/uploads/ (Traefik routet nur /api/*)
 try { db.prepare("UPDATE lichtungen SET image_path = '/api' || image_path WHERE image_path LIKE '/uploads/%'").run() } catch {}
@@ -545,13 +573,20 @@ export function getUserLight(userId) {
 export function createLight(userId, lat, lng, invitedBy) {
   db.prepare('DELETE FROM lights WHERE user_id = ?').run(userId)
   const id = randomUUID()
-  db.prepare('INSERT INTO lights (id, user_id, lat, lng, invited_by) VALUES (?, ?, ?, ?, ?)').run(id, userId, lat, lng, invitedBy || null)
-  // Verbindung erstellen wenn eingeladen
+  // Validieren: invitedBy muss eine echte User-ID sein, sonst null
+  let validInviter = null
   if (invitedBy && invitedBy !== userId) {
-    const [a, b] = [userId, invitedBy].sort()
-    db.prepare('INSERT OR IGNORE INTO connections (user_a, user_b) VALUES (?, ?)').run(a, b)
+    const exists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(invitedBy)
+    if (exists) validInviter = invitedBy
+    else console.warn(`createLight: ungueltige invited_by='${invitedBy}' verworfen`)
   }
-  return { id, lat, lng }
+  db.prepare('INSERT INTO lights (id, user_id, lat, lng, invited_by) VALUES (?, ?, ?, ?, ?)').run(id, userId, lat, lng, validInviter)
+  // Einladung erzeugt eine pending_connection — Einlader muss bestaetigen (gruenes Licht)
+  let pendingId = null
+  if (validInviter) {
+    pendingId = createPendingConnection(userId, validInviter, 'light')
+  }
+  return { id, lat, lng, pending_connection_id: pendingId }
 }
 
 export function getLightCount() {
@@ -811,9 +846,78 @@ export function updateLichtungTelegramLink(id, label, url, isPrivate) {
 // ─── Verbindungen (Mensch-zu-Mensch) ───
 
 export function createConnection(userA, userB) {
+  if (!userA || !userB || userA === userB) return
+  // Beide User-IDs muessen existieren
+  const aExists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(userA)
+  const bExists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(userB)
+  if (!aExists || !bExists) {
+    console.warn(`createConnection: ungueltige IDs userA=${userA}, userB=${userB}`)
+    return
+  }
   // Sortieren damit A<B, so verhindern wir Duplikate
   const [a, b] = [userA, userB].sort()
   db.prepare('INSERT OR IGNORE INTO connections (user_a, user_b) VALUES (?, ?)').run(a, b)
+}
+
+// ─── Pending Connections (Gruenes-Licht-Bestaetigung) ───
+
+export function createPendingConnection(initiatorId, receiverId, context = 'scan', contextRef = null) {
+  if (!initiatorId || !receiverId || initiatorId === receiverId) return null
+  const iExists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(initiatorId)
+  const rExists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(receiverId)
+  if (!iExists || !rExists) return null
+  // Schon verbunden? Dann nichts tun.
+  const [a, b] = [initiatorId, receiverId].sort()
+  const already = db.prepare('SELECT 1 FROM connections WHERE user_a = ? AND user_b = ?').get(a, b)
+  if (already) return null
+  // Duplikat-Pending? Dann nichts tun.
+  const dup = db.prepare('SELECT id FROM pending_connections WHERE initiator_id = ? AND receiver_id = ?').get(initiatorId, receiverId)
+  if (dup) return dup.id
+  const id = randomUUID()
+  db.prepare('INSERT INTO pending_connections (id, initiator_id, receiver_id, context, context_ref) VALUES (?, ?, ?, ?, ?)').run(id, initiatorId, receiverId, context, contextRef)
+  return id
+}
+
+export function getPendingIncoming(userId) {
+  return db.prepare(`
+    SELECT p.id, p.initiator_id, p.context, p.context_ref, p.created_at,
+           u.name, u.image_path, u.statement
+    FROM pending_connections p JOIN users u ON u.id = p.initiator_id
+    WHERE p.receiver_id = ?
+    ORDER BY p.created_at DESC
+  `).all(userId)
+}
+
+export function getPendingOutgoing(userId) {
+  return db.prepare(`
+    SELECT p.id, p.receiver_id, p.context, p.context_ref, p.created_at,
+           u.name, u.image_path
+    FROM pending_connections p JOIN users u ON u.id = p.receiver_id
+    WHERE p.initiator_id = ?
+    ORDER BY p.created_at DESC
+  `).all(userId)
+}
+
+export function getPendingById(id) {
+  return db.prepare('SELECT * FROM pending_connections WHERE id = ?').get(id)
+}
+
+export function confirmPendingConnection(id, receiverId) {
+  const p = db.prepare('SELECT * FROM pending_connections WHERE id = ? AND receiver_id = ?').get(id, receiverId)
+  if (!p) return false
+  const [a, b] = [p.initiator_id, p.receiver_id].sort()
+  db.prepare('INSERT OR IGNORE INTO connections (user_a, user_b) VALUES (?, ?)').run(a, b)
+  db.prepare('DELETE FROM pending_connections WHERE id = ?').run(id)
+  return { initiator_id: p.initiator_id, receiver_id: p.receiver_id }
+}
+
+export function rejectPendingConnection(id, receiverId) {
+  const r = db.prepare('DELETE FROM pending_connections WHERE id = ? AND receiver_id = ?').run(id, receiverId)
+  return r.changes > 0
+}
+
+export function getPendingIncomingCount(userId) {
+  return db.prepare('SELECT COUNT(*) as c FROM pending_connections WHERE receiver_id = ?').get(userId).c
 }
 
 export function getConnections(userId) {
