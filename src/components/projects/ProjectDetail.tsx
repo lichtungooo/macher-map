@@ -6,6 +6,7 @@ import { renderMarkdown } from '../../lib/markdown'
 import { getVideoEmbedUrl } from '../../lib/videoEmbed'
 import { ShareButton } from '../ShareButton'
 import { MarkdownToolbar } from '../auth/MarkdownToolbar'
+import { OpenCollectiveWidget } from './OpenCollectiveWidget'
 import * as api from '../../api/client'
 
 interface ProjectDetailProps {
@@ -342,14 +343,13 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 </div>
               )}
 
-              {/* Open-Collective-Button */}
+              {/* Open-Collective-Widget: Live-Daten, Ziel-Balken, Spenden-Button */}
               {project.opencollective_url && (
-                <a href={project.opencollective_url} target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
-                  style={{ ...font, fontSize: '0.85rem', fontWeight: 500, color: '#fff', background: `linear-gradient(90deg, ${ACCENT}, #E0A0B5)`, border: 'none', textDecoration: 'none' }}>
-                  Unterstuetzen via Open Collective
-                  <ExternalLink size={13} />
-                </a>
+                <OpenCollectiveWidget
+                  urlOrSlug={project.opencollective_url}
+                  goalAmount={project.goal_amount}
+                  accent={ACCENT}
+                />
               )}
 
               {/* Beschreibung */}
