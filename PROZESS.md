@@ -17,11 +17,34 @@ Fehler, Erkenntnisse, Optimierungen — damit wir beim nächsten Space schneller
 
 1. **Timo** → spricht Vision ein (Voice-Message / Gespräch)
 2. **Eli** → füllt KONZEPT.md aus (Fragenkatalog mit Timo zusammen)
-3. **Eli** → baut ersten Prototyp (Landingpage + Kern-Erlebnis)
-4. **Sebastian** → reviewed UX, gibt Design-Feedback übers Kanban
-5. **Eli** → iteriert auf Basis von UX-Feedback
-6. **Timo** → pitcht, sammelt Partner-Feedback
-7. → Zurück zu 4/5 bis Pitch-Ready
+3. **Eli** → erstellt MARKTANALYSE.md (Deep Dive, siehe unten)
+4. **Timo + Eli** → bewerten Marktchancen, justieren Vision
+5. **Eli** → baut ersten Prototyp (Landingpage + Kern-Erlebnis)
+6. **Sebastian** → reviewed UX, gibt Design-Feedback übers Kanban
+7. **Eli** → iteriert auf Basis von UX-Feedback
+8. **Timo** → pitcht, sammelt Partner-Feedback
+9. → Zurück zu 6/7 bis Pitch-Ready
+
+## Marktanalyse (Schritt 3 — vor dem ersten Code)
+
+Jedes Projekt braucht vor dem Prototyping eine saubere Marktanalyse. Datei: `MARKTANALYSE.md`
+
+**Pflicht-Abschnitte:**
+
+| Abschnitt | Was rein muss |
+|-----------|---------------|
+| **Ist-Zustand** | Was gibt es bereits am Markt? Wer sind die Player? Wo sind Lücken? |
+| **Zielgruppe** | Wer genau? Alter, Verhalten, Bedürfnisse, wo sind die online/offline? |
+| **Potenzielle Partner** | Firmen, Verbände, Institutionen — wer hat Interesse, Budget, Reichweite? |
+| **Sponsoring-Kandidaten** | Konkrete Firmen mit Begründung. Was bringen die mit? Was brauchen die? |
+| **Influencer & Multiplikatoren** | YouTube, Instagram, Podcasts — wer passt zum Universum? Reichweite, Kontaktweg |
+| **Kooperationsmöglichkeiten** | Wer könnte das Projekt nutzen, umsetzen, in die Realität bringen? |
+| **Finanz-Spektrum** | Kosten für Aufbau, laufende Kosten, Einnahme-Modelle, Break-Even |
+| **ROI-Szenarien** | Konservativ, realistisch, optimistisch — was bringt es dem Sponsor? |
+| **Strategische Positionierung** | Wie grenzen wir uns ab? Was ist unser unfairer Vorteil? |
+| **Pitch-Strategie** | Wer pitcht wem? In welcher Reihenfolge? Was zeigen wir zuerst? |
+
+**Warum vor dem Code:** Ohne Marktanalyse baut man ins Blaue. Mit Analyse weiß man: Lohnt sich das? Wer zahlt? Wen sprechen wir an? Das spart Wochen Arbeit an Prototypen, die niemand will.
 
 ## Tools
 
@@ -70,3 +93,5 @@ Fehler, Erkenntnisse, Optimierungen — damit wir beim nächsten Space schneller
 - [ ] Kanban-Board einrichten für Timo/Sebastian/Eli Zusammenarbeit
 - [ ] Skills/Templates für wiederkehrende Aufgaben erstellen (Landingpage-Generator, Marker-Stil-Generator)
 - [ ] Handoff-Dokument für Sebastian vorbereiten (Aufgabenverteilung, UX-Briefing)
+- [ ] MARKTANALYSE.md für Macher-Map erstellen (Deep Dive: Markt, Partner, Influencer, Finanzen)
+- [ ] Marktanalyse-Vorlage als Standard-Template für alle zukünftigen Spaces
