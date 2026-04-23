@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMemo } from 'react'
-import { Wrench, MapPin, Zap } from 'lucide-react'
+import { Wrench, MapPin, Hammer, ShoppingBag } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
 
@@ -45,13 +45,13 @@ export default function MapPreview() {
   const macher = useMemo(() => genMacher(200), [])
 
   return (
-    <section id="karte" className="py-24 section-reveal" style={{ background: '#fff' }}>
+    <section id="karte" className="py-24 section-reveal" style={{ background: '#FAF8F5' }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
           <div className="order-2 lg:order-1">
-            <div className="relative rounded-xl overflow-hidden" style={{ border: '1px solid rgba(26,26,26,0.1)', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+            <div className="relative rounded-xl overflow-hidden" style={{ border: '2px solid rgba(26,26,26,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
               <MapContainer
                 center={[51, 10] as LatLngExpression}
                 zoom={6}
@@ -64,9 +64,9 @@ export default function MapPreview() {
                 touchZoom={false}
                 doubleClickZoom={false}
                 className="w-full"
-                style={{ height: '400px', background: '#F5F0E8' }}
+                style={{ height: '420px', background: '#2C2C2C' }}
               >
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png" />
 
                 {macher.map((p, i) => (
                   <CircleMarker
@@ -74,10 +74,10 @@ export default function MapPreview() {
                     center={[p.lat, p.lng]}
                     radius={2.5}
                     pathOptions={{
-                      color: 'rgba(232,117,26,0.4)',
-                      fillColor: '#FFCC80',
-                      fillOpacity: 0.7,
-                      weight: 0.8,
+                      color: 'rgba(232,117,26,0.5)',
+                      fillColor: '#E8751A',
+                      fillOpacity: 0.6,
+                      weight: 0.5,
                     }}
                   />
                 ))}
@@ -86,25 +86,25 @@ export default function MapPreview() {
                   <CircleMarker
                     key={`w-${i}`}
                     center={[p.lat, p.lng]}
-                    radius={7}
+                    radius={8}
                     pathOptions={{
-                      color: '#E8751A',
-                      fillColor: '#FFF3E0',
+                      color: '#D4A020',
+                      fillColor: '#E8751A',
                       fillOpacity: 0.9,
-                      weight: 2,
+                      weight: 2.5,
                     }}
                   />
                 ))}
               </MapContainer>
 
-              <div className="absolute top-3 left-3 flex flex-col gap-1.5 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid rgba(26,26,26,0.06)' }}>
+              <div className="absolute top-3 left-3 flex flex-col gap-1.5 px-3 py-2 rounded-lg" style={{ background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(8px)' }}>
                 <div className="flex items-center gap-2">
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#FFCC80', border: '1.5px solid #E8751A' }} />
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(26,26,26,0.55)' }}>Macher</span>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#E8751A' }} />
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.62rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>Macher</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFF3E0', border: '1.5px solid #E8751A' }} />
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(26,26,26,0.55)' }}>Werkstaetten</span>
+                  <div style={{ width: 8, height: 8, borderRadius: '2px', background: '#E8751A', border: '1.5px solid #D4A020' }} />
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.62rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>Werkstaetten</span>
                 </div>
               </div>
             </div>
@@ -113,68 +113,64 @@ export default function MapPreview() {
           <div className="order-1 lg:order-2">
             <p
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '0.72rem',
-                fontWeight: 600,
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '0.75rem',
+                fontWeight: 700,
                 color: '#E8751A',
                 letterSpacing: '0.2em',
                 textTransform: 'uppercase',
                 marginBottom: '1rem',
               }}
             >
-              Die Macher-Karte
+              Die Karte
             </p>
 
             <h2
               style={{
                 fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)',
-                fontWeight: 700,
+                fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)',
+                fontWeight: 800,
                 color: '#1A1A1A',
-                lineHeight: 1.15,
+                lineHeight: 1.1,
                 marginBottom: '1.2rem',
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.03em',
               }}
             >
-              Finde Werkstaetten und Macher in deiner Naehe.
+              Alles in deiner Naehe.<br />
+              <span style={{ color: 'rgba(26,26,26,0.35)' }}>Sofort sichtbar.</span>
             </h2>
 
             <p
               style={{
                 fontFamily: 'Inter, sans-serif',
-                fontSize: '0.95rem',
+                fontSize: '0.92rem',
                 lineHeight: 1.7,
                 color: 'rgba(26,26,26,0.55)',
                 marginBottom: '2rem',
               }}
             >
-              Offene Werkstaetten, Bau-Events und aktive Macher — alles auf einer Karte.
-              Finde deinen naechsten Workshop, leih dir Werkzeug oder triff Gleichgesinnte.
+              Werkstaetten, Macher, Material, Abenteuer — alles auf einer Karte.
+              Klick drauf, fahr hin, pack an. So einfach.
             </p>
 
             <div className="space-y-4 mb-7">
               {[
-                { icon: MapPin, title: 'Werkstatt finden', text: 'FabLabs, Garagen, Schreinereien, Makerspaces — alles sichtbar.' },
-                { icon: Wrench, title: 'Werkzeug & Material', text: 'Sieh, wer was hat. Leih aus. Teile. Spar Geld.' },
-                { icon: Zap, title: 'Abenteuer starten', text: 'Workshops, Bau-Wochenenden, Seifenkistenrennen — pack an.' },
+                { icon: MapPin, title: 'Werkstatt finden', text: 'FabLabs, Garagen, Schreinereien — in deiner Naehe. Sofort sehen, was die haben.', color: '#E8751A' },
+                { icon: ShoppingBag, title: 'Material & Werkzeug', text: 'Wer hat was? Leihen, tauschen, kaufen. Alles lokal, alles abholbar.', color: '#D4A020' },
+                { icon: Hammer, title: 'Abenteuer starten', text: 'Workshops, Bau-Wochenenden, Seifenkistenrennen — einfach mitmachen.', color: '#2D7DD2' },
               ].map((s, i) => (
                 <div key={i} className="flex gap-4 items-start">
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(232,117,26,0.08)' }}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: `${s.color}15` }}
                   >
-                    <s.icon size={16} style={{ color: '#E8751A' }} />
+                    <s.icon size={18} style={{ color: s.color }} />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: 'rgba(26,26,26,0.2)' }}>
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', fontWeight: 600, color: '#1A1A1A' }}>
-                        {s.title}
-                      </h3>
-                    </div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', lineHeight: 1.55, color: 'rgba(26,26,26,0.5)', paddingLeft: '2rem' }}>
+                    <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.95rem', fontWeight: 700, color: '#1A1A1A', marginBottom: 2 }}>
+                      {s.title}
+                    </h3>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', lineHeight: 1.55, color: 'rgba(26,26,26,0.5)' }}>
                       {s.text}
                     </p>
                   </div>
@@ -186,9 +182,9 @@ export default function MapPreview() {
               to="/app"
               className="inline-flex items-center gap-2"
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '0.88rem',
-                fontWeight: 600,
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '0.92rem',
+                fontWeight: 700,
                 color: '#fff',
                 textDecoration: 'none',
                 padding: '14px 32px',
@@ -197,7 +193,7 @@ export default function MapPreview() {
                 boxShadow: '0 4px 16px rgba(232,117,26,0.3)',
               }}
             >
-              <MapPin size={16} />
+              <Wrench size={16} />
               Karte oeffnen
             </Link>
           </div>

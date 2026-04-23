@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Wrench, Calendar, Users, Trophy, X } from 'lucide-react'
+import { Wrench, Calendar, Trophy, Users, ShoppingBag, Target, X } from 'lucide-react'
 
 interface Feature {
   key: string
@@ -15,20 +15,21 @@ const FEATURES: Feature[] = [
     key: 'werkstaetten',
     icon: Wrench,
     title: 'Werkstaetten',
-    teaser: 'Finde offene Werkstaetten, FabLabs und Macher-Garagen in deiner Naehe.',
+    teaser: 'FabLabs, Garagen, Schreinereien, Makerspaces — alles auf der Karte. Finde den Ort, wo du loslegen kannst.',
     color: '#E8751A',
     detail: (
       <>
         <p>
-          Jede <strong>Werkstatt</strong> auf der Macher-Map ist ein realer Ort — eine Schreinerei,
-          ein FabLab, eine offene Garage, eine Schlosserei, ein Makerspace.
+          Jede <strong>Werkstatt</strong> auf der Karte ist ein realer Ort — Schreinerei,
+          FabLab, offene Garage, Schlosserei, Makerspace. Kein Fake, kein Stock-Foto.
         </p>
         <p>
-          Hier findest du Werkzeuge, Material und Menschen, die wissen, wie man es benutzt.
-          Jede Werkstatt zeigt, was sie bietet: CNC-Fraese, Schweissgeraet, 3D-Drucker, Holzwerkstatt.
+          Du siehst sofort: CNC-Fraese? Check. Schweissgeraet? Check. 3D-Drucker? Check.
+          Du weisst, was dich erwartet, bevor du hinfaehrst.
         </p>
         <p>
-          Du kannst eigene Werkstaetten eintragen und sichtbar machen fuer andere Macher.
+          Du betreibst selbst eine Werkstatt? Trag sie ein. Mach sie sichtbar.
+          Zeig der Community, was bei dir geht.
         </p>
       </>
     ),
@@ -37,20 +38,21 @@ const FEATURES: Feature[] = [
     key: 'abenteuer',
     icon: Calendar,
     title: 'Abenteuer',
-    teaser: 'Seifenkistenrennen, Bau-Wochenenden, Schweisskurse — echte Action.',
+    teaser: 'Seifenkistenrennen, Schweisskurse, Baumhaus-Bau — echte Action mit echten Leuten.',
     color: '#2D7DD2',
     detail: (
       <>
         <p>
-          <strong>Abenteuer</strong> sind Events, bei denen du selbst Hand anlegst.
-          Seifenkistenrennen, Baumhaus-Bau, Messerbau-Workshop, Schweiss-Kurs, Festival-Builds.
+          <strong>Abenteuer</strong> sind keine Webinare. Du packst an. Du schwitzt.
+          Du baust was mit deinen eigenen Haenden.
         </p>
         <p>
-          Jedes Abenteuer findet an einem realen Ort statt und ist auf der Karte sichtbar.
-          Melde dich an, bring deine Freunde mit, bau etwas Grossartiges.
+          Seifenkistenrennen in Ferropolis. Messerbau in Hamburg.
+          Floss bauen in Leipzig. Schweisskurs fuer Anfaenger in Berlin.
         </p>
         <p>
-          Nach dem Abenteuer bekommst du Erfahrungspunkte fuer deinen Skill-Tree.
+          Jedes Abenteuer bringt Erfahrung fuer deinen Skill-Tree.
+          Je mehr du machst, desto mehr wirst du zum Macher.
         </p>
       </>
     ),
@@ -59,20 +61,68 @@ const FEATURES: Feature[] = [
     key: 'bauprojekte',
     icon: Trophy,
     title: 'Bauprojekte',
-    teaser: 'Zeig, was du gebaut hast. Teile Bauplaene. Inspiriere andere.',
+    teaser: 'Zeig, was du gebaut hast. Teile Bauplaene. Finde Leute, die mitbauen.',
     color: '#45B764',
     detail: (
       <>
         <p>
-          Dein <strong>Bauprojekt</strong> verdient Sichtbarkeit. Egal ob Seifenkiste, Baumhaus,
-          selbstgebautes Moebelstueck oder eine komplette Werkstatt — zeig es der Community.
+          Du willst eine <strong>Seifenkiste</strong> bauen? Ein <strong>Baumhaus</strong>?
+          Ein komplettes <strong>Moebelstueck</strong>? Poste dein Projekt.
         </p>
         <p>
-          Lade Fotos hoch, beschreibe den Bauprozess, teile Bauplaene.
-          Andere Macher koennen kommentieren, Tipps geben oder sich fuer aehnliche Projekte inspirieren lassen.
+          Beschreib, was du vorhast. Was du brauchst. Wer soll mitbauen?
+          Andere Macher sehen dein Projekt auf der Karte und koennen sich melden.
         </p>
         <p>
-          Die besten Projekte werden auf der Karte hervorgehoben.
+          Fertig gebaut? Fotos rein, Bauplan teilen, andere inspirieren.
+          Die Community feiert, was du geschaffen hast.
+        </p>
+      </>
+    ),
+  },
+  {
+    key: 'marktplatz',
+    icon: ShoppingBag,
+    title: 'Materialboerse',
+    teaser: 'Holz uebrig? Schweissgeraet zu verleihen? Schrauben gesucht? Geben und Nehmen.',
+    color: '#D4A020',
+    detail: (
+      <>
+        <p>
+          Die <strong>Materialboerse</strong> verbindet Angebot und Nachfrage.
+          Du hast Material uebrig? Stell es rein. Du brauchst was? Schau, wer es hat.
+        </p>
+        <p>
+          Kostenlos, Tausch oder fair bezahlt — du entscheidest.
+          Alles lokal, alles abholbar, kein Versand-Quatsch.
+        </p>
+        <p>
+          Auch Werkzeug-Verleih, Maschinen-Sharing, Restposten von
+          Handwerksbetrieben. Was einer nicht braucht, ist fuer den anderen Gold.
+        </p>
+      </>
+    ),
+  },
+  {
+    key: 'skilltree',
+    icon: Target,
+    title: 'Skill-Tree',
+    teaser: 'Holz, Metall, Elektro, Schweissen — level deine Skills. Zeig, was du drauf hast.',
+    color: '#9B59B6',
+    detail: (
+      <>
+        <p>
+          Jedes Abenteuer, jeder Workshop, jedes Projekt gibt dir
+          <strong> Erfahrung</strong>. Dein Skill-Tree waechst mit dir.
+        </p>
+        <p>
+          Holz Level 5? Du bist in der Holzgilde.
+          Schweissen Level 10? Schweisskoenig.
+          Alles sichtbar auf deinem Profil — wie bei Duolingo, nur echt.
+        </p>
+        <p>
+          Handwerksbetriebe sehen sofort: Dieser Macher hat Talent,
+          hat Spass daran, hat Erfahrung. Der goldene Boden des Handwerks — sichtbar gemacht.
         </p>
       </>
     ),
@@ -81,20 +131,21 @@ const FEATURES: Feature[] = [
     key: 'community',
     icon: Users,
     title: 'Macher-Community',
-    teaser: 'Vernetze dich mit Machern in deiner Naehe. Analog. Echt. Ohne Tracking.',
-    color: '#9B59B6',
+    teaser: 'Echte Verbindungen. Keine Likes. Keine Follower. Leute, die anpacken.',
+    color: '#C0392B',
     detail: (
       <>
         <p>
-          Die <strong>Macher-Community</strong> lebt nicht im Internet — sie lebt in Werkstaetten,
-          auf Festivals, in Garagen und auf Baustellen.
+          Die <strong>Macher-Community</strong> lebt nicht im Internet — sie lebt
+          in Werkstaetten, auf Festivals, in Garagen und auf Baustellen.
         </p>
         <p>
-          Die Macher-Map verbindet dich mit Menschen, die anpacken. Keine Likes, keine Follower,
-          kein Algorithmus. Nur echte Verbindung zu echten Machern.
+          Offers & Needs: Was kannst du? Was brauchst du?
+          Hashtags verbinden dich mit Machern, die das Gleiche bauen wollen.
         </p>
         <p>
-          Deine Daten gehoeren dir. Kein Tracking. Keine Werbung. Du bestimmst, was sichtbar ist.
+          Deine Daten gehoeren dir. Kein Tracking. Keine Werbung.
+          Kein Algorithmus. Nur echte Verbindung zu echten Machern.
         </p>
       </>
     ),
@@ -112,28 +163,28 @@ function DetailDialog({ feature, onClose }: { feature: Feature; onClose: () => v
     <div
       onClick={onClose}
       className="fixed inset-0 z-[2000] flex items-center justify-center p-4"
-      style={{ background: 'rgba(26,26,26,0.5)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(26,26,26,0.6)', backdropFilter: 'blur(10px)' }}
     >
       <div
         onClick={e => e.stopPropagation()}
         className="relative rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
-        style={{ background: '#fff', border: '1px solid rgba(26,26,26,0.08)', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}
+        style={{ background: '#FAF8F5', border: '1px solid rgba(26,26,26,0.1)', boxShadow: '0 24px 64px rgba(0,0,0,0.25)' }}
       >
         <button
           onClick={onClose}
           aria-label="Schliessen"
           className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(26,26,26,0.05)', border: 'none', cursor: 'pointer' }}
+          style={{ background: 'rgba(26,26,26,0.08)', border: 'none', cursor: 'pointer' }}
         >
           <X size={15} style={{ color: 'rgba(26,26,26,0.6)' }} />
         </button>
 
         <div className="p-8 md:p-10">
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-            style={{ background: `${feature.color}14` }}
+            className="w-14 h-14 rounded-xl flex items-center justify-center mb-5"
+            style={{ background: `${feature.color}18` }}
           >
-            <feature.icon size={24} style={{ color: feature.color }} />
+            <feature.icon size={26} style={{ color: feature.color }} />
           </div>
 
           <h3
@@ -170,72 +221,76 @@ export default function Kunstprojekt() {
   const [open, setOpen] = useState<Feature | null>(null)
 
   return (
-    <section id="features" className="py-28 section-reveal" style={{ background: '#FAF8F5' }}>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="features" className="py-28 section-reveal" style={{ background: '#1A1A1A' }}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center mb-16">
+          <p
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#E8751A',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              marginBottom: '1rem',
+            }}
+          >
+            Was steckt drin
+          </p>
           <h2
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-              fontWeight: 700,
-              color: '#1A1A1A',
-              lineHeight: 1.15,
-              letterSpacing: '-0.02em',
-              marginBottom: '1.2rem',
+              fontWeight: 800,
+              color: '#fff',
+              lineHeight: 1.1,
+              letterSpacing: '-0.03em',
+              marginBottom: '1rem',
             }}
           >
             Alles, was Macher brauchen.
+            <br />
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Nichts, was sie nicht brauchen.</span>
           </h2>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)',
-              lineHeight: 1.65,
-              color: 'rgba(26,26,26,0.55)',
-              maxWidth: 580,
-              margin: '0 auto',
-            }}
-          >
-            Eine Karte. Werkstaetten, Abenteuer, Bauprojekte und eine Community,
-            die anpackt statt zuschaut.
-          </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map(f => (
             <button
               key={f.key}
               onClick={() => setOpen(f)}
-              className="group p-6 rounded-xl text-left transition-all"
+              className="group p-5 lg:p-6 rounded-xl text-left transition-all"
               style={{
-                background: '#fff',
-                border: '1px solid rgba(26,26,26,0.06)',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.08)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.borderColor = `${f.color}40`
+                e.currentTarget.style.transform = 'translateY(-3px)'
               }}
               onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
               }}
             >
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                style={{ background: `${f.color}14` }}
+                style={{ background: `${f.color}20` }}
               >
                 <f.icon size={20} style={{ color: f.color }} />
               </div>
               <h3
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: '1.1rem',
-                  fontWeight: 600,
-                  color: '#1A1A1A',
+                  fontSize: '1.05rem',
+                  fontWeight: 700,
+                  color: '#fff',
                   marginBottom: '0.5rem',
                 }}
               >
@@ -244,9 +299,9 @@ export default function Kunstprojekt() {
               <p
                 style={{
                   fontFamily: 'Inter, sans-serif',
-                  fontSize: '0.8rem',
+                  fontSize: '0.78rem',
                   lineHeight: 1.55,
-                  color: 'rgba(26,26,26,0.55)',
+                  color: 'rgba(255,255,255,0.45)',
                   flexGrow: 1,
                 }}
               >
@@ -254,16 +309,16 @@ export default function Kunstprojekt() {
               </p>
               <span
                 style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
                   color: f.color,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   marginTop: 14,
                 }}
               >
-                Mehr erfahren
+                Reinschauen →
               </span>
             </button>
           ))}

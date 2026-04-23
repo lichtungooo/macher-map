@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 
 const NAV_ITEMS = [
-  { href: '#features', label: 'Features' },
+  { href: '#features', label: 'Was steckt drin' },
   { href: '#karte', label: 'Karte' },
   { href: '#community', label: 'Community' },
-  { href: '#partner', label: 'Partner' },
+  { href: '#partner', label: 'Mitmachen' },
 ]
 
 export default function Header() {
@@ -88,7 +88,7 @@ export default function Header() {
               transition: 'all 0.2s',
             }}
           >
-            Macher werden
+            Pack an
           </Link>
         </nav>
 
@@ -141,7 +141,7 @@ export default function Header() {
               padding: '8px 0',
             }}
           >
-            Macher werden
+            Pack an
           </Link>
         </nav>
       )}

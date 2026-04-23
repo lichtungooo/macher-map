@@ -1,12 +1,12 @@
 import { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Wrench, Hammer, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Wrench, Hammer, Calendar, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 
 interface CardItem {
   id: string
   title: string
   subtitle: string
-  image?: string
+  tag?: string
 }
 
 function seed(i: number) {
@@ -14,41 +14,40 @@ function seed(i: number) {
   return x - Math.floor(x)
 }
 
-const MACHER_NAMES = [
-  'Max der Schweisser', 'Lena Holzwurm', 'Basti Schrauber', 'Finja Funkenflug',
-  'Jonas Zimmermann', 'Mila Saegemehl', 'Tom Kabelkoenig', 'Hanna Leimfest',
-  'Nico Dreher', 'Ella Bohrmaschine', 'Felix Schleifer', 'Paula Nagelprobe',
+const MACHER: CardItem[] = [
+  { id: 'm1', title: 'Max der Schweisser', subtitle: 'Schweissen · Metall · Level 8', tag: 'Schweissergilde' },
+  { id: 'm2', title: 'Lena Holzwurm', subtitle: 'Holzbau · Schreinerei · Level 12', tag: 'Holzgilde' },
+  { id: 'm3', title: 'Basti Schrauber', subtitle: 'KFZ · Fahrrad · Level 5', tag: 'Schrauber' },
+  { id: 'm4', title: 'Finja Funkenflug', subtitle: 'Elektro · Loeten · Level 7', tag: 'Technikerin' },
+  { id: 'm5', title: 'Jonas Zimmermann', subtitle: 'Trockenbau · Holz · Level 15', tag: 'Meister' },
+  { id: 'm6', title: 'Mila Saegemehl', subtitle: '3D-Druck · CNC · Level 6', tag: 'Makerin' },
+  { id: 'm7', title: 'Tom Kabelkoenig', subtitle: 'Smart Home · Arduino · Level 9', tag: 'IoT-Macher' },
+  { id: 'm8', title: 'Hanna Leimfest', subtitle: 'Moebelbau · Upcycling · Level 11', tag: 'Holzgilde' },
+  { id: 'm9', title: 'Nico Dreher', subtitle: 'Drechseln · Toepfern · Level 4', tag: 'Handwerker' },
 ]
 
-const MACHER_SKILLS = [
-  'Holzbau · Schreinerei', 'Schweissen · Metall', 'Elektro · Loeten',
-  '3D-Druck · CNC', 'Fahrrad-Schrauben', 'Messerbau', 'Moebelbau',
-  'Seifenkisten-Profi', 'Baumhaus-Bauer', 'Keramik · Toepfern',
-  'Leder-Handwerk', 'Textil · Naehen',
+const WERKSTAETTEN: CardItem[] = [
+  { id: 'w1', title: 'FabLab Berlin', subtitle: 'Kreuzberg · 3D-Drucker · Laser · CNC', tag: 'Offen' },
+  { id: 'w2', title: 'Offene Werkstatt Muenchen', subtitle: 'Schwabing · Holz · Metall · Textil', tag: 'Offen' },
+  { id: 'w3', title: 'Makerspace Koeln', subtitle: 'Ehrenfeld · Elektronik · Robotik', tag: 'Offen' },
+  { id: 'w4', title: 'HolzWerk Hamburg', subtitle: 'Altona · Schreinerei · Drechseln', tag: 'Werkstatt' },
+  { id: 'w5', title: 'MetallWerk Leipzig', subtitle: 'Plagwitz · Schweissen · Schmieden', tag: 'Werkstatt' },
+  { id: 'w6', title: 'Garage Nuernberg', subtitle: 'Gostenhof · KFZ · Moebel', tag: 'Garage' },
+  { id: 'w7', title: 'TechHub Frankfurt', subtitle: 'Bornheim · IoT · Arduino · Loeten', tag: 'Lab' },
+  { id: 'w8', title: 'BauWerk Dresden', subtitle: 'Neustadt · Holzbau · Trockenbau', tag: 'Werkstatt' },
+  { id: 'w9', title: 'Kreativlabor Stuttgart', subtitle: 'West · Siebdruck · Laser · Naehen', tag: 'Lab' },
 ]
 
-const WERKSTATT_ITEMS: CardItem[] = [
-  { id: 'w1', title: 'FabLab Berlin', subtitle: '3D-Drucker · Laser · CNC' },
-  { id: 'w2', title: 'Offene Werkstatt Muenchen', subtitle: 'Holz · Metall · Textil' },
-  { id: 'w3', title: 'Makerspace Koeln', subtitle: 'Elektronik · Robotik · 3D-Druck' },
-  { id: 'w4', title: 'HolzWerk Hamburg', subtitle: 'Schreinerei · Drechseln' },
-  { id: 'w5', title: 'MetallWerk Leipzig', subtitle: 'Schweissen · Schmieden · Drehen' },
-  { id: 'w6', title: 'Garage Nuernberg', subtitle: 'KFZ · Fahrrad · Moebel' },
-  { id: 'w7', title: 'Kreativlabor Stuttgart', subtitle: 'Siebdruck · Laser · Naehen' },
-  { id: 'w8', title: 'BauWerk Dresden', subtitle: 'Holzbau · Trockenbau · Mauer' },
-  { id: 'w9', title: 'TechHub Frankfurt', subtitle: 'IoT · Arduino · Loeten' },
-]
-
-const ABENTEUER_ITEMS: CardItem[] = [
-  { id: 'a1', title: 'Seifenkistenrennen Ferropolis', subtitle: '6. Aug 2026 · Ferropolis' },
-  { id: 'a2', title: 'Baumhaus-Wochenende', subtitle: '12. Jul 2026 · Schwarzwald' },
-  { id: 'a3', title: 'Messerbau-Workshop', subtitle: '23. Mai 2026 · Hamburg' },
-  { id: 'a4', title: 'Schweiss-Kurs fuer Anfaenger', subtitle: '8. Jun 2026 · Berlin' },
-  { id: 'a5', title: 'Festival-Buehne bauen', subtitle: '1. Aug 2026 · Ferropolis' },
-  { id: 'a6', title: 'Moebel aus Paletten', subtitle: '15. Jun 2026 · Koeln' },
-  { id: 'a7', title: 'Schmieden fuer Kids', subtitle: '20. Jul 2026 · Nuernberg' },
-  { id: 'a8', title: 'Floss bauen & fahren', subtitle: '28. Jun 2026 · Leipzig' },
-  { id: 'a9', title: 'Longboard selber bauen', subtitle: '5. Jul 2026 · Muenchen' },
+const ABENTEUER: CardItem[] = [
+  { id: 'a1', title: 'Seifenkistenrennen', subtitle: '6. Aug · Ferropolis · Macher-Festival', tag: 'Festival' },
+  { id: 'a2', title: 'Baumhaus-Wochenende', subtitle: '12. Jul · Schwarzwald · 2 Tage', tag: 'Bauprojekt' },
+  { id: 'a3', title: 'Messerbau-Workshop', subtitle: '23. Mai · Hamburg · Schmieden + Schleifen', tag: 'Workshop' },
+  { id: 'a4', title: 'Schweissen fuer Anfaenger', subtitle: '8. Jun · Berlin · MIG/MAG Grundkurs', tag: 'Kurs' },
+  { id: 'a5', title: 'Festival-Buehne bauen', subtitle: '1. Aug · Ferropolis · 3 Tage Bau-Action', tag: 'Festival' },
+  { id: 'a6', title: 'Moebel aus Paletten', subtitle: '15. Jun · Koeln · Upcycling-Workshop', tag: 'Workshop' },
+  { id: 'a7', title: 'Schmieden fuer Kids', subtitle: '20. Jul · Nuernberg · ab 10 Jahre', tag: 'Kids' },
+  { id: 'a8', title: 'Floss bauen & fahren', subtitle: '28. Jun · Leipzig · Bau + Fahrt', tag: 'Abenteuer' },
+  { id: 'a9', title: 'Longboard selber bauen', subtitle: '5. Jul · Muenchen · Holz + Shape', tag: 'Workshop' },
 ]
 
 function Carousel({
@@ -117,24 +116,24 @@ function Carousel({
         <button
           onClick={() => scroll('left')}
           aria-label="Zurueck"
-          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: 'transparent', border: '1px solid rgba(26,26,26,0.12)', cursor: 'pointer' }}
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: 'rgba(232,117,26,0.08)', border: '1px solid rgba(232,117,26,0.15)', cursor: 'pointer' }}
         >
-          <ChevronLeft size={13} style={{ color: 'rgba(26,26,26,0.55)' }} />
+          <ChevronLeft size={14} style={{ color: '#E8751A' }} />
         </button>
-        <div className="flex items-center gap-1.5" style={{ minWidth: 'calc((100% - 2 * 12px) / 3)', justifyContent: 'center' }}>
-          <Icon size={13} style={{ color: accentColor }} />
-          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(26,26,26,0.6)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+        <div className="flex items-center gap-2" style={{ minWidth: 160, justifyContent: 'center' }}>
+          <Icon size={14} style={{ color: accentColor }} />
+          <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.75rem', fontWeight: 700, color: accentColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             {title}
           </h3>
         </div>
         <button
           onClick={() => scroll('right')}
           aria-label="Weiter"
-          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: 'transparent', border: '1px solid rgba(26,26,26,0.12)', cursor: 'pointer' }}
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: 'rgba(232,117,26,0.08)', border: '1px solid rgba(232,117,26,0.15)', cursor: 'pointer' }}
         >
-          <ChevronRight size={13} style={{ color: 'rgba(26,26,26,0.55)' }} />
+          <ChevronRight size={14} style={{ color: '#E8751A' }} />
         </button>
       </div>
 
@@ -152,17 +151,11 @@ function Carousel({
 export default function LiveFeed() {
   const navigate = useNavigate()
 
-  const macherItems: CardItem[] = MACHER_NAMES.map((name, i) => ({
-    id: `m-${i}`,
-    title: name,
-    subtitle: MACHER_SKILLS[i % MACHER_SKILLS.length],
-  }))
-
   const itemStyle: React.CSSProperties = {
     flex: '0 0 calc((100% - 2 * 12px) / 3)',
     scrollSnapAlign: 'start',
     background: '#fff',
-    border: '1px solid rgba(26,26,26,0.05)',
+    border: '1px solid rgba(26,26,26,0.06)',
     borderRadius: 10,
     cursor: 'pointer',
     transition: 'all 0.2s',
@@ -170,7 +163,7 @@ export default function LiveFeed() {
 
   const hoverIn = (e: React.MouseEvent<HTMLDivElement>) => {
     e.currentTarget.style.transform = 'translateY(-2px)'
-    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.05)'
+    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)'
   }
   const hoverOut = (e: React.MouseEvent<HTMLDivElement>) => {
     e.currentTarget.style.transform = 'translateY(0)'
@@ -178,7 +171,7 @@ export default function LiveFeed() {
   }
 
   return (
-    <section id="community" className="py-20 section-reveal" style={{ background: '#FAF8F5' }}>
+    <section id="community" className="py-20 section-reveal" style={{ background: '#fff' }}>
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         @media (max-width: 768px) {
@@ -188,48 +181,60 @@ export default function LiveFeed() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
+          <h2 style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+            fontWeight: 800,
+            color: '#1A1A1A',
+            letterSpacing: '-0.02em',
+            marginBottom: '0.5rem',
+          }}>
+            Was gerade abgeht
+          </h2>
           <p style={{
             fontFamily: 'Inter, sans-serif',
-            fontSize: '0.68rem',
-            fontWeight: 500,
-            color: 'rgba(26,26,26,0.4)',
-            letterSpacing: '0.25em',
-            textTransform: 'uppercase',
+            fontSize: '0.85rem',
+            color: 'rgba(26,26,26,0.45)',
           }}>
-            Was gerade passiert
+            Macher, Werkstaetten und Abenteuer — live von der Karte.
           </p>
         </div>
 
-        {/* Macher */}
-        <Carousel title="Macher" icon={Hammer} accentColor="#E8751A" itemCount={macherItems.length}>
-          {[...macherItems, ...macherItems, ...macherItems].map((m, i) => (
+        <Carousel title="Macher" icon={Hammer} accentColor="#E8751A" itemCount={MACHER.length}>
+          {[...MACHER, ...MACHER, ...MACHER].map((m, i) => (
             <div
-              key={`${m.id}-${Math.floor(i / macherItems.length)}`}
+              key={`${m.id}-${Math.floor(i / MACHER.length)}`}
               className="carousel-item"
               onClick={() => navigate('/app')}
               style={{ ...itemStyle, padding: 14 }}
               onMouseEnter={hoverIn}
               onMouseLeave={hoverOut}
             >
-              <div className="flex gap-2.5 items-center">
+              <div className="flex gap-3 items-center">
                 <div
                   style={{
-                    width: 34, height: 34, borderRadius: '50%',
-                    background: `hsl(${seed(i * 7) * 360}, 35%, 92%)`,
-                    border: '1.5px solid rgba(232,117,26,0.25)',
+                    width: 38, height: 38, borderRadius: '10px',
+                    background: `hsl(${seed(i * 7) * 40 + 15}, 60%, 50%)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}
                 >
-                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.85rem', fontWeight: 600, color: '#E8751A' }}>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>
                     {m.title.charAt(0)}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 2 }}>
-                    {m.title}
-                  </h4>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(26,26,26,0.5)', lineHeight: 1.3 }}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1.2 }}>
+                      {m.title}
+                    </h4>
+                    {m.tag && (
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: '#E8751A', background: 'rgba(232,117,26,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+                        {m.tag}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(26,26,26,0.45)', lineHeight: 1.3 }}>
                     {m.subtitle}
                   </p>
                 </div>
@@ -238,53 +243,52 @@ export default function LiveFeed() {
           ))}
         </Carousel>
 
-        {/* Werkstaetten */}
-        <Carousel title="Werkstaetten" icon={Wrench} accentColor="#45B764" itemCount={WERKSTATT_ITEMS.length}>
-          {[...WERKSTATT_ITEMS, ...WERKSTATT_ITEMS, ...WERKSTATT_ITEMS].map((w, i) => (
+        <Carousel title="Werkstaetten" icon={Wrench} accentColor="#45B764" itemCount={WERKSTAETTEN.length}>
+          {[...WERKSTAETTEN, ...WERKSTAETTEN, ...WERKSTAETTEN].map((w, i) => (
             <div
-              key={`${w.id}-${Math.floor(i / WERKSTATT_ITEMS.length)}`}
+              key={`${w.id}-${Math.floor(i / WERKSTAETTEN.length)}`}
               className="carousel-item"
               onClick={() => navigate('/app')}
-              style={{ ...itemStyle, overflow: 'hidden' }}
+              style={{ ...itemStyle, padding: 14 }}
               onMouseEnter={hoverIn}
               onMouseLeave={hoverOut}
             >
-              <div style={{ height: 70, background: 'rgba(69,183,100,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Wrench size={20} style={{ color: 'rgba(69,183,100,0.35)' }} />
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin size={11} style={{ color: '#45B764' }} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#45B764', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  {w.tag}
+                </span>
               </div>
-              <div style={{ padding: 12 }}>
-                <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 2 }}>
-                  {w.title}
-                </h4>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(26,26,26,0.5)', lineHeight: 1.4 }}>
-                  {w.subtitle}
-                </p>
-              </div>
+              <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 2 }}>
+                {w.title}
+              </h4>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(26,26,26,0.45)', lineHeight: 1.4 }}>
+                {w.subtitle}
+              </p>
             </div>
           ))}
         </Carousel>
 
-        {/* Abenteuer */}
-        <Carousel title="Abenteuer" icon={Calendar} accentColor="#2D7DD2" itemCount={ABENTEUER_ITEMS.length}>
-          {[...ABENTEUER_ITEMS, ...ABENTEUER_ITEMS, ...ABENTEUER_ITEMS].map((a, i) => (
+        <Carousel title="Abenteuer" icon={Calendar} accentColor="#2D7DD2" itemCount={ABENTEUER.length}>
+          {[...ABENTEUER, ...ABENTEUER, ...ABENTEUER].map((a, i) => (
             <div
-              key={`${a.id}-${Math.floor(i / ABENTEUER_ITEMS.length)}`}
+              key={`${a.id}-${Math.floor(i / ABENTEUER.length)}`}
               className="carousel-item"
               onClick={() => navigate('/app')}
-              style={{ ...itemStyle, padding: 12 }}
+              style={{ ...itemStyle, padding: 14, borderLeft: `3px solid #2D7DD2` }}
               onMouseEnter={hoverIn}
               onMouseLeave={hoverOut}
             >
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Calendar size={10} style={{ color: '#2D7DD2' }} />
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: '#2D7DD2', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  Abenteuer
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar size={11} style={{ color: '#2D7DD2' }} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#2D7DD2', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  {a.tag}
                 </span>
               </div>
-              <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1.25, marginBottom: 2 }}>
+              <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.85rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 2 }}>
                 {a.title}
               </h4>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: 'rgba(26,26,26,0.45)' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(26,26,26,0.45)' }}>
                 {a.subtitle}
               </p>
             </div>
