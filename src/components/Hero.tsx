@@ -1,167 +1,131 @@
-import { useEffect, useState } from 'react'
 import { ArrowDown } from 'lucide-react'
-import { MapContainer, TileLayer } from 'react-leaflet'
-import type { LatLngExpression } from 'leaflet'
-import { BlazingO } from './BlazingO'
-import { LightMarker } from './map/LightMarker'
-import { LichtungMarker } from './map/LichtungMarker'
-import * as api from '../api/client'
-
-interface LightData {
-  id: string
-  lat: number
-  lng: number
-  name: string
-  statement: string
-  image_path?: string
-}
-
-interface LichtungData {
-  id: string
-  name: string
-  description: string
-  lat: number
-  lng: number
-  creator_name: string
-  image_path?: string
-}
+import { Link } from 'react-router-dom'
 
 export default function Hero() {
-  const [lights, setLights] = useState<LightData[]>([])
-  const [lichtungen, setLichtungen] = useState<LichtungData[]>([])
-
-  useEffect(() => {
-    api.getLights().then(setLights).catch(() => {})
-    api.getLichtungen().then(setLichtungen).catch(() => {})
-  }, [])
-
-  // LightMarker erwartet ein LightPin-Shape mit position
-  const lightsForMarker = lights.map(l => ({
-    id: l.id,
-    position: [l.lat, l.lng] as [number, number],
-    name: l.name,
-    statement: l.statement,
-    image_path: l.image_path,
-    createdAt: '',
-  }))
-
   return (
-    <section className="relative w-full overflow-hidden" style={{ height: '100vh' }}>
+    <section className="relative w-full overflow-hidden" style={{ minHeight: '100vh', background: '#F5F0E8' }}>
 
-      {/* Live-Karte als Hintergrund */}
-      <div className="absolute inset-0 z-0">
-        <MapContainer
-          center={[35, 15] as LatLngExpression}
-          zoom={3}
-          minZoom={2}
-          maxZoom={8}
-          scrollWheelZoom={false}
-          dragging={true}
-          zoomControl={false}
-          attributionControl={false}
-          doubleClickZoom={false}
-          touchZoom={true}
-          className="w-full h-full"
-          style={{ background: '#F5F4F0' }}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-          />
-          {lightsForMarker.map(l => (
-            <LightMarker key={l.id} light={l as any} />
-          ))}
-          {lichtungen.map(l => (
-            <LichtungMarker key={l.id} lichtung={l} onClick={() => {}} />
-          ))}
-        </MapContainer>
-      </div>
-
-      {/* Weicher Fade-Overlay oben und unten, damit Text lesbar ist */}
-      <div className="absolute inset-x-0 top-0 h-40 pointer-events-none z-10"
-        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.4) 60%, rgba(255,255,255,0) 100%)' }}
-      />
-      <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none z-10"
-        style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)' }}
+      {/* Hero-Bild als Hintergrund */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: 'url(/hero-macher.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 30%',
+          filter: 'brightness(0.7)',
+        }}
       />
 
-      {/* Hero-Inhalt im Zentrum */}
-      <div className="relative z-20 h-full flex flex-col items-center justify-center pt-16 pb-20 px-6 pointer-events-none">
+      {/* Gradient-Overlay fuer Lesbarkeit */}
+      <div
+        className="absolute inset-0 z-10"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(26,26,26,0.3) 0%, rgba(26,26,26,0.6) 60%, rgba(26,26,26,0.85) 100%)',
+        }}
+      />
 
-        <div
-          className="flex flex-col items-center text-center rounded-2xl px-8 py-8 md:px-12 md:py-10 pointer-events-auto"
-          style={{
-            background: 'rgba(255,255,255,0.82)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.6)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(10,10,10,0.03)',
-            maxWidth: 520,
-          }}
-        >
-          {/* BlazingO */}
-          <div className="hero-light mb-5">
-            <BlazingO size={110} />
+      {/* Hero-Inhalt */}
+      <div className="relative z-20 min-h-screen flex flex-col items-center justify-center pt-16 pb-20 px-6">
+
+        <div className="flex flex-col items-center text-center max-w-2xl">
+
+          {/* Badge */}
+          <div
+            className="hero-light mb-6 px-4 py-1.5 rounded-full"
+            style={{
+              background: 'rgba(232,117,26,0.15)',
+              border: '1px solid rgba(232,117,26,0.3)',
+            }}
+          >
+            <span style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              color: '#FFAA54',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+            }}>
+              Macher-Festival 2026 — Wir sind dabei
+            </span>
           </div>
 
           {/* Titel */}
           <h1
             className="hero-title"
             style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(1.8rem, 4.5vw, 3rem)',
-              fontWeight: 300,
-              color: '#0A0A0A',
-              lineHeight: 1,
-              marginBottom: '0.6rem',
-              letterSpacing: '0.25em',
-              textTransform: 'uppercase',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 'clamp(2.5rem, 7vw, 4.5rem)',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              lineHeight: 0.95,
+              marginBottom: '1.2rem',
+              letterSpacing: '-0.03em',
             }}
           >
-            Lichtung
+            Bau.<br />Mach.<br />Zeig es.
           </h1>
 
           {/* Untertitel */}
           <p
             className="hero-subtitle"
             style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(0.95rem, 2vw, 1.2rem)',
-              fontStyle: 'italic',
-              color: 'rgba(10,10,10,0.55)',
-              marginBottom: '1.8rem',
-              maxWidth: 380,
-              lineHeight: 1.5,
-              letterSpacing: '0.02em',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: 'clamp(1rem, 2.2vw, 1.25rem)',
+              color: 'rgba(255,255,255,0.75)',
+              marginBottom: '2.5rem',
+              maxWidth: 480,
+              lineHeight: 1.6,
             }}
           >
-            Licht fuer den Frieden aus den Herzen der Menschen.
+            Die Karte fuer Macher. Finde Werkstaetten, Abenteuer und Menschen,
+            die anpacken — in deiner Naehe.
           </p>
 
-          {/* Ein Button */}
-          <a
-            href="#kunst"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.85rem',
-              fontWeight: 400,
-              color: 'rgba(10,10,10,0.7)',
-              textDecoration: 'none',
-              padding: '13px 30px',
-              border: '1px solid rgba(10,10,10,0.15)',
-              borderRadius: '8px',
-              background: 'rgba(255,255,255,0.6)',
-            }}
-          >
-            Erfahre mehr
-          </a>
+          {/* CTAs */}
+          <div className="hero-ctas flex flex-col sm:flex-row gap-3">
+            <Link
+              to="/app"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                color: '#fff',
+                textDecoration: 'none',
+                padding: '14px 36px',
+                background: '#E8751A',
+                borderRadius: '10px',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 20px rgba(232,117,26,0.4)',
+              }}
+            >
+              Karte entdecken
+            </Link>
+            <a
+              href="#features"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+                color: 'rgba(255,255,255,0.85)',
+                textDecoration: 'none',
+                padding: '14px 36px',
+                border: '1px solid rgba(255,255,255,0.25)',
+                borderRadius: '10px',
+                background: 'rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              So funktioniert's
+            </a>
+          </div>
         </div>
 
       </div>
 
       {/* Scroll-Pfeil */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 scroll-hint pointer-events-auto">
-        <a href="#kunst" style={{ color: 'rgba(10,10,10,0.35)' }}>
-          <ArrowDown size={22} />
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 scroll-hint">
+        <a href="#features" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <ArrowDown size={24} />
         </a>
       </div>
 

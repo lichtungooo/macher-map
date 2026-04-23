@@ -1,33 +1,32 @@
-import { Sparkles, Trees, Heart, ExternalLink } from 'lucide-react'
+import { Hammer, Building, Megaphone, ExternalLink } from 'lucide-react'
 
-// Open Collective Kategorien — jede Karte kann spaeter ihre eigene OC-Seite bekommen
-const KATEGORIEN = [
+const PARTNER = [
   {
-    icon: Sparkles,
-    title: 'Die Bewegung',
-    text: 'Trage die Infrastruktur, damit die Lichtung waechst und leuchtet.',
-    url: 'https://opencollective.com/lichtung',
-    color: '#D4A843',
+    icon: Hammer,
+    title: 'Werkstatt-Partner',
+    text: 'Deine Werkstatt auf der Karte. Sichtbar fuer tausende Macher in deiner Region.',
+    cta: 'Partner werden',
+    color: '#E8751A',
   },
   {
-    icon: Trees,
-    title: 'Orte fuer den Frieden',
-    text: 'Unterstuetze Lichtungen — Plaetze, an denen Menschen zusammenkommen.',
-    url: 'https://opencollective.com/lichtung-orte',
-    color: '#7BAE5E',
+    icon: Building,
+    title: 'Sponsoring',
+    text: 'Unterstuetze die Macher-Bewegung. Dein Logo auf der Karte, bei Events und im Festival-Programm.',
+    cta: 'Sponsoring anfragen',
+    color: '#2D7DD2',
   },
   {
-    icon: Heart,
-    title: 'Projekte fuer den Frieden',
-    text: 'Foerdere Friedensprojekte, die Menschen auf der Karte starten.',
-    url: 'https://opencollective.com/lichtung-projekte',
-    color: '#C07090',
+    icon: Megaphone,
+    title: 'Macher-Festival 2026',
+    text: 'Ferropolis, 6.–9. August. Bau-Wettbewerbe, Workshops, Seifenkistenrennen. Sei dabei.',
+    cta: 'Mehr erfahren',
+    color: '#45B764',
   },
 ]
 
 export default function Support() {
   return (
-    <section id="unterstuetzen" className="py-24 section-reveal" style={{ background: '#fff' }}>
+    <section id="partner" className="py-24 section-reveal" style={{ background: '#fff' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center mb-14">
@@ -35,137 +34,127 @@ export default function Support() {
             style={{
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.72rem',
-              fontWeight: 500,
-              color: '#D4A843',
-              letterSpacing: '0.25em',
+              fontWeight: 600,
+              color: '#E8751A',
+              letterSpacing: '0.2em',
               textTransform: 'uppercase',
               marginBottom: '0.8rem',
             }}
           >
-            Unterstuetzen
+            Partner & Sponsoring
           </p>
           <h2
             style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: "'Space Grotesk', sans-serif",
               fontSize: 'clamp(1.6rem, 3.5vw, 2.3rem)',
-              fontWeight: 400,
-              color: '#0A0A0A',
+              fontWeight: 700,
+              color: '#1A1A1A',
               marginBottom: '0.8rem',
+              letterSpacing: '-0.02em',
             }}
           >
-            Waehle, was du staerken willst.
+            Mach mit. Werde Teil der Bewegung.
           </h2>
           <p
             style={{
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.92rem',
               lineHeight: 1.7,
-              color: 'rgba(10,10,10,0.5)',
-              maxWidth: '520px',
+              color: 'rgba(26,26,26,0.55)',
+              maxWidth: '540px',
               margin: '0 auto',
             }}
           >
-            Transparent ueber Open Collective. Jeder Beitrag — ob ein Euro oder hundert —
-            fliesst sichtbar dorthin, wo du ihn hintraegst.
+            Werkstaetten, Sponsoren und Festivals — gemeinsam bauen wir
+            die groesste Macher-Karte Deutschlands.
           </p>
         </div>
 
-        {/* Drei Karten */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
-          {KATEGORIEN.map((k, i) => (
-            <a
+          {PARTNER.map((p, i) => (
+            <div
               key={i}
-              href={k.url}
-              target="_blank"
-              rel="noopener noreferrer"
               className="group p-7 rounded-xl transition-all"
               style={{
-                background: '#FAFAF8',
-                border: '1px solid rgba(10,10,10,0.05)',
-                textDecoration: 'none',
+                background: '#FAF8F5',
+                border: '1px solid rgba(26,26,26,0.05)',
                 display: 'flex',
                 flexDirection: 'column',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = '#fff'}
-              onMouseLeave={e => e.currentTarget.style.background = '#FAFAF8'}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#fff'
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.06)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#FAF8F5'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
             >
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                style={{ background: `${k.color}14` }}
+                style={{ background: `${p.color}14` }}
               >
-                <k.icon size={20} style={{ color: k.color }} />
+                <p.icon size={20} style={{ color: p.color }} />
               </div>
               <h3
                 style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
-                  fontSize: '1.2rem',
-                  fontWeight: 500,
-                  color: '#0A0A0A',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: '1.15rem',
+                  fontWeight: 600,
+                  color: '#1A1A1A',
                   marginBottom: '0.6rem',
                 }}
               >
-                {k.title}
+                {p.title}
               </h3>
               <p
                 style={{
                   fontFamily: 'Inter, sans-serif',
                   fontSize: '0.82rem',
                   lineHeight: 1.6,
-                  color: 'rgba(10,10,10,0.55)',
+                  color: 'rgba(26,26,26,0.55)',
                   marginBottom: '1rem',
                   flexGrow: 1,
                 }}
               >
-                {k.text}
+                {p.text}
               </p>
-              <div
+              <span
                 className="flex items-center gap-1.5"
                 style={{
                   fontFamily: 'Inter, sans-serif',
                   fontSize: '0.78rem',
-                  fontWeight: 500,
-                  color: k.color,
+                  fontWeight: 600,
+                  color: p.color,
+                  cursor: 'pointer',
                 }}
               >
-                Open Collective
+                {p.cta}
                 <ExternalLink size={12} />
-              </div>
-            </a>
+              </span>
+            </div>
           ))}
         </div>
 
-        {/* Bezug zum Real Life Network — kleiner Verweis */}
         <div
           className="text-center mt-10 pt-10"
-          style={{ borderTop: '1px solid rgba(10,10,10,0.05)' }}
+          style={{ borderTop: '1px solid rgba(26,26,26,0.05)' }}
         >
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(10,10,10,0.5)', lineHeight: 1.7, maxWidth: 560, margin: '0 auto' }}>
-            Die Lichtung wurzelt im <strong>Real Life Network</strong> — dem gemeinsamen Fundament fuer echtes Begegnen.
-            Vertrauen entsteht ueber das <strong>Web of Trust</strong>.
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(26,26,26,0.5)', lineHeight: 1.7, maxWidth: 560, margin: '0 auto' }}>
+            Die Macher-Map ist ein Projekt des <strong>Real Life Network</strong> —
+            dem Fundament fuer echtes Machen, echte Begegnung, echte Wirkung.
           </p>
           <div className="flex items-center justify-center gap-5 mt-4">
             <a
               href="https://real-life-stack.de"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: 'rgba(10,10,10,0.15)' }}
+              style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(26,26,26,0.5)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: 'rgba(26,26,26,0.15)' }}
             >
-              Real Life Stack
-            </a>
-            <a
-              href="https://web-of-trust.de"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: 'rgba(10,10,10,0.15)' }}
-            >
-              Web of Trust
+              Real Life Network
             </a>
           </div>
         </div>
-
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.3)', textAlign: 'center', marginTop: '2rem' }}>
-          Gemeinnuetzig &middot; Steuerlich absetzbar &middot; Kollektiv Lichtung e.V.
-        </p>
       </div>
     </section>
   )

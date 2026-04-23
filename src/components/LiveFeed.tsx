@@ -1,81 +1,55 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trees, Sparkles, CalendarDays, ChevronLeft, ChevronRight, Moon, Globe } from 'lucide-react'
-import * as api from '../api/client'
+import { Wrench, Hammer, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 
-// ─── Typen ───
-
-interface LightItem {
-  id: string
-  name: string
-  statement: string
-  image_path?: string
-}
-
-interface LichtungItem {
-  id: string
-  name: string
-  description?: string
-  image_path?: string
-}
-
-interface EventItem {
+interface CardItem {
   id: string
   title: string
-  description?: string
-  start_time: string
-  end_time?: string
-  type?: string
-  is_global?: boolean
-  is_placeholder?: boolean
+  subtitle: string
+  image?: string
 }
 
-// ─── Utils ───
-
-function pickRandom<T>(arr: T[], n: number): T[] {
-  const copy = [...arr]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy.slice(0, n)
+function seed(i: number) {
+  let x = Math.sin(i * 9301 + 49297) * 233280
+  return x - Math.floor(x)
 }
 
-function formatDate(iso: string) {
-  try {
-    const d = new Date(iso)
-    return d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) +
-      ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return iso
-  }
-}
+const MACHER_NAMES = [
+  'Max der Schweisser', 'Lena Holzwurm', 'Basti Schrauber', 'Finja Funkenflug',
+  'Jonas Zimmermann', 'Mila Saegemehl', 'Tom Kabelkoenig', 'Hanna Leimfest',
+  'Nico Dreher', 'Ella Bohrmaschine', 'Felix Schleifer', 'Paula Nagelprobe',
+]
 
-// Platzhalter-Events fuer globale Meditationen (falls Backend leer ist)
-const PLACEHOLDER_EVENTS: EventItem[] = (() => {
-  const out: EventItem[] = []
-  const now = new Date()
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now)
-    d.setDate(now.getDate() + i * 15)
-    d.setHours(21, 0, 0, 0)
-    const isFullMoon = i % 2 === 0
-    out.push({
-      id: `placeholder-${i}`,
-      title: isFullMoon ? 'Vollmond-Meditation' : 'Neumond-Innehalten',
-      description: isFullMoon
-        ? 'Weltweite Meditation im Licht des Vollmondes.'
-        : 'Neubeginn in der Stille. Gemeinsamer Puls um die Erde.',
-      start_time: d.toISOString(),
-      type: isFullMoon ? 'meditation' : 'stille',
-      is_global: true,
-      is_placeholder: true,
-    })
-  }
-  return out
-})()
+const MACHER_SKILLS = [
+  'Holzbau · Schreinerei', 'Schweissen · Metall', 'Elektro · Loeten',
+  '3D-Druck · CNC', 'Fahrrad-Schrauben', 'Messerbau', 'Moebelbau',
+  'Seifenkisten-Profi', 'Baumhaus-Bauer', 'Keramik · Toepfern',
+  'Leder-Handwerk', 'Textil · Naehen',
+]
 
-// ─── Karussell ───
+const WERKSTATT_ITEMS: CardItem[] = [
+  { id: 'w1', title: 'FabLab Berlin', subtitle: '3D-Drucker · Laser · CNC' },
+  { id: 'w2', title: 'Offene Werkstatt Muenchen', subtitle: 'Holz · Metall · Textil' },
+  { id: 'w3', title: 'Makerspace Koeln', subtitle: 'Elektronik · Robotik · 3D-Druck' },
+  { id: 'w4', title: 'HolzWerk Hamburg', subtitle: 'Schreinerei · Drechseln' },
+  { id: 'w5', title: 'MetallWerk Leipzig', subtitle: 'Schweissen · Schmieden · Drehen' },
+  { id: 'w6', title: 'Garage Nuernberg', subtitle: 'KFZ · Fahrrad · Moebel' },
+  { id: 'w7', title: 'Kreativlabor Stuttgart', subtitle: 'Siebdruck · Laser · Naehen' },
+  { id: 'w8', title: 'BauWerk Dresden', subtitle: 'Holzbau · Trockenbau · Mauer' },
+  { id: 'w9', title: 'TechHub Frankfurt', subtitle: 'IoT · Arduino · Loeten' },
+]
+
+const ABENTEUER_ITEMS: CardItem[] = [
+  { id: 'a1', title: 'Seifenkistenrennen Ferropolis', subtitle: '6. Aug 2026 · Ferropolis' },
+  { id: 'a2', title: 'Baumhaus-Wochenende', subtitle: '12. Jul 2026 · Schwarzwald' },
+  { id: 'a3', title: 'Messerbau-Workshop', subtitle: '23. Mai 2026 · Hamburg' },
+  { id: 'a4', title: 'Schweiss-Kurs fuer Anfaenger', subtitle: '8. Jun 2026 · Berlin' },
+  { id: 'a5', title: 'Festival-Buehne bauen', subtitle: '1. Aug 2026 · Ferropolis' },
+  { id: 'a6', title: 'Moebel aus Paletten', subtitle: '15. Jun 2026 · Koeln' },
+  { id: 'a7', title: 'Schmieden fuer Kids', subtitle: '20. Jul 2026 · Nuernberg' },
+  { id: 'a8', title: 'Floss bauen & fahren', subtitle: '28. Jun 2026 · Leipzig' },
+  { id: 'a9', title: 'Longboard selber bauen', subtitle: '5. Jul 2026 · Muenchen' },
+]
 
 function Carousel({
   title,
@@ -88,7 +62,7 @@ function Carousel({
   icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
   accentColor: string
   children: React.ReactNode
-  itemCount: number // Original-Anzahl (nicht verdreifachte)
+  itemCount: number
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
@@ -98,16 +72,13 @@ function Carousel({
     if (!el) return 0
     const firstItem = el.querySelector(':scope > *') as HTMLElement | null
     if (!firstItem) return 0
-    return firstItem.getBoundingClientRect().width + 12 // + gap
+    return firstItem.getBoundingClientRect().width + 12
   }
 
-  // Beim ersten Render: in die mittlere Kopie scrollen (ohne Animation)
   useEffect(() => {
     if (initialized.current || itemCount === 0) return
     const el = scrollRef.current
     if (!el) return
-
-    // Kleiner Delay, damit Browser die Breite berechnet hat
     const timer = setTimeout(() => {
       const cardWidth = getCardWidth()
       if (cardWidth > 0) {
@@ -118,24 +89,15 @@ function Carousel({
     return () => clearTimeout(timer)
   }, [itemCount])
 
-  // Nach Animation pruefen, ob wir in der Rand-Zone sind → ohne Animation zur Mitte teleportieren
   const rebalance = () => {
     const el = scrollRef.current
     if (!el) return
     const cardWidth = getCardWidth()
     if (cardWidth === 0) return
-
     const oneSet = cardWidth * itemCount
     const current = el.scrollLeft
-
-    // Wenn im ersten Drittel → zur Mitte springen (addiere oneSet)
-    if (current < oneSet * 0.5) {
-      el.scrollLeft = current + oneSet
-    }
-    // Wenn im letzten Drittel → zur Mitte springen (subtrahiere oneSet)
-    else if (current > oneSet * 2.5) {
-      el.scrollLeft = current - oneSet
-    }
+    if (current < oneSet * 0.5) el.scrollLeft = current + oneSet
+    else if (current > oneSet * 2.5) el.scrollLeft = current - oneSet
   }
 
   const scroll = (dir: 'left' | 'right') => {
@@ -143,10 +105,7 @@ function Carousel({
     if (!el) return
     const cardWidth = getCardWidth()
     if (cardWidth === 0) return
-
     el.scrollBy({ left: dir === 'right' ? cardWidth : -cardWidth, behavior: 'smooth' })
-
-    // Nach der smooth-Scroll-Animation (ca. 400ms) umpositionieren, falls noetig
     setTimeout(rebalance, 450)
   }
 
@@ -154,41 +113,35 @@ function Carousel({
 
   return (
     <div className="mb-8 last:mb-0">
-      {/* Header zentriert: [←] Titel [→] */}
       <div className="flex items-center justify-center gap-3 mb-3">
         <button
           onClick={() => scroll('left')}
           aria-label="Zurueck"
           className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.12)', cursor: 'pointer' }}
+          style={{ background: 'transparent', border: '1px solid rgba(26,26,26,0.12)', cursor: 'pointer' }}
         >
-          <ChevronLeft size={13} style={{ color: 'rgba(10,10,10,0.55)' }} />
+          <ChevronLeft size={13} style={{ color: 'rgba(26,26,26,0.55)' }} />
         </button>
-
         <div className="flex items-center gap-1.5" style={{ minWidth: 'calc((100% - 2 * 12px) / 3)', justifyContent: 'center' }}>
           <Icon size={13} style={{ color: accentColor }} />
-          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(10,10,10,0.6)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(26,26,26,0.6)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
             {title}
           </h3>
         </div>
-
         <button
           onClick={() => scroll('right')}
           aria-label="Weiter"
           className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.12)', cursor: 'pointer' }}
+          style={{ background: 'transparent', border: '1px solid rgba(26,26,26,0.12)', cursor: 'pointer' }}
         >
-          <ChevronRight size={13} style={{ color: 'rgba(10,10,10,0.55)' }} />
+          <ChevronRight size={13} style={{ color: 'rgba(26,26,26,0.55)' }} />
         </button>
       </div>
 
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {children}
       </div>
@@ -196,60 +149,36 @@ function Carousel({
   )
 }
 
-// ─── Haupt-Komponente ───
-
 export default function LiveFeed() {
   const navigate = useNavigate()
-  const [lights, setLights] = useState<LightItem[]>([])
-  const [lichtungen, setLichtungen] = useState<LichtungItem[]>([])
-  const [events, setEvents] = useState<EventItem[]>([])
 
-  useEffect(() => {
-    api.getLights().then((data: any[]) => {
-      const filtered = (data || []).filter(l => l.name && (l.statement || l.image_path))
-      setLights(pickRandom(filtered, 9))
-    }).catch(() => {})
+  const macherItems: CardItem[] = MACHER_NAMES.map((name, i) => ({
+    id: `m-${i}`,
+    title: name,
+    subtitle: MACHER_SKILLS[i % MACHER_SKILLS.length],
+  }))
 
-    api.getLichtungen().then((data: any[]) => {
-      setLichtungen(pickRandom(data || [], 9))
-    }).catch(() => {})
-
-    api.getEvents().then((data: any[]) => {
-      const real = (data || []).filter(e => e.title)
-      const now = Date.now()
-      const future = real.filter(e => !e.start_time || new Date(e.start_time).getTime() > now - 24 * 3600 * 1000)
-      if (future.length >= 3) {
-        setEvents(pickRandom(future, 9))
-      } else {
-        setEvents([...future, ...PLACEHOLDER_EVENTS].slice(0, 9))
-      }
-    }).catch(() => {
-      setEvents(PLACEHOLDER_EVENTS)
-    })
-  }, [])
-
-  const openOnMap = (type: 'light' | 'lichtung' | 'event', id: string, isPlaceholder?: boolean) => {
-    if (isPlaceholder) {
-      navigate('/app')
-      return
-    }
-    navigate(`/app?${type}=${id}`)
-  }
-
-  // Karussell-Item-Breite: 3 sichtbar auf Desktop, 1 Karte mit Peek auf Mobile
   const itemStyle: React.CSSProperties = {
     flex: '0 0 calc((100% - 2 * 12px) / 3)',
     scrollSnapAlign: 'start',
     background: '#fff',
-    border: '1px solid rgba(10,10,10,0.05)',
+    border: '1px solid rgba(26,26,26,0.05)',
     borderRadius: 10,
     cursor: 'pointer',
     transition: 'all 0.2s',
   }
 
+  const hoverIn = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = 'translateY(-2px)'
+    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.05)'
+  }
+  const hoverOut = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = 'translateY(0)'
+    e.currentTarget.style.boxShadow = 'none'
+  }
+
   return (
-    <section id="stimmen" className="py-20 section-reveal" style={{ background: '#FAFAF8' }}>
-      {/* Scrollbar-Hider fuer alle Browser */}
+    <section id="community" className="py-20 section-reveal" style={{ background: '#FAF8F5' }}>
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         @media (max-width: 768px) {
@@ -258,153 +187,109 @@ export default function LiveFeed() {
       `}</style>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Minimal-Titel */}
         <div className="text-center mb-10">
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.68rem',
-              fontWeight: 500,
-              color: 'rgba(10,10,10,0.4)',
-              letterSpacing: '0.25em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Stimmen von der Karte
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '0.68rem',
+            fontWeight: 500,
+            color: 'rgba(26,26,26,0.4)',
+            letterSpacing: '0.25em',
+            textTransform: 'uppercase',
+          }}>
+            Was gerade passiert
           </p>
         </div>
 
-        {/* ─── Menschen (Lichter) ─── */}
-        <Carousel title="Menschen" icon={Sparkles} accentColor="#D4A843" itemCount={lights.length}>
-          {[...lights, ...lights, ...lights].map((l, i) => (
+        {/* Macher */}
+        <Carousel title="Macher" icon={Hammer} accentColor="#E8751A" itemCount={macherItems.length}>
+          {[...macherItems, ...macherItems, ...macherItems].map((m, i) => (
             <div
-              key={`${l.id}-${Math.floor(i / Math.max(lights.length, 1))}`}
+              key={`${m.id}-${Math.floor(i / macherItems.length)}`}
               className="carousel-item"
-              onClick={() => openOnMap('light', l.id)}
+              onClick={() => navigate('/app')}
               style={{ ...itemStyle, padding: 14 }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.05)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+              onMouseEnter={hoverIn}
+              onMouseLeave={hoverOut}
             >
-              <div className="flex gap-2.5 items-start">
-                {l.image_path ? (
-                  <img
-                    src={l.image_path}
-                    alt=""
-                    style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(212,168,67,0.3)' }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 34, height: 34, borderRadius: '50%',
-                      background: 'rgba(212,168,67,0.08)',
-                      border: '1.5px solid rgba(212,168,67,0.25)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', color: '#D4A843' }}>
-                      {l.name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h4 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A', marginBottom: 2, lineHeight: 1.2 }}>
-                    {l.name}
-                  </h4>
-                  {l.statement && (
-                    <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.78rem', fontStyle: 'italic', lineHeight: 1.4, color: 'rgba(10,10,10,0.55)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                      „{l.statement}"
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </Carousel>
-
-        {/* ─── Orte (Lichtungen) ─── */}
-        <Carousel title="Orte" icon={Trees} accentColor="#7BAE5E" itemCount={lichtungen.length}>
-          {[...lichtungen, ...lichtungen, ...lichtungen].map((l, i) => (
-            <div
-              key={`${l.id}-${Math.floor(i / Math.max(lichtungen.length, 1))}`}
-              className="carousel-item"
-              onClick={() => openOnMap('lichtung', l.id)}
-              style={{ ...itemStyle, overflow: 'hidden' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.05)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-            >
-              {l.image_path ? (
+              <div className="flex gap-2.5 items-center">
                 <div
                   style={{
-                    height: 80,
-                    backgroundImage: `url(${l.image_path})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    width: 34, height: 34, borderRadius: '50%',
+                    background: `hsl(${seed(i * 7) * 360}, 35%, 92%)`,
+                    border: '1.5px solid rgba(232,117,26,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
                   }}
-                />
-              ) : (
-                <div style={{ height: 80, background: 'rgba(123,174,94,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Trees size={22} style={{ color: 'rgba(123,174,94,0.4)' }} />
+                >
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.85rem', fontWeight: 600, color: '#E8751A' }}>
+                    {m.title.charAt(0)}
+                  </span>
                 </div>
-              )}
-              <div style={{ padding: 12 }}>
-                <h4 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A', marginBottom: 2, lineHeight: 1.2 }}>
-                  {l.name}
-                </h4>
-                {l.description && (
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', lineHeight: 1.4, color: 'rgba(10,10,10,0.5)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {l.description}
+                <div className="min-w-0 flex-1">
+                  <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 2 }}>
+                    {m.title}
+                  </h4>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(26,26,26,0.5)', lineHeight: 1.3 }}>
+                    {m.subtitle}
                   </p>
-                )}
+                </div>
               </div>
             </div>
           ))}
         </Carousel>
 
-        {/* ─── Veranstaltungen ─── */}
-        <Carousel title="Veranstaltungen" icon={CalendarDays} accentColor="#5078C8" itemCount={events.length}>
-          {[...events, ...events, ...events].map((ev, i) => (
+        {/* Werkstaetten */}
+        <Carousel title="Werkstaetten" icon={Wrench} accentColor="#45B764" itemCount={WERKSTATT_ITEMS.length}>
+          {[...WERKSTATT_ITEMS, ...WERKSTATT_ITEMS, ...WERKSTATT_ITEMS].map((w, i) => (
             <div
-              key={`${ev.id}-${Math.floor(i / Math.max(events.length, 1))}`}
+              key={`${w.id}-${Math.floor(i / WERKSTATT_ITEMS.length)}`}
               className="carousel-item"
-              onClick={() => openOnMap('event', ev.id, ev.is_placeholder)}
+              onClick={() => navigate('/app')}
+              style={{ ...itemStyle, overflow: 'hidden' }}
+              onMouseEnter={hoverIn}
+              onMouseLeave={hoverOut}
+            >
+              <div style={{ height: 70, background: 'rgba(69,183,100,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Wrench size={20} style={{ color: 'rgba(69,183,100,0.35)' }} />
+              </div>
+              <div style={{ padding: 12 }}>
+                <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 2 }}>
+                  {w.title}
+                </h4>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(26,26,26,0.5)', lineHeight: 1.4 }}>
+                  {w.subtitle}
+                </p>
+              </div>
+            </div>
+          ))}
+        </Carousel>
+
+        {/* Abenteuer */}
+        <Carousel title="Abenteuer" icon={Calendar} accentColor="#2D7DD2" itemCount={ABENTEUER_ITEMS.length}>
+          {[...ABENTEUER_ITEMS, ...ABENTEUER_ITEMS, ...ABENTEUER_ITEMS].map((a, i) => (
+            <div
+              key={`${a.id}-${Math.floor(i / ABENTEUER_ITEMS.length)}`}
+              className="carousel-item"
+              onClick={() => navigate('/app')}
               style={{ ...itemStyle, padding: 12 }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.05)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+              onMouseEnter={hoverIn}
+              onMouseLeave={hoverOut}
             >
               <div className="flex items-center gap-1.5 mb-1.5">
-                {ev.is_global ? (
-                  <Globe size={10} style={{ color: '#5078C8' }} />
-                ) : ev.type === 'meditation' || ev.type === 'stille' ? (
-                  <Moon size={10} style={{ color: '#5078C8' }} />
-                ) : (
-                  <CalendarDays size={10} style={{ color: '#5078C8' }} />
-                )}
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: '#5078C8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  {ev.is_global ? 'Global' : ev.type || 'Event'}
+                <Calendar size={10} style={{ color: '#2D7DD2' }} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: '#2D7DD2', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  Abenteuer
                 </span>
-                {ev.is_placeholder && (
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', color: 'rgba(10,10,10,0.3)', marginLeft: 'auto' }}>
-                    geplant
-                  </span>
-                )}
               </div>
-              <h4 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A', marginBottom: 2, lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
-                {ev.title}
+              <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1.25, marginBottom: 2 }}>
+                {a.title}
               </h4>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: 'rgba(10,10,10,0.45)', marginBottom: 4 }}>
-                {formatDate(ev.start_time)}
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: 'rgba(26,26,26,0.45)' }}>
+                {a.subtitle}
               </p>
-              {ev.description && (
-                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.74rem', fontStyle: 'italic', lineHeight: 1.4, color: 'rgba(10,10,10,0.55)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
-                  {ev.description}
-                </p>
-              )}
             </div>
           ))}
         </Carousel>
-
       </div>
     </section>
   )

@@ -1,20 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 
 const NAV_ITEMS = [
-  { href: '#kunst', label: 'Bewegung' },
-  { href: '#karte', label: 'Verbindung' },
-  { href: '#stimmen', label: 'Sichtbar' },
-  { href: '#unterstuetzen', label: 'Getragen' },
+  { href: '#features', label: 'Features' },
+  { href: '#karte', label: 'Karte' },
+  { href: '#community', label: 'Community' },
+  { href: '#partner', label: 'Partner' },
 ]
 
 export default function Header() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  // Beim Scrollen wird der Header opak, oben ist er ueber der Karte transparent
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
     onScroll()
@@ -23,12 +22,12 @@ export default function Header() {
   }, [])
 
   const headerBg = scrolled
-    ? 'rgba(255,255,255,0.88)'
-    : 'rgba(255,255,255,0.35)'
+    ? 'rgba(250,248,245,0.95)'
+    : 'rgba(250,248,245,0.4)'
 
   const borderColor = scrolled
-    ? 'rgba(10,10,10,0.06)'
-    : 'rgba(255,255,255,0.4)'
+    ? 'rgba(26,26,26,0.08)'
+    : 'rgba(26,26,26,0.04)'
 
   return (
     <header
@@ -41,27 +40,21 @@ export default function Header() {
       }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <a
-          href="#"
-          className="flex items-center gap-2"
-          style={{ textDecoration: 'none' }}
-        >
-          <Logo size={26} />
+        <a href="#" className="flex items-center gap-2.5" style={{ textDecoration: 'none' }}>
+          <Logo size={30} />
           <span
             style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: '1.2rem',
-              fontWeight: 500,
-              color: '#0A0A0A',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '1.15rem',
+              fontWeight: 700,
+              color: '#1A1A1A',
+              letterSpacing: '-0.02em',
             }}
           >
-            Lichtung
+            Macher-Map
           </span>
         </a>
 
-        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           {NAV_ITEMS.map(item => (
             <a
@@ -69,14 +62,14 @@ export default function Header() {
               href={item.href}
               style={{
                 fontFamily: 'Inter, sans-serif',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 fontWeight: 500,
-                color: '#0A0A0A',
+                color: '#1A1A1A',
                 textDecoration: 'none',
                 transition: 'color 0.2s',
               }}
-              onMouseEnter={e => e.currentTarget.style.color = '#D4A843'}
-              onMouseLeave={e => e.currentTarget.style.color = '#0A0A0A'}
+              onMouseEnter={e => e.currentTarget.style.color = '#E8751A'}
+              onMouseLeave={e => e.currentTarget.style.color = '#1A1A1A'}
             >
               {item.label}
             </a>
@@ -85,38 +78,36 @@ export default function Header() {
             to="/app"
             style={{
               fontFamily: 'Inter, sans-serif',
-              fontSize: '0.75rem',
-              fontWeight: 500,
+              fontSize: '0.78rem',
+              fontWeight: 600,
               color: '#fff',
               textDecoration: 'none',
-              padding: '8px 20px',
-              background: '#0A0A0A',
-              borderRadius: '6px',
+              padding: '9px 22px',
+              background: '#E8751A',
+              borderRadius: '8px',
               transition: 'all 0.2s',
             }}
           >
-            Setze dein Licht
+            Macher werden
           </Link>
         </nav>
 
-        {/* Mobile Toggle */}
         <button
           onClick={() => setOpen(!open)}
           className="md:hidden"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0A0A0A' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1A1A1A' }}
           aria-label="Navigation"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Nav */}
       {open && (
         <nav
           className="md:hidden px-4 pb-4 space-y-3"
           style={{
-            borderTop: '1px solid rgba(10,10,10,0.06)',
-            background: 'rgba(255,255,255,0.95)',
+            borderTop: '1px solid rgba(26,26,26,0.06)',
+            background: 'rgba(250,248,245,0.98)',
             backdropFilter: 'blur(12px)',
           }}
         >
@@ -128,8 +119,8 @@ export default function Header() {
               style={{
                 display: 'block',
                 fontFamily: 'Inter, sans-serif',
-                fontSize: '0.85rem',
-                color: 'rgba(10,10,10,0.6)',
+                fontSize: '0.88rem',
+                color: 'rgba(26,26,26,0.6)',
                 textDecoration: 'none',
                 padding: '8px 0',
               }}
@@ -143,14 +134,14 @@ export default function Header() {
             style={{
               display: 'block',
               fontFamily: 'Inter, sans-serif',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              color: '#D4A843',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              color: '#E8751A',
               textDecoration: 'none',
               padding: '8px 0',
             }}
           >
-            Setze dein Licht
+            Macher werden
           </Link>
         </nav>
       )}

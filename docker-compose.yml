@@ -1,31 +1,29 @@
 services:
   web:
-    image: ghcr.io/lichtungooo/licht-fuer-frieden:latest
+    build: .
+    restart: unless-stopped
     network_mode: bridge
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lichtung.rule=Host(`lichtung.ooo`)"
-      - "traefik.http.routers.lichtung.entrypoints=websecure"
-      - "traefik.http.routers.lichtung.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.macher-map.rule=Host(`macher-map.org`)"
+      - "traefik.http.routers.macher-map.entrypoints=websecure"
+      - "traefik.http.routers.macher-map.tls.certresolver=letsencrypt"
 
   api:
     image: ghcr.io/lichtungooo/licht-fuer-frieden-api:latest
+    restart: unless-stopped
     network_mode: bridge
     volumes:
-      - lichtung-data:/data
+      - macher-data:/data
     environment:
-      - SMTP_USER=frieden@lichtung.ooo
-      - SMTP_PASS=${SMTP_PASS}
       - JWT_SECRET=${JWT_SECRET}
-      - BASE_URL=https://lichtung.ooo
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_BOT_USERNAME=LichtungFriedenBot
+      - BASE_URL=https://macher-map.org
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lichtung-api.rule=Host(`lichtung.ooo`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.lichtung-api.entrypoints=websecure"
-      - "traefik.http.routers.lichtung-api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.lichtung-api.loadbalancer.server.port=3001"
+      - "traefik.http.routers.macher-api.rule=Host(`macher-map.org`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.macher-api.entrypoints=websecure"
+      - "traefik.http.routers.macher-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.macher-api.loadbalancer.server.port=3001"
 
 volumes:
-  lichtung-data:
+  macher-data:

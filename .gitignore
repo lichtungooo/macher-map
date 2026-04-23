@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Original Lichtung source (kept locally for reference)
+licht-fuer-frieden/
