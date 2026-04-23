@@ -271,7 +271,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
       {/* Kompakter Header: Name + Datum-Nav + Tabs + X in einer Zeile */}
       <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b flex-wrap" style={{ borderColor: 'rgba(10,10,10,0.06)', background: '#fff' }}>
         {/* Lichtung-Name */}
-        <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate max-w-[150px] shrink-0">
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.92rem', fontWeight: 500, color: '#1A1A1A' }} className="truncate max-w-[150px] shrink-0">
           {lichtungName}
         </span>
 
@@ -282,7 +282,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
               style={{ background: 'transparent', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
               <ChevronLeft size={13} />
             </button>
-            <span style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A', minWidth: '120px', textAlign: 'center' }}>
+            <span style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#1A1A1A', minWidth: '120px', textAlign: 'center' }}>
               {dateLabel}
             </span>
             <button onClick={navNext} className="w-7 h-7 rounded-full flex items-center justify-center"
@@ -292,7 +292,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
           </div>
         )}
         {view === 'list' && (
-          <span style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A' }}>{dateLabel}</span>
+          <span style={{ ...font, fontSize: '0.78rem', fontWeight: 600, color: '#1A1A1A' }}>{dateLabel}</span>
         )}
 
         <div className="flex-1" />
@@ -301,7 +301,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
         <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
           {(['month', 'week', 'day', 'list'] as const).map(v => (
             <button key={v} onClick={() => { if (v === 'day' && !selectedDate) setSelectedDate(now.toISOString().slice(0, 10)); setView(v) }}
-              style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '4px 8px', background: view === v ? 'rgba(123,174,94,0.1)' : '#fff', color: view === v ? '#7BAE5E' : 'rgba(10,10,10,0.4)', border: 'none', cursor: 'pointer' }}>
+              style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '4px 8px', background: view === v ? 'rgba(123,174,94,0.1)' : '#fff', color: view === v ? '#E8751A' : 'rgba(10,10,10,0.4)', border: 'none', cursor: 'pointer' }}>
               {v === 'month' ? 'Monat' : v === 'week' ? 'Woche' : v === 'day' ? 'Tag' : 'Liste'}
             </button>
           ))}
@@ -346,11 +346,11 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                   return (
                     <button key={i} onClick={() => day.inMonth && (setSelectedDate(day.date), setView('day'))}
                       className="relative rounded-xl p-2 text-left transition-all hover:shadow-sm"
-                      style={{ background: day.inMonth ? bg : 'transparent', border: `1px solid ${isToday ? '#D4A843' : border}`, minHeight: '90px', cursor: day.inMonth ? 'pointer' : 'default' }}>
+                      style={{ background: day.inMonth ? bg : 'transparent', border: `1px solid ${isToday ? '#E8751A' : border}`, minHeight: '90px', cursor: day.inMonth ? 'pointer' : 'default' }}>
                       {day.inMonth && (
                         <>
                           <div className="flex items-center justify-between mb-1">
-                            <span style={{ ...font, fontSize: '0.9rem', fontWeight: isToday ? 700 : 500, color: closed ? '#c44' : '#0A0A0A' }}>{day.day}</span>
+                            <span style={{ ...font, fontSize: '0.9rem', fontWeight: isToday ? 700 : 500, color: closed ? '#c44' : '#1A1A1A' }}>{day.day}</span>
                             <div className="flex items-center gap-1">
                               {moon && (
                                 <span
@@ -359,7 +359,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                                   style={{
                                     width: 10, height: 10, borderRadius: '50%', display: 'inline-block',
                                     background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                                    border: `1.5px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                                    border: `1.5px solid ${moon.type === 'vollmond' ? '#E8751A' : '#6B4C8A'}`,
                                     boxShadow: moon.type === 'vollmond' ? '0 0 4px rgba(245,224,144,0.6)' : 'none',
                                     cursor: 'pointer',
                                   }}
@@ -375,10 +375,10 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
 
                           {!closed && hasSlots > 0 && (
                             <div className="space-y-0.5">
-                              <span style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: '#7BAE5E' }}>
+                              <span style={{ ...font, fontSize: '0.62rem', fontWeight: 600, color: '#E8751A' }}>
                                 {hasSlots} Slot{hasSlots !== 1 ? 's' : ''}
                               </span>
-                              <div style={{ ...font, fontSize: '0.6rem', color: free > 0 ? 'rgba(10,10,10,0.5)' : '#D4A843' }}>
+                              <div style={{ ...font, fontSize: '0.6rem', color: free > 0 ? 'rgba(10,10,10,0.5)' : '#E8751A' }}>
                                 {occupied}/{total} belegt
                               </div>
                             </div>
@@ -419,14 +419,14 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                     className="w-4 h-4 rounded flex items-center justify-center shrink-0"
                     style={{
                       border: adminMode ? 'none' : '1px solid rgba(10,10,10,0.2)',
-                      background: adminMode ? '#D4A843' : '#fff',
+                      background: adminMode ? '#E8751A' : '#fff',
                       cursor: 'pointer',
                     }}>
                     {adminMode && <span style={{ color: '#fff', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>&#10003;</span>}
                   </button>
-                  <Shield size={12} style={{ color: adminMode ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+                  <Shield size={12} style={{ color: adminMode ? '#E8751A' : 'rgba(10,10,10,0.35)' }} />
                   <span onClick={() => setAdminMode(!adminMode)}
-                    style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: adminMode ? '#D4A843' : 'rgba(10,10,10,0.5)' }}>
+                    style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: adminMode ? '#E8751A' : 'rgba(10,10,10,0.5)' }}>
                     Slots verwalten
                   </span>
                 </label>
@@ -465,7 +465,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                           className="w-full hover:bg-gray-50"
                           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                           <div style={{ ...font, fontSize: '0.6rem', fontWeight: 600, color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{d.label}</div>
-                          <div style={{ ...font, fontSize: '0.95rem', fontWeight: isToday ? 700 : 500, color: isClosed ? '#c44' : isToday ? '#D4A843' : '#0A0A0A', lineHeight: 1 }}>
+                          <div style={{ ...font, fontSize: '0.95rem', fontWeight: isToday ? 700 : 500, color: isClosed ? '#c44' : isToday ? '#E8751A' : '#1A1A1A', lineHeight: 1 }}>
                             {d.day}
                           </div>
                         </button>
@@ -478,7 +478,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                               position: 'absolute', top: 4, right: 4,
                               width: 8, height: 8, borderRadius: '50%', display: 'inline-block',
                               background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                              border: `1.5px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                              border: `1.5px solid ${moon.type === 'vollmond' ? '#E8751A' : '#6B4C8A'}`,
                               boxShadow: moon.type === 'vollmond' ? '0 0 4px rgba(245,224,144,0.6)' : 'none',
                               cursor: 'pointer',
                             }}
@@ -490,7 +490,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                             <button onClick={() => setDayAll('open')} title="Tag komplett offen"
                               className="flex-1 rounded flex items-center justify-center"
                               style={{ height: '18px', background: 'rgba(123,174,94,0.15)', border: '1px solid rgba(123,174,94,0.3)', cursor: 'pointer' }}>
-                              <Unlock size={9} style={{ color: '#7BAE5E' }} />
+                              <Unlock size={9} style={{ color: '#E8751A' }} />
                             </button>
                             <button onClick={() => setDayAll('closed')} title="Tag komplett sperren"
                               className="flex-1 rounded flex items-center justify-center"
@@ -568,17 +568,17 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                           }}>
                           {!adminMode && slot && isFirstHour && !inDragPreview && (
                             <div className="rounded px-1.5 py-0.5 mb-0.5" style={{ background: slotFull ? 'rgba(212,168,67,0.2)' : 'rgba(123,174,94,0.18)' }}>
-                              <div style={{ ...font, fontSize: '0.55rem', fontWeight: 600, color: slotFull ? '#D4A843' : '#5A8A3C' }}>
+                              <div style={{ ...font, fontSize: '0.55rem', fontWeight: 600, color: slotFull ? '#E8751A' : '#5A8A3C' }}>
                                 {slot.note || `${String(slot.start_hour).padStart(2, '0')}-${String(slot.end_hour).padStart(2, '0')}`}
                               </div>
-                              <div style={{ ...font, fontSize: '0.5rem', color: slotFull ? '#D4A843' : '#7BAE5E' }}>
+                              <div style={{ ...font, fontSize: '0.5rem', color: slotFull ? '#E8751A' : '#E8751A' }}>
                                 {eventsInHour.length}/{slot.parallel_slots}
                               </div>
                             </div>
                           )}
                           {!adminMode && !inDragPreview && eventsInHour.map((e: any) => (
                             <div key={e.id} className="rounded px-1.5 py-0.5 mb-0.5 truncate" style={{ background: 'rgba(212,168,67,0.25)' }}>
-                              <span style={{ ...font, fontSize: '0.58rem', fontWeight: 500, color: '#0A0A0A' }}>{e.title}</span>
+                              <span style={{ ...font, fontSize: '0.58rem', fontWeight: 500, color: '#1A1A1A' }}>{e.title}</span>
                             </div>
                           ))}
                         </div>
@@ -592,8 +592,8 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
               {adminMode && isGaertner && (
                 <div className="mt-4 p-3 rounded-xl" style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.25)' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Shield size={13} style={{ color: '#D4A843' }} />
-                    <span style={{ ...font, fontSize: '0.75rem', fontWeight: 600, color: '#0A0A0A' }}>Administrationsmodus</span>
+                    <Shield size={13} style={{ color: '#E8751A' }} />
+                    <span style={{ ...font, fontSize: '0.75rem', fontWeight: 600, color: '#1A1A1A' }}>Administrationsmodus</span>
                   </div>
                   <p style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.5, marginBottom: '10px' }}>
                     Klick + Ziehen auf der Woche: markiert einen Zeitraum. Dann kannst du den Bereich als <strong>Offen</strong> oder <strong>Gesperrt</strong> setzen.
@@ -602,7 +602,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                   {/* Woche wiederholen */}
                   {isHueter && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Repeat size={12} style={{ color: '#7BAE5E' }} />
+                      <Repeat size={12} style={{ color: '#E8751A' }} />
                       <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.6)' }}>
                         Diese Woche auf die naechsten
                       </span>
@@ -613,10 +613,10 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                       <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.6)' }}>Wochen uebertragen</span>
                       <button onClick={repeatCurrentWeek} disabled={repeating}
                         className="rounded-lg px-3 py-1"
-                        style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#fff', background: repeating ? 'rgba(10,10,10,0.4)' : '#7BAE5E', border: 'none', cursor: repeating ? 'wait' : 'pointer' }}>
+                        style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#fff', background: repeating ? 'rgba(10,10,10,0.4)' : '#E8751A', border: 'none', cursor: repeating ? 'wait' : 'pointer' }}>
                         {repeating ? '...' : 'Uebertragen'}
                       </button>
-                      {repeatMsg && <span style={{ ...font, fontSize: '0.65rem', color: repeatMsg.includes('Fehler') ? '#c44' : '#7BAE5E' }}>{repeatMsg}</span>}
+                      {repeatMsg && <span style={{ ...font, fontSize: '0.65rem', color: repeatMsg.includes('Fehler') ? '#c44' : '#E8751A' }}>{repeatMsg}</span>}
                     </div>
                   )}
                 </div>
@@ -651,7 +651,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                     style={{
                       width: 14, height: 14, borderRadius: '50%', display: 'inline-block',
                       background: moonByDate[selectedDate].type === 'vollmond' ? '#F5E090' : 'transparent',
-                      border: `2px solid ${moonByDate[selectedDate].type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                      border: `2px solid ${moonByDate[selectedDate].type === 'vollmond' ? '#E8751A' : '#6B4C8A'}`,
                       boxShadow: moonByDate[selectedDate].type === 'vollmond' ? '0 0 6px rgba(245,224,144,0.7)' : 'none',
                       cursor: 'pointer',
                     }}
@@ -665,7 +665,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
               {isClosed ? (
                 <div className="rounded-xl p-12 text-center" style={{ background: 'rgba(200,60,60,0.04)', border: '1px solid rgba(200,60,60,0.12)' }}>
                   <Lock size={32} style={{ color: '#c44', margin: '0 auto 12px' }} />
-                  <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', color: '#c44' }}>Ruhetag</p>
+                  <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', color: '#c44' }}>Ruhetag</p>
                   <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(200,60,60,0.7)', marginTop: '4px' }}>An diesem Tag finden keine Veranstaltungen statt.</p>
                 </div>
               ) : (
@@ -688,13 +688,13 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                               <div className="rounded-lg p-3 mb-1" style={{ background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.2)' }}>
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>
+                                    <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }}>
                                       {String(slot.start_hour).padStart(2, '0')}:00 - {String(slot.end_hour).padStart(2, '0')}:00
                                     </span>
                                     {slot.note && <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.5)', marginLeft: '8px' }}>· {slot.note}</span>}
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span style={{ ...font, fontSize: '0.68rem', color: '#7BAE5E' }}>
+                                    <span style={{ ...font, fontSize: '0.68rem', color: '#E8751A' }}>
                                       {eventsInHour.length}/{slot.parallel_slots} Gruppen
                                     </span>
                                     {isHueter && (
@@ -708,7 +708,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                             )}
                             {eventsInHour.map((e: any) => (
                               <div key={e.id} className="rounded-lg px-3 py-1.5" style={{ background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.25)' }}>
-                                <span style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#0A0A0A' }}>{e.title}</span>
+                                <span style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#1A1A1A' }}>{e.title}</span>
                                 <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.45)', marginLeft: '8px' }}>
                                   {new Date(e.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
@@ -724,7 +724,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                   {isHueter && !showNewSlot && (
                     <button onClick={() => setShowNewSlot(true)}
                       className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl"
-                      style={{ background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.25)', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#7BAE5E', cursor: 'pointer' }}>
+                      style={{ background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.25)', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#E8751A', cursor: 'pointer' }}>
                       <Plus size={14} /> Zeit-Slot oeffnen
                     </button>
                   )}
@@ -759,7 +759,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                       </div>
                       <div className="flex gap-2">
                         <button onClick={handleCreateSlot} className="flex-1 py-2.5 rounded-lg"
-                          style={{ background: '#7BAE5E', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
+                          style={{ background: '#E8751A', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
                           Slot oeffnen
                         </button>
                         <button onClick={() => setShowNewSlot(false)} className="px-4 py-2.5 rounded-lg"
@@ -789,11 +789,11 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
                     return (
                       <div key={e.id} className="rounded-xl p-4 flex items-center gap-4" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
                         <div className="text-center" style={{ minWidth: '60px' }}>
-                          <div style={{ ...font, fontSize: '1.4rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>{d.getDate()}</div>
+                          <div style={{ ...font, fontSize: '1.4rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1 }}>{d.getDate()}</div>
                           <div style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)', textTransform: 'uppercase' }}>{MONTHS[d.getMonth()].slice(0, 3)}</div>
                         </div>
                         <div className="flex-1">
-                          <div style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A' }}>{e.title}</div>
+                          <div style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#1A1A1A' }}>{e.title}</div>
                           <div style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.45)', marginTop: '2px' }}>
                             {DAYS_SHORT[(d.getDay() + 6) % 7]} &middot; {d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr
                           </div>
@@ -820,7 +820,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
             <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>
               Zeitraum
             </p>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
               {new Date(dragDialog.date).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
             </h3>
             <p style={{ ...font, fontSize: '0.82rem', color: 'rgba(10,10,10,0.55)', marginBottom: '16px' }}>
@@ -829,7 +829,7 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
             <div className="flex gap-2">
               <button onClick={() => applyDrag('open')}
                 className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5"
-                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#E8751A', border: 'none', cursor: 'pointer' }}>
                 <Unlock size={14} /> Offen
               </button>
               <button onClick={() => applyDrag('closed')}
@@ -858,11 +858,11 @@ export function FullCalendar({ lichtungId, lichtungName, myRole, onClose }: Full
               <div style={{
                 width: 48, height: 48, borderRadius: '50%',
                 background: selectedMoon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                border: `3px solid ${selectedMoon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                border: `3px solid ${selectedMoon.type === 'vollmond' ? '#E8751A' : '#6B4C8A'}`,
                 boxShadow: selectedMoon.type === 'vollmond' ? '0 0 20px rgba(245,224,144,0.7)' : 'none',
               }} />
             </div>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '6px' }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.3rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '6px' }}>
               {selectedMoon.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
             </h3>
             <p style={{ ...font, fontSize: '0.8rem', color: 'rgba(10,10,10,0.55)' }}>

@@ -31,7 +31,7 @@ function MapTooltip({ label, children }: { label: string; children: React.ReactN
     <div className="relative group">
       {children}
       <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[1100]"
-        style={{ background: '#0A0A0A', whiteSpace: 'nowrap' }}>
+        style={{ background: '#1A1A1A', whiteSpace: 'nowrap' }}>
         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{label}</span>
       </div>
     </div>
@@ -55,7 +55,7 @@ function MapAppInner() {
   const [mapRadius, setMapRadius] = useState(500)
   const [showLocateDialog, setShowLocateDialog] = useState(false)
   const [locatedPos, setLocatedPos] = useState<[number, number] | null>(null)
-  const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
+  const [autoLight, setAutoLight] = useState(() => localStorage.getItem('macher-auto-pin') === '1')
   const [flyTo, setFlyTo] = useState<[number, number, number] | null>(null)
   const [desiredZoomRadius, setDesiredZoomRadius] = useState<number | null>(null)
   const [lichtungen, setLichtungen] = useState<any[]>([])
@@ -194,8 +194,8 @@ function MapAppInner() {
         api.getLichtungen().then(setLichtungen)
       }).catch(() => {})
     } else {
-      sessionStorage.setItem('lichtung-join-code', placeCode)
-      if (broughtBy) sessionStorage.setItem('lichtung-join-by', broughtBy)
+      sessionStorage.setItem('macher-join-code', placeCode)
+      if (broughtBy) sessionStorage.setItem('macher-join-by', broughtBy)
       setDialog('auth')
     }
   }, [])
@@ -218,11 +218,11 @@ function MapAppInner() {
   // Nach Login: aufgeschobene Lichtung-/Event-Joins ausfuehren
   useEffect(() => {
     if (!user || !api.getToken()) return
-    const joinCode = sessionStorage.getItem('lichtung-join-code')
-    const joinBy = sessionStorage.getItem('lichtung-join-by')
+    const joinCode = sessionStorage.getItem('macher-join-code')
+    const joinBy = sessionStorage.getItem('macher-join-by')
     if (joinCode) {
-      sessionStorage.removeItem('lichtung-join-code')
-      sessionStorage.removeItem('lichtung-join-by')
+      sessionStorage.removeItem('macher-join-code')
+      sessionStorage.removeItem('macher-join-by')
       api.joinLichtungByCode(joinCode, joinBy || undefined).then(data => {
         setSelectedLichtung(data.lichtung_id)
         api.getLichtungen().then(setLichtungen)
@@ -238,7 +238,7 @@ function MapAppInner() {
   // Auto-Standort: Beim Laden Licht automatisch setzen
   useEffect(() => {
     if (!user || !api.getToken()) return
-    if (localStorage.getItem('lichtung-auto-light') !== '1') return
+    if (localStorage.getItem('macher-auto-pin') !== '1') return
     if (!('geolocation' in navigator)) return
 
     navigator.geolocation.getCurrentPosition(
@@ -300,7 +300,7 @@ function MapAppInner() {
 
   // Tutorial only for first-time visitors
   useEffect(() => {
-    const seen = localStorage.getItem('lichtung-tutorial-seen')
+    const seen = localStorage.getItem('macher-tutorial-seen')
     if (!seen && !api.getToken() && !searchParams.get('invite')) setTutorialStep('welcome')
   }, [])
 
@@ -315,7 +315,7 @@ function MapAppInner() {
 
   const closeTutorial = () => {
     setTutorialStep(null)
-    localStorage.setItem('lichtung-tutorial-seen', '1')
+    localStorage.setItem('macher-tutorial-seen', '1')
   }
 
   const handleTutorialNext = () => {
@@ -329,7 +329,7 @@ function MapAppInner() {
   const handleAuthSuccess = (userData: { id: string; email: string; name: string; statement: string; image_path?: string }) => {
     loginCtx({ id: userData.id, email: userData.email, name: userData.name, statement: userData.statement, imageUrl: userData.image_path || undefined })
     // Mark tutorial as seen after first auth
-    localStorage.setItem('lichtung-tutorial-seen', '1')
+    localStorage.setItem('macher-tutorial-seen', '1')
     // Only show profile fill + set-light if name is empty (brand new user)
     if (!userData.name) {
       setIsNewUser(true)
@@ -393,7 +393,7 @@ function MapAppInner() {
   const toggleAutoLight = () => {
     const next = !autoLight
     setAutoLight(next)
-    localStorage.setItem('lichtung-auto-light', next ? '1' : '0')
+    localStorage.setItem('macher-auto-pin', next ? '1' : '0')
   }
 
   const handleSetLight = () => {
@@ -435,8 +435,8 @@ function MapAppInner() {
         }
       }
       setMode('browse')
-      const seen = localStorage.getItem('lichtung-tutorial-seen')
-      if (!seen) { setTutorialStep('done'); localStorage.setItem('lichtung-tutorial-seen', '1') }
+      const seen = localStorage.getItem('macher-tutorial-seen')
+      if (!seen) { setTutorialStep('done'); localStorage.setItem('macher-tutorial-seen', '1') }
     } else if (mode === 'place-event') {
       setEventPosition(position)
       setDialog('create-event')
@@ -470,7 +470,7 @@ function MapAppInner() {
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1050] px-4 py-2.5 rounded-full shadow-lg"
           style={{ background: 'rgba(124,179,66,0.95)', backdropFilter: 'blur(4px)', maxWidth: 'calc(100vw - 32px)' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#fff', textAlign: 'center' }}>
-            <b>{inviterName}</b> laedt dich ein — {user ? 'entzuende dein Licht, um euch zu verbinden.' : 'melde dich an, um euch zu verbinden.'}
+            <b>{inviterName}</b> laedt dich ein — {user ? 'setz deinen Pin, um euch zu verbinden.' : 'melde dich an, um euch zu verbinden.'}
           </p>
         </div>
       )}
@@ -495,7 +495,7 @@ function MapAppInner() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3" style={{ pointerEvents: 'none' }}>
-        <MapTooltip label="Lichtung">
+        <MapTooltip label="Macher-Map">
           <Link to="/" style={{ textDecoration: 'none', pointerEvents: 'auto' }}>
             <Logo size={42} />
           </Link>
@@ -509,7 +509,7 @@ function MapAppInner() {
               className="rounded-full flex items-center justify-center shadow-sm"
               style={{ width: BTN_SIZE, height: BTN_SIZE, background: showSettings ? '#F5EDD8' : '#fff', border: '1px solid ' + (showSettings ? 'rgba(212,168,67,0.35)' : 'rgba(10,10,10,0.06)'), cursor: 'pointer' }}
             >
-              <Settings size={18} style={{ color: showSettings ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+              <Settings size={18} style={{ color: showSettings ? '#E8751A' : 'rgba(10,10,10,0.35)' }} />
             </button>
           </MapTooltip>
 
@@ -520,7 +520,7 @@ function MapAppInner() {
               className="rounded-full flex items-center justify-center shadow-sm"
               style={{ width: BTN_SIZE, height: BTN_SIZE, background: showCalendar ? '#F5EDD8' : '#fff', border: '1px solid ' + (showCalendar ? 'rgba(212,168,67,0.35)' : 'rgba(10,10,10,0.06)'), cursor: 'pointer' }}
             >
-              <CalendarDays size={18} style={{ color: showCalendar ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+              <CalendarDays size={18} style={{ color: showCalendar ? '#E8751A' : 'rgba(10,10,10,0.35)' }} />
             </button>
           </MapTooltip>
 
@@ -540,7 +540,7 @@ function MapAppInner() {
                 {user?.imageUrl ? (
                   <img src={user.imageUrl} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  <User size={18} style={{ color: user ? '#D4A843' : 'rgba(10,10,10,0.35)' }} />
+                  <User size={18} style={{ color: user ? '#E8751A' : 'rgba(10,10,10,0.35)' }} />
                 )}
               </button>
               {user && (
@@ -549,7 +549,7 @@ function MapAppInner() {
                   className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center"
                   style={{ width: 20, height: 20, background: '#fff', border: '1px solid rgba(10,10,10,0.1)', cursor: 'pointer' }}
                 >
-                  <QrCode size={10} style={{ color: '#D4A843' }} />
+                  <QrCode size={10} style={{ color: '#E8751A' }} />
                 </button>
               )}
             </div>
@@ -560,12 +560,12 @@ function MapAppInner() {
       {/* Mode Indicator */}
       {mode !== 'browse' && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', textAlign: 'center' }}>
-            {mode === 'place-light' && 'Setze dein Licht auf die Karte'}
-            {mode === 'place-lichtung' && 'Setze deinen Ort auf die Karte'}
-            {mode === 'place-event' && 'Setze deinen Termin auf die Karte'}
-            {mode === 'place-project' && 'Setze dein Projekt auf die Karte'}
-            {mode === 'move-lichtung' && 'Tippe den neuen Ort der Lichtung an'}
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#1A1A1A', textAlign: 'center' }}>
+            {mode === 'place-light' && 'Setze deinen Macher-Pin auf die Karte'}
+            {mode === 'place-lichtung' && 'Setze deine Werkstatt auf die Karte'}
+            {mode === 'place-event' && 'Setze dein Abenteuer auf die Karte'}
+            {mode === 'place-project' && 'Setze dein Bauprojekt auf die Karte'}
+            {mode === 'move-lichtung' && 'Tippe den neuen Standort der Werkstatt an'}
           </p>
           <button onClick={() => { setMode('browse'); setMovingLichtungId(null) }}
             style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
@@ -582,7 +582,7 @@ function MapAppInner() {
             className="rounded-full flex items-center justify-center shadow-lg"
             style={{ width: BTN_SIZE, height: BTN_SIZE, background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
           >
-            <LocateFixed size={18} style={{ color: '#D4A843' }} />
+            <LocateFixed size={18} style={{ color: '#E8751A' }} />
           </button>
         </MapTooltip>
       </div>
@@ -608,11 +608,11 @@ function MapAppInner() {
       {showLocateDialog && locatedPos && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.2)' }}>
           <div className="rounded-2xl p-6 shadow-xl w-full max-w-xs" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '8px' }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '8px' }}>
               Dein Standort
             </h3>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(10,10,10,0.5)', marginBottom: '16px', lineHeight: 1.6 }}>
-              Moechtest du dein Licht an deinen aktuellen Standort setzen?
+              Moechtest du deinen Macher-Pin an deinen aktuellen Standort setzen?
             </p>
 
             {user ? (
@@ -620,28 +620,28 @@ function MapAppInner() {
                 <button
                   onClick={handleSetLightAtLocation}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-2"
-                  style={{ background: '#0A0A0A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}
+                  style={{ background: '#1A1A1A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}
                 >
                   <LocateFixed size={16} />
-                  Licht hier setzen
+                  Pin hier setzen
                 </button>
 
                 <label className="flex items-center gap-2 cursor-pointer mt-3">
                   <button
                     onClick={toggleAutoLight}
                     className="w-5 h-5 rounded flex items-center justify-center shrink-0"
-                    style={{ border: autoLight ? 'none' : '1px solid rgba(10,10,10,0.15)', background: autoLight ? '#D4A843' : '#fff', cursor: 'pointer' }}
+                    style={{ border: autoLight ? 'none' : '1px solid rgba(10,10,10,0.15)', background: autoLight ? '#E8751A' : '#fff', cursor: 'pointer' }}
                   >
                     {autoLight && <Check size={14} color="#fff" />}
                   </button>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.45)' }}>
-                    Licht automatisch setzen
+                    Pin automatisch setzen
                   </span>
                 </label>
               </>
             ) : (
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(10,10,10,0.4)' }}>
-                Melde dich an, um dein Licht zu setzen.
+                Melde dich an, um deinen Pin zu setzen.
               </p>
             )}
 

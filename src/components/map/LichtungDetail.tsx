@@ -9,8 +9,8 @@ import { ShareButton } from '../ShareButton'
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
-  meditation: '#D4A843', gebet: '#A07CC0', stille: '#6BA3BE',
-  begegnung: '#7BAE5E', tanz: '#D4766E', fest: '#E0A050',
+  meditation: '#E8751A', gebet: '#A07CC0', stille: '#6BA3BE',
+  begegnung: '#E8751A', tanz: '#D4766E', fest: '#E0A050',
 }
 
 function formatDate(d: string) { return new Date(d).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) }
@@ -131,7 +131,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
         </button>
 
         <div className="text-center mb-6">
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '2rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
             {lichtung.name}
           </h2>
           <p style={{ ...font, fontSize: '0.85rem', color: 'rgba(10,10,10,0.45)' }}>
@@ -140,15 +140,15 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
         </div>
 
         <div className="rounded-2xl p-8 shadow-xl" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)' }}>
-          <QRCodeSVG value={qrUrl} size={Math.min(380, window.innerWidth - 80)} bgColor="#fff" fgColor="#0A0A0A" level="H"
+          <QRCodeSVG value={qrUrl} size={Math.min(380, window.innerWidth - 80)} bgColor="#fff" fgColor="#1A1A1A" level="H"
             imageSettings={{
-              src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#FDFCF9"/><circle cx="18" cy="18" r="14" fill="#7BAE5E" opacity="0.7"/><circle cx="18" cy="18" r="8" fill="#D4E8C0" opacity="0.9"/><circle cx="18" cy="18" r="4" fill="#FFFFF0"/></svg>'),
+              src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#FDFCF9"/><circle cx="18" cy="18" r="14" fill="#E8751A" opacity="0.7"/><circle cx="18" cy="18" r="8" fill="#D4E8C0" opacity="0.9"/><circle cx="18" cy="18" r="4" fill="#FFFFF0"/></svg>'),
               height: 50, width: 50, excavate: true,
             }} />
         </div>
 
         <div className="mt-6 text-center max-w-md">
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
             "Wer durch dich beitritt, ist mit dir verbunden. Du buergst fuer ihn."
           </p>
           <p style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.35)', marginTop: '12px' }}>
@@ -178,17 +178,17 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                 background: tab === key ? 'rgba(123,174,94,0.1)' : 'transparent',
                 border: 'none', cursor: 'pointer',
               }}>
-              <Icon size={15} style={{ color: tab === key ? '#7BAE5E' : 'rgba(10,10,10,0.4)' }} />
+              <Icon size={15} style={{ color: tab === key ? '#E8751A' : 'rgba(10,10,10,0.4)' }} />
               {badge && (
                 <span className="absolute -top-0.5 -right-0.5 rounded-full flex items-center justify-center"
-                  style={{ minWidth: 14, height: 14, padding: '0 3px', background: '#7BAE5E', color: '#fff', fontSize: '0.55rem', fontWeight: 600, ...font }}>
+                  style={{ minWidth: 14, height: 14, padding: '0 3px', background: '#E8751A', color: '#fff', fontSize: '0.55rem', fontWeight: 600, ...font }}>
                   {badge}
                 </span>
               )}
             </button>
             {/* Tooltip */}
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-              style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+              style={{ background: '#1A1A1A', whiteSpace: 'nowrap', zIndex: 10 }}>
               <span style={{ ...font, fontSize: '0.6rem', color: '#fff' }}>{label}</span>
             </div>
           </div>
@@ -217,7 +217,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               {/* Upload-Overlay (nur Owner/Admin) */}
               {(myRole === 'owner' || myRole === 'admin') && (
                 <>
-                  <input type="file" accept="image/*" id={`lichtung-img-${lichtungId}`} className="hidden"
+                  <input type="file" accept="image/*" id={`macher-img-${lichtungId}`} className="hidden"
                     onChange={async e => {
                       const file = e.target.files?.[0]
                       if (!file) return
@@ -225,7 +225,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                       const updated = await api.getLichtung(lichtungId)
                       setLichtung(updated)
                     }} />
-                  <label htmlFor={`lichtung-img-${lichtungId}`}
+                  <label htmlFor={`macher-img-${lichtungId}`}
                     className="absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
                     style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid rgba(10,10,10,0.08)' }}
                     title="Bild hochladen">
@@ -240,7 +240,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                   className="absolute bottom-2 right-2 rounded-lg overflow-hidden p-1"
                   style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}
                   title="QR-Code vergroessern">
-                  <QRCodeSVG value={qrUrl} size={52} bgColor="#fff" fgColor="#0A0A0A" level="M" />
+                  <QRCodeSVG value={qrUrl} size={52} bgColor="#fff" fgColor="#1A1A1A" level="M" />
                 </button>
               )}
             </div>
@@ -252,13 +252,13 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                   <label style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }}>Name</label>
                   <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg outline-none"
-                    style={{ border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.85rem', color: '#0A0A0A' }} />
+                    style={{ border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.85rem', color: '#1A1A1A' }} />
                 </div>
                 <div>
                   <label style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }}>Beschreibung</label>
                   <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={4}
                     className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-                    style={{ border: '1px solid rgba(10,10,10,0.1)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.6, color: '#0A0A0A' }} />
+                    style={{ border: '1px solid rgba(10,10,10,0.1)', fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.92rem', lineHeight: 1.6, color: '#1A1A1A' }} />
                 </div>
                 <div className="flex gap-2">
                   <button onClick={async () => {
@@ -268,7 +268,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                     setEditMode(false)
                   }}
                     className="flex-1 py-2 rounded-lg"
-                    style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                    style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', background: '#E8751A', border: 'none', cursor: 'pointer' }}>
                     Speichern
                   </button>
                   <button onClick={() => setEditMode(false)}
@@ -292,7 +292,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                     className="w-full flex items-center justify-center gap-2 py-2 rounded-lg mt-2"
                     style={{ ...font, fontSize: '0.72rem', color: '#c44', background: 'rgba(200,50,50,0.04)', border: '1px solid rgba(200,50,50,0.15)', cursor: 'pointer' }}>
                     <Trash2 size={12} />
-                    Lichtung loeschen
+                    Werkstatt loeschen
                   </button>
                 )}
               </div>
@@ -300,22 +300,22 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               /* ─── Anzeige ─── */
               <>
                 <div className="flex items-start justify-between mb-4 gap-2">
-                  <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 500, color: '#0A0A0A' }}>
+                  <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.5rem', fontWeight: 500, color: '#1A1A1A' }}>
                     {lichtung.name}
                   </h2>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <ShareButton
                       url={`${window.location.origin}/api/share/lichtung/${lichtungId}`}
-                      title={`Lichtung: ${lichtung.name}`}
-                      text={lichtung.description ? lichtung.description.split('\n')[0].replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Ort auf der Lichtungs-Karte.'}
+                      title={`Werkstatt: ${lichtung.name}`}
+                      text={lichtung.description ? lichtung.description.split('\n')[0].replace(/[#*>]/g, '').trim().slice(0, 140) : 'Eine Werkstatt auf der Macher-Map.'}
                       label=""
                       compact
                     />
                     {onMoveLichtung && (myRole === 'owner' || myRole === 'admin') && (
                       <button onClick={() => onMoveLichtung(lichtungId)}
-                        title="Lichtung neu platzieren"
+                        title="Werkstatt neu platzieren"
                         className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg"
-                        style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)', cursor: 'pointer' }}>
+                        style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#E8751A', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)', cursor: 'pointer' }}>
                         <Move size={13} />
                         Platzieren
                       </button>
@@ -334,7 +334,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                 {lichtung.description && (
                   <div className="rounded-xl p-5 mb-4" style={{ background: '#FAFAF8' }}>
                     <div
-                      className="prose-lichtung"
+                      className="prose-macher"
                       dangerouslySetInnerHTML={{ __html: renderMarkdown(lichtung.description) }}
                     />
                   </div>
@@ -345,8 +345,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
             {/* Navigation */}
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3 rounded-xl mb-4"
-              style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
-              <Navigation size={15} style={{ color: '#7BAE5E' }} />
+              style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
+              <Navigation size={15} style={{ color: '#E8751A' }} />
               Zum Standort navigieren
             </a>
 
@@ -355,8 +355,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               <div className="rounded-xl p-3" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <MessageCircle size={13} style={{ color: '#5078C8' }} />
-                    <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#0A0A0A' }}>Telegram-Gruppen</span>
+                    <MessageCircle size={13} style={{ color: '#D4A020' }} />
+                    <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#1A1A1A' }}>Telegram-Gruppen</span>
                   </div>
                   {(myRole === 'owner' || myRole === 'admin') && !showAddTg && (
                     <button onClick={() => setShowAddTg(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.4)', padding: '2px' }}>
@@ -381,14 +381,14 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                           <input type="text" value={editTgLabel} onChange={e => setEditTgLabel(e.target.value)}
                             placeholder="Name" autoFocus
                             className="w-full px-2.5 py-1.5 rounded-lg outline-none"
-                            style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A', background: '#fff', border: '1px solid rgba(80,120,200,0.25)' }} />
+                            style={{ ...font, fontSize: '0.75rem', color: '#1A1A1A', background: '#fff', border: '1px solid rgba(80,120,200,0.25)' }} />
                           <input type="text" value={editTgUrl} onChange={e => setEditTgUrl(e.target.value)}
                             placeholder="https://t.me/..."
                             className="w-full px-2.5 py-1.5 rounded-lg outline-none"
                             style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.55)', background: '#fff', border: '1px solid rgba(10,10,10,0.08)' }} />
                           <div className="flex gap-1.5">
                             <button onClick={saveEditTg}
-                              style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: '#fff', background: '#5078C8', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}>
+                              style={{ ...font, fontSize: '0.68rem', fontWeight: 500, color: '#fff', background: '#D4A020', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}>
                               Speichern
                             </button>
                             <button onClick={() => setEditingTg(null)}
@@ -410,9 +410,9 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                         <a href={link.url} target="_blank" rel="noopener noreferrer"
                           className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-lg"
                           style={{ background: '#fff', border: '1px solid rgba(80,120,200,0.12)', textDecoration: 'none' }}>
-                          <MessageCircle size={12} style={{ color: '#5078C8' }} />
-                          <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A' }}>{link.label}</span>
-                          {!!link.is_private && <Lock size={10} style={{ color: '#D4A843', marginLeft: 'auto' }} />}
+                          <MessageCircle size={12} style={{ color: '#D4A020' }} />
+                          <span style={{ ...font, fontSize: '0.75rem', color: '#1A1A1A' }}>{link.label}</span>
+                          {!!link.is_private && <Lock size={10} style={{ color: '#E8751A', marginLeft: 'auto' }} />}
                         </a>
                       )}
                       {!isEditing && (myRole === 'owner' || myRole === 'admin') && (
@@ -446,19 +446,19 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                     <label className="flex items-start gap-2 cursor-pointer p-2 rounded-lg" style={{ background: newTgPrivate ? 'rgba(212,168,67,0.06)' : '#fff' }}>
                       <button type="button" onClick={() => setNewTgPrivate(!newTgPrivate)}
                         className="w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ border: newTgPrivate ? 'none' : '1px solid rgba(10,10,10,0.15)', background: newTgPrivate ? '#D4A843' : '#fff', cursor: 'pointer' }}>
+                        style={{ border: newTgPrivate ? 'none' : '1px solid rgba(10,10,10,0.15)', background: newTgPrivate ? '#E8751A' : '#fff', cursor: 'pointer' }}>
                         {newTgPrivate && <Check size={11} color="#fff" />}
                       </button>
                       <div>
-                        <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: '#0A0A0A', display: 'block' }}>Private Gruppe</span>
+                        <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: '#1A1A1A', display: 'block' }}>Private Gruppe</span>
                         <span style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.4)', display: 'block' }}>
-                          Link nur fuer Lichtung-Mitglieder sichtbar.
+                          Link nur fuer Werkstatt-Mitglieder sichtbar.
                         </span>
                       </div>
                     </label>
                     <div className="flex gap-2">
                       <button onClick={handleAddTg} className="flex-1 py-2 rounded-lg"
-                        style={{ background: '#5078C8', border: 'none', ...font, fontSize: '0.72rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
+                        style={{ background: '#D4A020', border: 'none', ...font, fontSize: '0.72rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
                         Hinzufuegen
                       </button>
                       <button onClick={() => { setShowAddTg(false); setNewTgLabel(''); setNewTgUrl('') }}
@@ -481,7 +481,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               <button
                 onClick={() => onCreateEvent(lichtungId, lichtung.name, [lichtung.lat, lichtung.lng])}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
-                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#1A1A1A', border: 'none', cursor: 'pointer' }}
               >
                 <Plus size={15} />
                 Termin erstellen
@@ -492,7 +492,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
             {onCreateEvent && !myRole && user && (
               <div className="rounded-xl p-4 mb-4 text-center" style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.15)' }}>
                 <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.55)', marginBottom: 8 }}>
-                  Werde Mitglied dieser Lichtung, um Termine zu erstellen.
+                  Werde Mitglied dieser Werkstatt, um Termine zu erstellen.
                 </p>
               </div>
             )}
@@ -508,8 +508,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                 {events.map((e: any) => (
                   <div key={e.id} className="rounded-xl p-3.5" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)' }}>
                     <div className="flex items-center gap-1.5 mb-1">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
-                      <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>{e.title}</span>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#E8751A' }} />
+                      <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }}>{e.title}</span>
                     </div>
                     <div className="flex items-center gap-3 flex-wrap mb-2">
                       <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)' }}>
@@ -520,12 +520,12 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                           <Repeat size={9} /> {e.recurring}
                         </span>
                       )}
-                      <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.6rem', color: '#D4A843' }}>
+                      <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.6rem', color: '#E8751A' }}>
                         <Users size={10} /> {e.participant_count}{e.max_participants ? `/${e.max_participants}` : ''}
                       </span>
                     </div>
                     {e.description && (
-                      <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.45)', lineHeight: 1.5 }}>
+                      <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.45)', lineHeight: 1.5 }}>
                         {e.description.slice(0, 120)}{e.description.length > 120 ? '...' : ''}
                       </p>
                     )}
@@ -558,7 +558,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
             {events.length > 0 && (
               <div className="rounded-xl p-3 mt-3" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <Link2 size={12} style={{ color: '#7BAE5E' }} />
+                  <Link2 size={12} style={{ color: '#E8751A' }} />
                   <span style={{ ...font, fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)' }}>Kalender abonnieren</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -567,7 +567,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                     onClick={e => (e.target as HTMLInputElement).select()} />
                   <button onClick={() => { navigator.clipboard.writeText(calUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
                     className="shrink-0 rounded px-2 py-1.5" style={{ background: copied ? 'rgba(123,174,94,0.1)' : '#fff', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-                    {copied ? <Check size={12} style={{ color: '#7BAE5E' }} /> : <Copy size={12} style={{ color: 'rgba(10,10,10,0.35)' }} />}
+                    {copied ? <Check size={12} style={{ color: '#E8751A' }} /> : <Copy size={12} style={{ color: 'rgba(10,10,10,0.35)' }} />}
                   </button>
                 </div>
               </div>
@@ -578,7 +578,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               {(myRole === 'owner' || myRole === 'admin') && (
                 <button onClick={() => setShowFullCalendar(true)}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
-                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
+                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#1A1A1A', border: 'none', cursor: 'pointer' }}>
                   <CalendarDays size={16} />
                   Kalender oeffnen
                 </button>
@@ -599,34 +599,34 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                     <img src={m.image_path} alt="" className="w-9 h-9 rounded-full object-cover" style={{ border: '2px solid rgba(123,174,94,0.2)' }} />
                   ) : (
                     <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(123,174,94,0.08)', border: '2px solid rgba(123,174,94,0.15)' }}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', color: '#7BAE5E' }}>{m.name?.charAt(0) || '?'}</span>
+                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', color: '#E8751A' }}>{m.name?.charAt(0) || '?'}</span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{m.name}</span>
-                    <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.62rem', color: m.role === 'owner' ? '#7BAE5E' : m.role === 'admin' ? '#D4A843' : 'rgba(10,10,10,0.35)' }}>
-                      {m.role === 'owner' && <><Shield size={9} /> Hueter</>}
-                      {m.role === 'admin' && <><Shield size={9} /> Gaertner</>}
+                    <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A' }} className="truncate block">{m.name}</span>
+                    <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.62rem', color: m.role === 'owner' ? '#E8751A' : m.role === 'admin' ? '#E8751A' : 'rgba(10,10,10,0.35)' }}>
+                      {m.role === 'owner' && <><Shield size={9} /> Meister</>}
+                      {m.role === 'admin' && <><Shield size={9} /> Vorarbeiter</>}
                       {m.role === 'member' && 'Mitglied'}
                     </span>
                   </div>
-                  {/* Rolle aendern (nur fuer Hueter) */}
+                  {/* Rolle aendern (nur fuer Meister) */}
                   {myRole === 'owner' && m.id !== user?.id && (
                     <div className="flex gap-1 shrink-0">
                       {m.role !== 'owner' && (
                         <button
                           onClick={() => api.setMemberRole(lichtungId, m.id, 'owner').then(() => api.getLichtungMembers(lichtungId).then(setMembers))}
-                          title="Zum Hueter machen"
-                          style={{ ...font, fontSize: '0.58rem', color: '#7BAE5E', background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.2)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
-                          Hueter
+                          title="Zum Meister machen"
+                          style={{ ...font, fontSize: '0.58rem', color: '#E8751A', background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.2)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
+                          Meister
                         </button>
                       )}
                       {m.role !== 'admin' && (
                         <button
                           onClick={() => api.setMemberRole(lichtungId, m.id, 'admin').then(() => api.getLichtungMembers(lichtungId).then(setMembers))}
-                          title="Zum Gaertner machen"
-                          style={{ ...font, fontSize: '0.58rem', color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
-                          Gaertner
+                          title="Zum Vorarbeiter machen"
+                          style={{ ...font, fontSize: '0.58rem', color: '#E8751A', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer' }}>
+                          Vorarbeiter
                         </button>
                       )}
                       {m.role !== 'member' && (
@@ -661,9 +661,9 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
                   })
                 }}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-4"
-                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#7BAE5E', border: 'none', cursor: 'pointer' }}>
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#E8751A', border: 'none', cursor: 'pointer' }}>
                 <Users size={16} />
-                Dieser Lichtung beitreten
+                Dieser Werkstatt beitreten
               </button>
             )}
           </>
@@ -675,8 +675,8 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               <p style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', marginBottom: '8px' }}>Ort verwalten</p>
               <button onClick={() => { setEditName(lichtung.name); setEditDesc(lichtung.description || ''); setTab('info'); setEditMode(true) }}
                 className="w-full flex items-center gap-2 p-3 rounded-lg"
-                style={{ ...font, fontSize: '0.78rem', color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)', cursor: 'pointer', textAlign: 'left' }}>
-                <Pencil size={14} style={{ color: '#7BAE5E' }} />
+                style={{ ...font, fontSize: '0.78rem', color: '#1A1A1A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)', cursor: 'pointer', textAlign: 'left' }}>
+                <Pencil size={14} style={{ color: '#E8751A' }} />
                 Name und Beschreibung bearbeiten
               </button>
             </div>
@@ -686,9 +686,9 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               <p style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', marginBottom: '8px' }}>Telegram-Bot</p>
               <div className="rounded-lg p-3" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
                 <p style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.5)', lineHeight: 1.5, marginBottom: '8px' }}>
-                  Fuege @lichtungsbot zu einer Telegram-Gruppe hinzu und tippe dort:
+                  Fuege den Bot zu einer Telegram-Gruppe hinzu und tippe dort:
                 </p>
-                <code style={{ ...font, fontSize: '0.72rem', color: '#7BAE5E', background: 'rgba(123,174,94,0.06)', padding: '4px 8px', borderRadius: '4px', display: 'block', marginBottom: '6px' }}>
+                <code style={{ ...font, fontSize: '0.72rem', color: '#E8751A', background: 'rgba(123,174,94,0.06)', padding: '4px 8px', borderRadius: '4px', display: 'block', marginBottom: '6px' }}>
                   /connect {lichtung.code || lichtungId.slice(0, 8)}
                 </code>
                 <p style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.35)' }}>
@@ -702,18 +702,18 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
               <p style={{ ...font, fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.35)', marginBottom: '8px' }}>Rollen</p>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FAFAF8' }}>
-                  <Shield size={12} style={{ color: '#7BAE5E' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Hueter</span>
+                  <Shield size={12} style={{ color: '#E8751A' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#1A1A1A', flex: 1 }}>Meister</span>
                   <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Volle Kontrolle</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FAFAF8' }}>
-                  <Shield size={12} style={{ color: '#D4A843' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Gaertner</span>
+                  <Shield size={12} style={{ color: '#E8751A' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#1A1A1A', flex: 1 }}>Vorarbeiter</span>
                   <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Events + Kalender</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FAFAF8' }}>
                   <Users size={12} style={{ color: 'rgba(10,10,10,0.35)' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Mitglied</span>
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#1A1A1A', flex: 1 }}>Mitglied</span>
                   <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Teilnehmen + Sehen</span>
                 </div>
               </div>

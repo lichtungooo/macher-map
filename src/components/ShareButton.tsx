@@ -85,7 +85,7 @@ export function ShareButton({ url, title, text, label = 'Teilen', compact = fals
   return (
     <div className="relative inline-block">
       <button onClick={handleClick} style={buttonStyle}>
-        <Share2 size={compact ? 12 : 14} style={{ color: '#D4A843' }} />
+        <Share2 size={compact ? 12 : 14} style={{ color: '#E8751A' }} />
         {label}
       </button>
 
@@ -112,7 +112,7 @@ export function ShareButton({ url, title, text, label = 'Teilen', compact = fals
 
           <ShareOption href={telegramUrl} icon={Send} label="Telegram" color="#2AABEE" />
           <ShareOption href={whatsappUrl} icon={MessageCircle} label="WhatsApp" color="#25D366" />
-          <ShareOption href={mailUrl} icon={Mail} label="E-Mail" color="#D4A843" />
+          <ShareOption href={mailUrl} icon={Mail} label="E-Mail" color="#E8751A" />
 
           <button
             onClick={copy}
@@ -122,11 +122,11 @@ export function ShareButton({ url, title, text, label = 'Teilen', compact = fals
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             {copied ? (
-              <Check size={15} style={{ color: '#7BAE5E' }} />
+              <Check size={15} style={{ color: '#E8751A' }} />
             ) : (
               <LinkIcon size={15} style={{ color: 'rgba(10,10,10,0.55)' }} />
             )}
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A' }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#1A1A1A' }}>
               {copied ? 'Kopiert' : 'Link kopieren'}
             </span>
           </button>
@@ -148,7 +148,7 @@ function ShareOption({ href, icon: Icon, label, color }: { href: string; icon: a
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     >
       <Icon size={15} style={{ color }} />
-      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A' }}>
+      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#1A1A1A' }}>
         {label}
       </span>
     </a>

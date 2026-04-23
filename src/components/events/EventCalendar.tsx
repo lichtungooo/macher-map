@@ -13,8 +13,8 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  meditation: '#D4A843', gebet: '#A07CC0', stille: '#6BA3BE',
-  begegnung: '#7BAE5E', tanz: '#D4766E', fest: '#E0A050',
+  meditation: '#E8751A', gebet: '#A07CC0', stille: '#6BA3BE',
+  begegnung: '#E8751A', tanz: '#D4766E', fest: '#E0A050',
 }
 
 const RECURRING_LABELS: Record<string, string> = {
@@ -136,16 +136,16 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
         <div className="flex items-center gap-2.5">
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A' }}>Kalender</h2>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', fontWeight: 500, color: '#1A1A1A' }}>Kalender</h2>
           {onCreateEvent && (
             <div className="relative group">
               <button onClick={onCreateEvent}
                 className="rounded-full flex items-center justify-center"
                 style={{ width: 26, height: 26, background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', cursor: 'pointer' }}>
-                <Plus size={14} style={{ color: '#D4A843' }} />
+                <Plus size={14} style={{ color: '#E8751A' }} />
               </button>
               <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-                style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+                style={{ background: '#1A1A1A', whiteSpace: 'nowrap', zIndex: 10 }}>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>Neuer Eintrag</span>
               </div>
             </div>
@@ -155,7 +155,7 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
           <div className="flex rounded-full overflow-hidden" style={{ border: '1px solid rgba(10,10,10,0.08)' }}>
             {(['list', 'month'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '3px 10px', background: view === v ? 'rgba(212,168,67,0.1)' : 'transparent', color: view === v ? '#D4A843' : 'rgba(10,10,10,0.35)', border: 'none', cursor: 'pointer' }}>
+                style={{ ...font, fontSize: '0.65rem', fontWeight: 500, padding: '3px 10px', background: view === v ? 'rgba(212,168,67,0.1)' : 'transparent', color: view === v ? '#E8751A' : 'rgba(10,10,10,0.35)', border: 'none', cursor: 'pointer' }}>
                 {v === 'list' ? 'Liste' : 'Monat'}
               </button>
             ))}
@@ -170,10 +170,10 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
       <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(10,10,10,0.03)' }}>
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <NavIcon size={11} style={{ color: userPos ? '#D4A843' : 'rgba(10,10,10,0.2)' }} />
+            <NavIcon size={11} style={{ color: userPos ? '#E8751A' : 'rgba(10,10,10,0.2)' }} />
             <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)' }}>Umkreis</span>
           </div>
-          <span style={{ ...font, fontSize: '0.7rem', fontWeight: 600, color: '#D4A843' }}>
+          <span style={{ ...font, fontSize: '0.7rem', fontWeight: 600, color: '#E8751A' }}>
             {radiusKm >= 500 ? 'Alle' : `${radiusKm} km`}
           </span>
         </div>
@@ -188,7 +188,7 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
             if (onRadiusSlide) onRadiusSlide(v)
           }}
           className="w-full"
-          style={{ accentColor: '#D4A843', height: '4px' }}
+          style={{ accentColor: '#E8751A', height: '4px' }}
         />
         <div className="flex justify-between mt-0.5">
           <span style={{ ...font, fontSize: '0.5rem', color: 'rgba(10,10,10,0.2)' }}>1 km</span>
@@ -208,11 +208,11 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
               <div style={{
                 width: 42, height: 42, borderRadius: '50%',
                 background: moonPopup.type === 'vollmond' ? '#F5E090' : 'transparent',
-                border: `3px solid ${moonPopup.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                border: `3px solid ${moonPopup.type === 'vollmond' ? '#E8751A' : '#6B4C8A'}`,
                 boxShadow: moonPopup.type === 'vollmond' ? '0 0 16px rgba(245,224,144,0.7)' : 'none',
               }} />
             </div>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
               {moonPopup.type === 'vollmond' ? 'Vollmond' : 'Neumond'}
             </h3>
             <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.55)' }}>
@@ -242,13 +242,13 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
                 style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)', cursor: 'pointer' }}>
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-lg flex flex-col items-center justify-center" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.05)' }}>
-                    <span style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>{new Date(event.start).getDate()}</span>
+                    <span style={{ ...font, fontSize: '0.95rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1 }}>{new Date(event.start).getDate()}</span>
                     <span style={{ ...font, fontSize: '0.5rem', fontWeight: 500, color: 'rgba(10,10,10,0.35)', textTransform: 'uppercase' }}>{MONTHS[new Date(event.start).getMonth()]?.slice(0, 3)}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: TYPE_COLORS[event.type] || '#D4A843' }} />
-                      <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }} className="truncate">{event.title}</span>
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: TYPE_COLORS[event.type] || '#E8751A' }} />
+                      <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }} className="truncate">{event.title}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="flex items-center gap-1" style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.4)' }}>
@@ -260,7 +260,7 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
                         </span>
                       )}
                       {(event as any).dist != null && (
-                        <span style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: '#D4A843' }}>
+                        <span style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: '#E8751A' }}>
                           {formatDist((event as any).dist)}
                         </span>
                       )}
@@ -274,7 +274,7 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
               <button onClick={() => setMonthOffset(monthOffset - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}><ChevronLeft size={16} /></button>
-              <span style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#0A0A0A' }}>{MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}</span>
+              <span style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#1A1A1A' }}>{MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}</span>
               <button onClick={() => setMonthOffset(monthOffset + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}><ChevronRight size={16} /></button>
             </div>
             <div className="grid grid-cols-7 mb-1">
@@ -293,11 +293,11 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
                     onClick={() => day.events.length > 0 && setSelectedEvent(day.events[0])}>
                     {day.inMonth && (
                       <>
-                        <span style={{ ...font, fontSize: '0.68rem', fontWeight: day.date === now.getDate() && monthOffset === 0 ? 700 : 400, color: day.date === now.getDate() && monthOffset === 0 ? '#D4A843' : 'rgba(10,10,10,0.45)' }}>{day.date}</span>
+                        <span style={{ ...font, fontSize: '0.68rem', fontWeight: day.date === now.getDate() && monthOffset === 0 ? 700 : 400, color: day.date === now.getDate() && monthOffset === 0 ? '#E8751A' : 'rgba(10,10,10,0.45)' }}>{day.date}</span>
                         {day.events.length > 0 && (
                           <div className="flex gap-0.5 mt-0.5">
                             {day.events.slice(0, 3).map((e, j) => (
-                              <div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
+                              <div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: TYPE_COLORS[e.type] || '#E8751A' }} />
                             ))}
                           </div>
                         )}
@@ -309,7 +309,7 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
                               position: 'absolute', top: 2, right: 2,
                               width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
                               background: moon.type === 'vollmond' ? '#F5E090' : 'transparent',
-                              border: `1.2px solid ${moon.type === 'vollmond' ? '#D4A843' : '#6B4C8A'}`,
+                              border: `1.2px solid ${moon.type === 'vollmond' ? '#E8751A' : '#6B4C8A'}`,
                               boxShadow: moon.type === 'vollmond' ? '0 0 3px rgba(245,224,144,0.6)' : 'none',
                               cursor: 'pointer',
                             }}
@@ -325,7 +325,7 @@ export function EventCalendar({ onClose, mapRadius, onRadiusSlide, onCreateEvent
             {/* Legende */}
             <div className="flex items-center justify-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid rgba(10,10,10,0.04)' }}>
               <div className="flex items-center gap-1.5">
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F5E090', border: '1.5px solid #D4A843' }} />
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F5E090', border: '1.5px solid #E8751A' }} />
                 <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.4)' }}>Vollmond</span>
               </div>
               <div className="flex items-center gap-1.5">

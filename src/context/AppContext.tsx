@@ -59,7 +59,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Auto-Login: Token aus localStorage wiederherstellen
   useEffect(() => {
-    const token = localStorage.getItem('lichtung-token')
+    const token = localStorage.getItem('macher-token')
     if (token) {
       fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.ok ? res.json() : Promise.reject())
@@ -73,7 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             isAdmin: !!data.is_admin,
           })
         })
-        .catch(() => localStorage.removeItem('lichtung-token'))
+        .catch(() => localStorage.removeItem('macher-token'))
     }
   }, [])
 

@@ -35,17 +35,17 @@ function ConnectionDetail({ connection, onClose }: { connection: ConnectionProfi
           <img src={connection.image_path} alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-3" style={{ border: '2.5px solid rgba(212,168,67,0.3)' }} />
         ) : (
           <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(212,168,67,0.08)', border: '2.5px solid rgba(212,168,67,0.2)' }}>
-            <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', color: '#D4A843' }}>{connection.name?.charAt(0) || '?'}</span>
+            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.8rem', color: '#E8751A' }}>{connection.name?.charAt(0) || '?'}</span>
           </div>
         )}
-        <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>
+        <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.3rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
           {connection.name}
         </h3>
       </div>
 
       {connection.statement && (
         <div className="p-4 rounded-xl" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.03)' }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.95rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
             "{connection.statement}"
           </p>
         </div>
@@ -57,7 +57,7 @@ function ConnectionDetail({ connection, onClose }: { connection: ConnectionProfi
           target="_blank"
           rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
-          style={{ background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', textDecoration: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#5078C8' }}
+          style={{ background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', textDecoration: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#D4A020' }}
         >
           <MessageCircle size={16} />
           Telegram: {connection.telegram}
@@ -118,18 +118,18 @@ export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
       {/* Ketten-Statistik */}
       <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'rgba(212,168,67,0.04)', border: '1px solid rgba(212,168,67,0.1)' }}>
         <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.1)' }}>
-          <Link2 size={20} style={{ color: '#D4A843' }} />
+          <Link2 size={20} style={{ color: '#E8751A' }} />
         </div>
         <div>
           <div className="flex items-baseline gap-2">
-            <span style={{ ...font, fontSize: '1.4rem', fontWeight: 700, color: '#D4A843' }}>{connectionCount}</span>
+            <span style={{ ...font, fontSize: '1.4rem', fontWeight: 700, color: '#E8751A' }}>{connectionCount}</span>
             <span style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)' }}>
               {connectionCount === 1 ? 'Verbindung' : 'Verbindungen'}
             </span>
           </div>
           {chain.length > 0 && (
             <p style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.3)', marginTop: '2px' }}>
-              {chain.length} {chain.length === 1 ? 'Mensch' : 'Menschen'} in deiner Lichterkette
+              {chain.length} {chain.length === 1 ? 'Macher' : 'Macher'} in deinem Netzwerk
             </p>
           )}
         </div>
@@ -139,7 +139,7 @@ export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
             style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.15)', cursor: 'pointer' }}
             title="Auf der Karte zeigen"
           >
-            <Map size={16} style={{ color: '#D4A843' }} />
+            <Map size={16} style={{ color: '#E8751A' }} />
           </button>
         )}
       </div>
@@ -157,13 +157,13 @@ export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
                 <img src={p.image_path} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" style={{ border: '2px solid rgba(124,179,66,0.4)' }} />
               ) : (
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,179,66,0.12)', border: '2px solid rgba(124,179,66,0.3)' }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', color: '#7CB342' }}>{p.name?.charAt(0) || '?'}</span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', color: '#7CB342' }}>{p.name?.charAt(0) || '?'}</span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{p.name}</span>
+                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A' }} className="truncate block">{p.name}</span>
                 <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)' }} className="truncate block">
-                  {p.context === 'lichtung' ? 'ist einer Lichtung beigetreten' : 'hat dich gescannt'}
+                  {p.context === 'lichtung' ? 'ist einer Werkstatt beigetreten' : 'hat dich gescannt'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -212,19 +212,19 @@ export function MyConnections({ onShowOnMap }: MyConnectionsProps = {}) {
                 <img src={c.image_path} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" style={{ border: '2px solid rgba(212,168,67,0.2)' }} />
               ) : (
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.15)' }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', color: '#D4A843' }}>{c.name?.charAt(0) || '?'}</span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', color: '#E8751A' }}>{c.name?.charAt(0) || '?'}</span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{c.name}</span>
+                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A' }} className="truncate block">{c.name}</span>
                 {c.statement && (
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.72rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.4)' }} className="truncate block">
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.72rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.4)' }} className="truncate block">
                     {c.statement.slice(0, 50)}{c.statement.length > 50 ? '...' : ''}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                {c.telegram && <MessageCircle size={13} style={{ color: '#5078C8' }} />}
+                {c.telegram && <MessageCircle size={13} style={{ color: '#D4A020' }} />}
                 <ChevronRight size={14} style={{ color: 'rgba(10,10,10,0.2)' }} />
               </div>
             </button>

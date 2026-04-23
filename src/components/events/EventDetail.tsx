@@ -136,7 +136,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
             <div className="flex flex-wrap gap-1.5 mb-3">
               {tags.map((tag: string, i: number) => (
                 <span key={i} className="px-2 py-0.5 rounded-full"
-                  style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#D4A843', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.15)' }}>
+                  style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#E8751A', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.15)' }}>
                   #{tag.trim()}
                 </span>
               ))}
@@ -145,13 +145,13 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
 
           {/* Title + Share + QR */}
           <div className="flex items-start justify-between gap-2 mb-3">
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.35rem', fontWeight: 500, color: '#0A0A0A', lineHeight: 1.3, flex: 1 }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.35rem', fontWeight: 500, color: '#1A1A1A', lineHeight: 1.3, flex: 1 }}>
               {event.title}
             </h2>
             <div className="flex items-center gap-1.5 shrink-0">
               <button onClick={() => setShowQR(true)} title="QR-Code fuer Teilnahme"
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 10px', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', borderRadius: 8, cursor: 'pointer' }}>
-                <QrCode size={14} style={{ color: '#D4A843' }} />
+                <QrCode size={14} style={{ color: '#E8751A' }} />
               </button>
               <ShareButton
                 url={`${window.location.origin}/api/share/event/${event.id}`}
@@ -174,7 +174,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                 <button onClick={() => setShowQR(false)} className="absolute top-4 right-4" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
                   <X size={20} />
                 </button>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', color: '#0A0A0A', marginBottom: '6px' }}>
+                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', color: '#1A1A1A', marginBottom: '6px' }}>
                   Teilnahme per QR-Code
                 </h3>
                 <p style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.5)', marginBottom: '16px' }}>
@@ -185,11 +185,11 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                     value={`${window.location.origin}/app?event=${event.id}&join=1`}
                     size={Math.min(280, window.innerWidth - 120)}
                     bgColor="#FAFAF8"
-                    fgColor="#0A0A0A"
+                    fgColor="#1A1A1A"
                     level="H"
                   />
                 </div>
-                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', color: '#0A0A0A', marginTop: '14px' }}>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', color: '#1A1A1A', marginTop: '14px' }}>
                   {event.title}
                 </p>
               </div>
@@ -223,15 +223,15 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
           {/* Navigation */}
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl mb-3"
-            style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
-            <Navigation size={14} style={{ color: '#D4A843' }} />
+            style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#1A1A1A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
+            <Navigation size={14} style={{ color: '#E8751A' }} />
             Zum Standort navigieren
           </a>
 
           {/* Description */}
           {event.description && (
             <div className="mb-4 rounded-xl p-3.5" style={{ background: '#FAFAF8' }}>
-              <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(event.description) }} />
             </div>
           )}
@@ -252,7 +252,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                       <img src={p.image_path} alt="" style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,168,67,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '0.5rem', color: '#D4A843' }}>{p.name?.charAt(0)}</span>
+                        <span style={{ fontSize: '0.5rem', color: '#E8751A' }}>{p.name?.charAt(0)}</span>
                       </div>
                     )}
                     <span style={{ ...font, fontSize: '0.65rem', color: 'rgba(10,10,10,0.5)' }}>{p.name}</span>
@@ -268,12 +268,12 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
               <button onClick={() => handleAction(status === 'joined' ? 'leave' : 'join')} disabled={loading}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl"
                 style={{
-                  background: status === 'joined' ? 'rgba(212,168,67,0.1)' : '#0A0A0A',
+                  background: status === 'joined' ? 'rgba(212,168,67,0.1)' : '#1A1A1A',
                   border: status === 'joined' ? '1px solid rgba(212,168,67,0.3)' : 'none',
-                  color: status === 'joined' ? '#D4A843' : '#fff',
+                  color: status === 'joined' ? '#E8751A' : '#fff',
                   ...font, fontSize: '0.78rem', fontWeight: 500, cursor: loading ? 'wait' : 'pointer',
                 }}>
-                <Heart size={14} fill={status === 'joined' ? '#D4A843' : 'none'} />
+                <Heart size={14} fill={status === 'joined' ? '#E8751A' : 'none'} />
                 {status === 'joined' ? 'Dabei' : 'Teilnehmen'}
               </button>
               <button onClick={() => handleAction(status === 'watching' ? 'leave' : 'watch')} disabled={loading}
@@ -281,7 +281,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                 style={{
                   background: status === 'watching' ? 'rgba(10,10,10,0.06)' : 'transparent',
                   border: '1px solid ' + (status === 'watching' ? 'rgba(10,10,10,0.15)' : 'rgba(10,10,10,0.08)'),
-                  color: status === 'watching' ? '#0A0A0A' : 'rgba(10,10,10,0.4)',
+                  color: status === 'watching' ? '#1A1A1A' : 'rgba(10,10,10,0.4)',
                   ...font, fontSize: '0.78rem', fontWeight: 500, cursor: loading ? 'wait' : 'pointer',
                 }}>
                 <Eye size={14} />
@@ -323,10 +323,10 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                       <img src={c.image_path} alt="" className="w-6 h-6 rounded-full object-cover" />
                     ) : (
                       <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.15)' }}>
-                        <span style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#D4A843' }}>{c.name?.charAt(0) || '?'}</span>
+                        <span style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#E8751A' }}>{c.name?.charAt(0) || '?'}</span>
                       </div>
                     )}
-                    <span className="flex-1 truncate" style={{ ...font, fontSize: '0.78rem', color: '#0A0A0A' }}>{c.name || c.email}</span>
+                    <span className="flex-1 truncate" style={{ ...font, fontSize: '0.78rem', color: '#1A1A1A' }}>{c.name || c.email}</span>
                     {isOwner && (
                       <button onClick={() => handleRemoveCoOwner(c.id)} title="Entfernen"
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)', padding: '2px' }}>
@@ -342,10 +342,10 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                   <input type="email" value={newCoEmail} onChange={e => setNewCoEmail(e.target.value)}
                     placeholder="E-Mail des Nutzers"
                     className="w-full px-3 py-2 rounded-lg outline-none"
-                    style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A', background: '#fff', border: '1px solid rgba(10,10,10,0.1)' }} />
+                    style={{ ...font, fontSize: '0.75rem', color: '#1A1A1A', background: '#fff', border: '1px solid rgba(10,10,10,0.1)' }} />
                   <div className="flex gap-1.5">
                     <button onClick={handleAddCoOwner}
-                      style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
+                      style={{ ...font, fontSize: '0.7rem', fontWeight: 500, color: '#fff', background: '#1A1A1A', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
                       Hinzufuegen
                     </button>
                     <button onClick={() => { setShowAddCo(false); setNewCoEmail(''); setCoError('') }}

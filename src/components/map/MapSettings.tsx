@@ -21,8 +21,8 @@ interface MapSettingsProps {
 
 export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEvents, onClose }: MapSettingsProps) {
   const [tab, setTab] = useState<Tab>('general')
-  const [currentLayer, setCurrentLayer] = useState(localStorage.getItem('lichtung-tile-layer') || 'osm_de')
-  const [autoLight, setAutoLight] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
+  const [currentLayer, setCurrentLayer] = useState(localStorage.getItem('macher-tile-layer') || 'osm_de')
+  const [autoLight, setAutoLight] = useState(() => localStorage.getItem('macher-auto-pin') === '1')
   const [telegramConnected, setTelegramConnected] = useState(false)
   const [notifyConnection, setNotifyConnection] = useState(true)
   const [notifyEvent, setNotifyEvent] = useState(true)
@@ -43,7 +43,7 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
 
   const switchLayer = (key: string) => {
     setCurrentLayer(key)
-    localStorage.setItem('lichtung-tile-layer', key)
+    localStorage.setItem('macher-tile-layer', key)
     window.location.reload()
   }
 
@@ -70,10 +70,10 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
               <button onClick={() => setTab(t.key)}
                 className="rounded-full flex items-center justify-center"
                 style={{ width: 32, height: 32, background: tab === t.key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                <t.icon size={14} style={{ color: tab === t.key ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                <t.icon size={14} style={{ color: tab === t.key ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
               </button>
               <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-                style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+                style={{ background: '#1A1A1A', whiteSpace: 'nowrap', zIndex: 10 }}>
                 <span style={{ ...font, fontSize: '0.55rem', color: '#fff' }}>{t.label}</span>
               </div>
             </div>
@@ -94,16 +94,16 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
                 onClick={() => {
                   const next = !autoLight
                   setAutoLight(next)
-                  localStorage.setItem('lichtung-auto-light', next ? '1' : '0')
+                  localStorage.setItem('macher-auto-pin', next ? '1' : '0')
                 }}
                 className="w-full flex items-center gap-3 p-2.5 rounded-lg"
                 style={{ background: autoLight ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (autoLight ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                <LocateFixed size={14} style={{ color: autoLight ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                <LocateFixed size={14} style={{ color: autoLight ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
                 <div style={{ flex: 1 }}>
-                  <span style={{ ...font, fontSize: '0.75rem', color: '#0A0A0A', display: 'block' }}>Licht automatisch setzen</span>
+                  <span style={{ ...font, fontSize: '0.75rem', color: '#1A1A1A', display: 'block' }}>Pin automatisch setzen</span>
                   <span style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.35)' }}>Beim Oeffnen der Karte</span>
                 </div>
-                {autoLight && <Check size={13} style={{ color: '#D4A843' }} />}
+                {autoLight && <Check size={13} style={{ color: '#E8751A' }} />}
               </button>
             </div>
 
@@ -124,15 +124,15 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
                     }, 5000)
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg mb-2"
-                  style={{ ...font, fontSize: '0.75rem', fontWeight: 500, color: '#5078C8', background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', cursor: 'pointer' }}>
+                  style={{ ...font, fontSize: '0.75rem', fontWeight: 500, color: '#D4A020', background: 'rgba(80,120,200,0.06)', border: '1px solid rgba(80,120,200,0.15)', cursor: 'pointer' }}>
                   <MessageCircle size={14} />
                   Mit Telegram verbinden
                   <ExternalLink size={11} />
                 </button>
               ) : (
                 <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg mb-2" style={{ background: 'rgba(123,174,94,0.06)', border: '1px solid rgba(123,174,94,0.15)' }}>
-                  <Check size={13} style={{ color: '#7BAE5E' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#7BAE5E' }}>Telegram verbunden</span>
+                  <Check size={13} style={{ color: '#E8751A' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#E8751A' }}>Telegram verbunden</span>
                 </div>
               )}
 
@@ -141,37 +141,37 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
                 <button onClick={() => { const v = !notifyConnection; setNotifyConnection(v); api.updateNotifySettings({ notify_new_connection: v }) }}
                   className="w-full flex items-center gap-3 p-2 rounded-lg"
                   style={{ background: notifyConnection ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (notifyConnection ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                  <Link2 size={13} style={{ color: notifyConnection ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Neue Verbindung</span>
-                  {notifyConnection && <Check size={12} style={{ color: '#D4A843' }} />}
+                  <Link2 size={13} style={{ color: notifyConnection ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#1A1A1A', flex: 1 }}>Neue Verbindung</span>
+                  {notifyConnection && <Check size={12} style={{ color: '#E8751A' }} />}
                 </button>
 
                 <button onClick={() => { const v = !notifyEvent; setNotifyEvent(v); api.updateNotifySettings({ notify_new_event: v }) }}
                   className="w-full flex items-center gap-3 p-2 rounded-lg"
                   style={{ background: notifyEvent ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (notifyEvent ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                  <CalendarDays size={13} style={{ color: notifyEvent ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Neue Veranstaltung</span>
-                  {notifyEvent && <Check size={12} style={{ color: '#D4A843' }} />}
+                  <CalendarDays size={13} style={{ color: notifyEvent ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#1A1A1A', flex: 1 }}>Neue Veranstaltung</span>
+                  {notifyEvent && <Check size={12} style={{ color: '#E8751A' }} />}
                 </button>
 
                 {notifyEvent && (
                   <div className="px-2 py-1.5">
                     <div className="flex items-center justify-between mb-1">
                       <span style={{ ...font, fontSize: '0.62rem', color: 'rgba(10,10,10,0.4)' }}>Umkreis</span>
-                      <span style={{ ...font, fontSize: '0.65rem', fontWeight: 600, color: '#D4A843' }}>{notifyRadius} km</span>
+                      <span style={{ ...font, fontSize: '0.65rem', fontWeight: 600, color: '#E8751A' }}>{notifyRadius} km</span>
                     </div>
                     <input type="range" min="5" max="200" value={notifyRadius}
                       onChange={e => { const v = Number(e.target.value); setNotifyRadius(v); api.updateNotifySettings({ notify_radius: v }) }}
-                      className="w-full" style={{ accentColor: '#D4A843', height: '3px' }} />
+                      className="w-full" style={{ accentColor: '#E8751A', height: '3px' }} />
                   </div>
                 )}
 
                 <button onClick={() => { const v = !notifyLichtung; setNotifyLichtung(v); api.updateNotifySettings({ notify_lichtung: v }) }}
                   className="w-full flex items-center gap-3 p-2 rounded-lg"
                   style={{ background: notifyLichtung ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (notifyLichtung ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                  <Sparkles size={13} style={{ color: notifyLichtung ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                  <span style={{ ...font, fontSize: '0.72rem', color: '#0A0A0A', flex: 1 }}>Lichtungen</span>
-                  {notifyLichtung && <Check size={12} style={{ color: '#D4A843' }} />}
+                  <Sparkles size={13} style={{ color: notifyLichtung ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.72rem', color: '#1A1A1A', flex: 1 }}>Werkstaetten</span>
+                  {notifyLichtung && <Check size={12} style={{ color: '#E8751A' }} />}
                 </button>
               </div>
             </div>
@@ -186,15 +186,15 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
               <div className="space-y-1.5">
                 <button onClick={onToggleLights} className="w-full flex items-center gap-3 p-2.5 rounded-lg"
                   style={{ background: showLights ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (showLights ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                  <Sparkles size={14} style={{ color: showLights ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                  <span style={{ ...font, fontSize: '0.75rem', color: showLights ? '#0A0A0A' : 'rgba(10,10,10,0.4)', flex: 1 }}>Lichter</span>
-                  {showLights && <Check size={13} style={{ color: '#D4A843' }} />}
+                  <Sparkles size={14} style={{ color: showLights ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.75rem', color: showLights ? '#1A1A1A' : 'rgba(10,10,10,0.4)', flex: 1 }}>Macher-Pins</span>
+                  {showLights && <Check size={13} style={{ color: '#E8751A' }} />}
                 </button>
                 <button onClick={onToggleEvents} className="w-full flex items-center gap-3 p-2.5 rounded-lg"
                   style={{ background: showEvents ? 'rgba(212,168,67,0.05)' : '#FAFAF8', border: '1px solid ' + (showEvents ? 'rgba(212,168,67,0.2)' : 'rgba(10,10,10,0.04)'), cursor: 'pointer', textAlign: 'left' }}>
-                  <CalendarDays size={14} style={{ color: showEvents ? '#0A0A0A' : 'rgba(10,10,10,0.25)' }} />
-                  <span style={{ ...font, fontSize: '0.75rem', color: showEvents ? '#0A0A0A' : 'rgba(10,10,10,0.4)', flex: 1 }}>Veranstaltungen</span>
-                  {showEvents && <Check size={13} style={{ color: '#D4A843' }} />}
+                  <CalendarDays size={14} style={{ color: showEvents ? '#1A1A1A' : 'rgba(10,10,10,0.25)' }} />
+                  <span style={{ ...font, fontSize: '0.75rem', color: showEvents ? '#1A1A1A' : 'rgba(10,10,10,0.4)', flex: 1 }}>Veranstaltungen</span>
+                  {showEvents && <Check size={13} style={{ color: '#E8751A' }} />}
                 </button>
               </div>
             </div>
@@ -211,8 +211,8 @@ export function MapSettings({ showLights, showEvents, onToggleLights, onToggleEv
                       border: '1px solid ' + (currentLayer === l.key ? 'rgba(212,168,67,0.25)' : 'rgba(10,10,10,0.04)'),
                       cursor: 'pointer',
                     }}>
-                    <Map size={11} style={{ color: currentLayer === l.key ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
-                    <span style={{ ...font, fontSize: '0.62rem', fontWeight: currentLayer === l.key ? 600 : 400, color: currentLayer === l.key ? '#D4A843' : 'rgba(10,10,10,0.45)' }}>
+                    <Map size={11} style={{ color: currentLayer === l.key ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
+                    <span style={{ ...font, fontSize: '0.62rem', fontWeight: currentLayer === l.key ? 600 : 400, color: currentLayer === l.key ? '#E8751A' : 'rgba(10,10,10,0.45)' }}>
                       {l.label}
                     </span>
                   </button>

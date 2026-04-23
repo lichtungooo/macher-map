@@ -4,21 +4,21 @@ import { ArrowRight, User, MapPin, CalendarPlus, X } from 'lucide-react'
 const STEPS = [
   {
     icon: User,
-    title: 'Willkommen bei Lichtung',
-    text: 'Hier setzt du dein Licht fuer den Frieden auf die Weltkarte. Erstelle zuerst dein Profil — mit deinem Namen, einem Foto und deinem persoenlichen Friedens-Statement.',
+    title: 'Willkommen bei Macher-Map',
+    text: 'Finde Werkstaetten, Abenteuer und Macher in deiner Naehe. Erstelle zuerst dein Profil — mit deinem Namen, einem Foto und deinen Skills.',
     hint: 'Klicke oben rechts auf das Profil-Symbol.',
   },
   {
     icon: MapPin,
-    title: 'Setze dein Licht',
-    text: 'Mit dem Plus-Button unten rechts kannst du dein Licht auf die Karte setzen. Tippe auf die Stelle, wo du leuchten moechtest — dort wo du lebst, oder an einem Ort, der dir am Herzen liegt.',
-    hint: 'Klicke auf (+) und waehle "Setze dein Licht".',
+    title: 'Zeig dich auf der Karte',
+    text: 'Mit dem Plus-Button unten rechts kannst du deinen Macher-Pin auf die Karte setzen. Tippe auf die Stelle, wo du baust — dort wo du lebst, oder an einem Ort, der dir am Herzen liegt.',
+    hint: 'Klicke auf (+) und waehle "Macher-Pin setzen".',
   },
   {
     icon: CalendarPlus,
-    title: 'Triff dich mit Menschen',
-    text: 'Erstelle Veranstaltungen in deiner Naehe: Zusammen am Feuer sitzen, gemeinsam schweigen, fuer den Frieden meditieren. Andere Menschen koennen teilnehmen und sich mit dir verbinden.',
-    hint: 'Klicke auf (+) und waehle "Veranstaltung erstellen".',
+    title: 'Triff dich mit Machern',
+    text: 'Erstelle Abenteuer in deiner Naehe: Zusammen bauen, schweissen, werkeln. Andere Macher koennen teilnehmen und sich mit dir verbinden.',
+    hint: 'Klicke auf (+) und waehle "Abenteuer erstellen".',
   },
 ]
 
@@ -51,7 +51,7 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
             <div
               key={i}
               className="h-1 rounded-full flex-1 transition-all"
-              style={{ background: i <= step ? '#D4A843' : 'rgba(10,10,10,0.08)' }}
+              style={{ background: i <= step ? '#E8751A' : 'rgba(10,10,10,0.08)' }}
             />
           ))}
         </div>
@@ -61,11 +61,11 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
           className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
           style={{ background: 'rgba(212,168,67,0.08)' }}
         >
-          <current.icon size={24} style={{ color: '#D4A843' }} />
+          <current.icon size={24} style={{ color: '#E8751A' }} />
         </div>
 
         {/* Content */}
-        <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '0.6rem' }}>
+        <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.4rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '0.6rem' }}>
           {current.title}
         </h3>
 
@@ -78,8 +78,8 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
           className="flex items-center gap-2 px-4 py-3 rounded-lg mb-6"
           style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}
         >
-          <ArrowRight size={14} style={{ color: '#D4A843', flexShrink: 0 }} />
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 500, color: '#D4A843' }}>
+          <ArrowRight size={14} style={{ color: '#E8751A', flexShrink: 0 }} />
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 500, color: '#E8751A' }}>
             {current.hint}
           </span>
         </div>
@@ -101,7 +101,7 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
             onClick={() => isLast ? onClose() : setStep(step + 1)}
             style={{
               fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500,
-              color: '#fff', background: '#0A0A0A', border: 'none',
+              color: '#fff', background: '#1A1A1A', border: 'none',
               padding: '10px 24px', borderRadius: '8px', cursor: 'pointer',
             }}
           >

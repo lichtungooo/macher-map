@@ -69,7 +69,7 @@ export function OpenCollectiveWidget({ urlOrSlug, goalAmount, accent = '#C07090'
   const [error, setError] = useState<string | null>(null)
 
   const font = { fontFamily: 'Inter, sans-serif' as const }
-  const serif = { fontFamily: "'Cormorant Garamond', Georgia, serif" }
+  const serif = { fontFamily: "'Space Grotesk', sans-serif" }
 
   useEffect(() => {
     if (!slug) { setLoading(false); return }
@@ -164,7 +164,7 @@ export function OpenCollectiveWidget({ urlOrSlug, goalAmount, accent = '#C07090'
           <p style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: 'rgba(10,10,10,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>
             Eingenommen
           </p>
-          <p style={{ ...serif, fontSize: '1.35rem', fontWeight: 500, color: '#0A0A0A', lineHeight: 1.1 }}>
+          <p style={{ ...serif, fontSize: '1.35rem', fontWeight: 500, color: '#1A1A1A', lineHeight: 1.1 }}>
             {formatCurrency(received, currency)}
           </p>
         </div>

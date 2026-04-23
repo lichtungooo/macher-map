@@ -65,7 +65,7 @@ export function ProjectMarker({ project, onClick }: ProjectMarkerProps) {
     >
       <Popup className="project-popup">
         <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 240, textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', margin: '0 0 8px' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontWeight: 500, color: '#1A1A1A', margin: '0 0 8px' }}>
             {project.title}
           </p>
           {project.goal_amount && project.goal_amount > 0 && project.current_amount && project.current_amount > 0 ? (

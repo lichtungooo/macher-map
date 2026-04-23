@@ -21,7 +21,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
   const [view, setView] = useState<'profile' | 'events' | 'connections' | 'settings'>('profile')
   const [telegram, setTelegram] = useState('')
   const [pwMsg, setPwMsg] = useState('')
-  const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('lichtung-auto-light') === '1')
+  const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('macher-auto-pin') === '1')
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushStatus, setPushStatus] = useState('')
 
@@ -77,7 +77,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
     } catch { setPwMsg('Fehler.') }
   }
 
-  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', background: '#fff' }
+  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#1A1A1A', background: '#fff' }
   const labelStyle = { fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', fontWeight: 400 as const, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.4)', display: 'block', marginBottom: '6px' }
 
   return (
@@ -104,10 +104,10 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                   <button onClick={() => setView(key as any)}
                     className="rounded-full flex items-center justify-center"
                     style={{ width: 36, height: 36, background: view === key ? 'rgba(212,168,67,0.1)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                    <Icon size={16} style={{ color: view === key ? '#D4A843' : 'rgba(10,10,10,0.25)' }} />
+                    <Icon size={16} style={{ color: view === key ? '#E8751A' : 'rgba(10,10,10,0.25)' }} />
                   </button>
                   <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-                    style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+                    style={{ background: '#1A1A1A', whiteSpace: 'nowrap', zIndex: 10 }}>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{label}</span>
                   </div>
                 </div>
@@ -138,12 +138,12 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
               <button
                 onClick={handleChangePassword}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-lg"
-                style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', cursor: 'pointer' }}
+                style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#1A1A1A', cursor: 'pointer' }}
               >
-                <KeyRound size={16} style={{ color: '#D4A843' }} />
+                <KeyRound size={16} style={{ color: '#E8751A' }} />
                 Link zum Zuruecksetzen senden
               </button>
-              {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('Fehler') ? '#c44' : '#D4A843', marginTop: '6px' }}>{pwMsg}</p>}
+              {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('Fehler') ? '#c44' : '#E8751A', marginTop: '6px' }}>{pwMsg}</p>}
             </div>
 
             {user?.isAdmin && (
@@ -151,7 +151,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                 <label style={labelStyle}>Admin</label>
                 <a href="/admin" target="_blank" rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg"
-                  style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#D4A843', cursor: 'pointer', textDecoration: 'none' }}>
+                  style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.25)', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#E8751A', cursor: 'pointer', textDecoration: 'none' }}>
                   <ShieldCheck size={16} />
                   Admin-Panel oeffnen
                 </a>
@@ -165,19 +165,19 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                   onClick={() => {
                     const next = !autoLight
                     setAutoLightState(next)
-                    localStorage.setItem('lichtung-auto-light', next ? '1' : '0')
+                    localStorage.setItem('macher-auto-pin', next ? '1' : '0')
                   }}
                   className="w-5 h-5 rounded flex items-center justify-center shrink-0"
-                  style={{ border: autoLight ? 'none' : '1px solid rgba(10,10,10,0.15)', background: autoLight ? '#D4A843' : '#fff', cursor: 'pointer' }}
+                  style={{ border: autoLight ? 'none' : '1px solid rgba(10,10,10,0.15)', background: autoLight ? '#E8751A' : '#fff', cursor: 'pointer' }}
                 >
                   {autoLight && <Check size={14} color="#fff" />}
                 </button>
                 <div>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', display: 'block' }}>
-                    Licht automatisch setzen
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#1A1A1A', display: 'block' }}>
+                    Pin automatisch setzen
                   </span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', display: 'block', marginTop: '2px' }}>
-                    Beim Oeffnen der Karte wird dein Licht an deinen Standort gesetzt.
+                    Beim Oeffnen der Karte wird dein Pin an deinen Standort gesetzt.
                   </span>
                 </div>
               </label>
@@ -199,18 +199,18 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                       setPushEnabled(true)
                       setPushStatus('Aktiviert.')
                       // Test-Notification
-                      new Notification('Lichtung', { body: 'Push-Nachrichten sind aktiv.', icon: '/favicon.svg' })
+                      new Notification('Macher-Map', { body: 'Push-Nachrichten sind aktiv.', icon: '/favicon.svg' })
                     } else {
                       setPushStatus('Berechtigung verweigert.')
                     }
                   }}
                   className="w-5 h-5 rounded flex items-center justify-center shrink-0"
-                  style={{ border: pushEnabled ? 'none' : '1px solid rgba(10,10,10,0.15)', background: pushEnabled ? '#D4A843' : '#fff', cursor: 'pointer' }}
+                  style={{ border: pushEnabled ? 'none' : '1px solid rgba(10,10,10,0.15)', background: pushEnabled ? '#E8751A' : '#fff', cursor: 'pointer' }}
                 >
                   {pushEnabled && <Check size={14} color="#fff" />}
                 </button>
                 <div>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#0A0A0A', display: 'block' }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#1A1A1A', display: 'block' }}>
                     Push-Nachrichten
                   </span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)', display: 'block', marginTop: '2px' }}>
@@ -218,7 +218,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                   </span>
                 </div>
               </label>
-              {pushStatus && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#D4A843', marginTop: '4px' }}>{pushStatus}</p>}
+              {pushStatus && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#E8751A', marginTop: '4px' }}>{pushStatus}</p>}
             </div>
 
             <div>
@@ -230,18 +230,18 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                   { key: 'voyager', label: 'Voyager' },
                   { key: 'positron', label: 'Positron' },
                 ].map(layer => {
-                  const active = (localStorage.getItem('lichtung-tile-layer') || 'osm_de') === layer.key
+                  const active = (localStorage.getItem('macher-tile-layer') || 'osm_de') === layer.key
                   return (
                     <button key={layer.key}
-                      onClick={() => { localStorage.setItem('lichtung-tile-layer', layer.key); window.location.reload() }}
+                      onClick={() => { localStorage.setItem('macher-tile-layer', layer.key); window.location.reload() }}
                       className="flex items-center gap-2 p-3 rounded-lg"
                       style={{
                         background: active ? 'rgba(212,168,67,0.06)' : '#FAFAF8',
                         border: active ? '1px solid rgba(212,168,67,0.3)' : '1px solid rgba(10,10,10,0.04)',
                         cursor: 'pointer',
                       }}>
-                      <Map size={13} style={{ color: active ? '#D4A843' : 'rgba(10,10,10,0.3)' }} />
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: active ? 600 : 400, color: active ? '#D4A843' : 'rgba(10,10,10,0.5)' }}>
+                      <Map size={13} style={{ color: active ? '#E8751A' : 'rgba(10,10,10,0.3)' }} />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: active ? 600 : 400, color: active ? '#E8751A' : 'rgba(10,10,10,0.5)' }}>
                         {layer.label}
                       </span>
                     </button>
@@ -261,9 +261,9 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                     try { await api.exportMyData() } catch { alert('Download fehlgeschlagen.') }
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg"
-                  style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#0A0A0A', cursor: 'pointer' }}
+                  style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#1A1A1A', cursor: 'pointer' }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5078C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4A020" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   Meine Daten herunterladen
                 </button>
                 <a href="/datenschutz" target="_blank" rel="noopener noreferrer"
@@ -291,7 +291,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
             {/* Konto loeschen */}
             <button
               onClick={async () => {
-                if (!confirm('Moechtest du dein Konto und alle deine Daten wirklich unwiderruflich loeschen? Deine Lichter, Veranstaltungen und Lichtungen werden entfernt. Das kann nicht rueckgaengig gemacht werden.')) return
+                if (!confirm('Moechtest du dein Konto und alle deine Daten wirklich unwiderruflich loeschen? Deine Pins, Abenteuer und Werkstaetten werden entfernt. Das kann nicht rueckgaengig gemacht werden.')) return
                 if (!confirm('Letzter Hinweis: Diese Aktion ist endgueltig. Moechtest du wirklich loeschen?')) return
                 try {
                   await api.deleteAccount()
@@ -318,25 +318,25 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                 <img src={imagePreview} alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-3" style={{ border: '3px solid rgba(212,168,67,0.3)' }} />
               ) : (
                 <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)' }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', color: '#D4A843' }}>{name?.charAt(0) || '?'}</span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.8rem', color: '#E8751A' }}>{name?.charAt(0) || '?'}</span>
                 </div>
               )}
-              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', marginBottom: '2px' }}>{name || 'Dein Name'}</h3>
+              <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.4rem', fontWeight: 500, color: '#1A1A1A', marginBottom: '2px' }}>{name || 'Dein Name'}</h3>
               {telegram && (
                 <a href={`https://t.me/${telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-                  style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#5078C8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#D4A020', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <MessageCircle size={12} />
                   {telegram}
                 </a>
               )}
               {statement && (
-                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginTop: '10px', lineHeight: 1.5 }}>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginTop: '10px', lineHeight: 1.5 }}>
                   "{statement}"
                 </p>
               )}
               {bio && (
                 <div className="rounded-xl p-4 text-left mt-4" style={{ background: '#FAFAF8' }}>
-                  <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}>{bio}</p>
+                  <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.92rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}>{bio}</p>
                 </div>
               )}
             </div>
@@ -354,7 +354,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                   {imagePreview ? (
                     <img src={imagePreview} alt="" className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <Camera size={22} style={{ color: '#D4A843' }} />
+                    <Camera size={22} style={{ color: '#E8751A' }} />
                   )}
                 </button>
               </div>
@@ -368,11 +368,11 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
 
               {/* Kurz-Statement */}
               <div className="mb-3">
-                <label style={labelStyle}>Friedens-Statement</label>
+                <label style={labelStyle}>Macher-Motto</label>
                 <input type="text" value={statement} onChange={e => setStatement(e.target.value)}
-                  placeholder="Ein kurzer Satz — z.B. Frieden kommt aus dem Herzen."
+                  placeholder="Ein kurzer Satz — z.B. Ich bau das, was andere nur planen."
                   className="w-full px-4 py-2.5 rounded-lg outline-none"
-                  style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem' }}
+                  style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.95rem' }}
                   maxLength={120}
                 />
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.55rem', color: 'rgba(10,10,10,0.25)', textAlign: 'right', marginTop: '2px' }}>
@@ -388,7 +388,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                   placeholder="Erzaehle mehr von dir — deine Geschichte, dein Weg, deine Vision."
                   rows={4}
                   className="w-full px-4 py-2.5 rounded-lg outline-none resize-none"
-                  style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.6 }} />
+                  style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.92rem', lineHeight: 1.6 }} />
               </div>
 
               {/* Telegram */}
@@ -408,7 +408,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
 
               <div className="flex gap-2">
                 <button onClick={handleSave} className="flex-1 py-2.5 rounded-lg"
-                  style={{ background: '#0A0A0A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
+                  style={{ background: '#1A1A1A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
                   Speichern
                 </button>
                 <button onClick={() => setShowPreview(true)} className="py-2.5 px-4 rounded-lg"

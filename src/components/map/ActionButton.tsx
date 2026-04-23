@@ -14,10 +14,10 @@ export function ActionButton({ onSetLight, onCreateEvent, onCreateLichtung, onCr
   const [open, setOpen] = useState(false)
 
   const SUB_BUTTONS = [
-    ...(onCreateProject ? [{ icon: HeartHandshake, label: 'Projekt erstellen', color: '#C07090', onClick: onCreateProject }] : []),
-    ...(onCreateLichtung ? [{ icon: Trees, label: 'Ort platzieren', color: '#7BAE5E', onClick: onCreateLichtung }] : []),
-    { icon: CalendarDays, label: 'Veranstaltung erstellen', color: '#5078C8', onClick: onCreateEvent },
-    { icon: Sparkles, label: 'Licht platzieren', color: '#D4A843', onClick: onSetLight },
+    ...(onCreateProject ? [{ icon: HeartHandshake, label: 'Bauprojekt erstellen', color: '#C07090', onClick: onCreateProject }] : []),
+    ...(onCreateLichtung ? [{ icon: Trees, label: 'Werkstatt eintragen', color: '#E8751A', onClick: onCreateLichtung }] : []),
+    { icon: CalendarDays, label: 'Abenteuer erstellen', color: '#D4A020', onClick: onCreateEvent },
+    { icon: Sparkles, label: 'Macher-Pin setzen', color: '#E8751A', onClick: onSetLight },
   ]
 
   return (
@@ -39,7 +39,7 @@ export function ActionButton({ onSetLight, onCreateEvent, onCreateLichtung, onCr
           </button>
           {/* Tooltip links */}
           <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-            style={{ background: '#0A0A0A', whiteSpace: 'nowrap' }}>
+            style={{ background: '#1A1A1A', whiteSpace: 'nowrap' }}>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>{btn.label}</span>
           </div>
         </div>
@@ -50,13 +50,13 @@ export function ActionButton({ onSetLight, onCreateEvent, onCreateLichtung, onCr
         <button
           onClick={() => setOpen(!open)}
           className="rounded-full flex items-center justify-center shadow-lg"
-          style={{ width: BTN_SIZE, height: BTN_SIZE, background: open ? '#0A0A0A' : '#fff', border: open ? 'none' : '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
+          style={{ width: BTN_SIZE, height: BTN_SIZE, background: open ? '#1A1A1A' : '#fff', border: open ? 'none' : '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}
         >
-          {open ? <X size={20} color="#fff" /> : <Plus size={20} color="#D4A843" />}
+          {open ? <X size={20} color="#fff" /> : <Plus size={20} color="#E8751A" />}
         </button>
         {!open && (
           <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-            style={{ background: '#0A0A0A', whiteSpace: 'nowrap' }}>
+            style={{ background: '#1A1A1A', whiteSpace: 'nowrap' }}>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: '#fff' }}>Aktion</span>
           </div>
         )}

@@ -10,7 +10,7 @@ function createLightIcon() {
           <stop offset="0%" stop-color="#FFFFF0" stop-opacity="1"/>
           <stop offset="30%" stop-color="#FFF8D0" stop-opacity="0.9"/>
           <stop offset="60%" stop-color="#F5E090" stop-opacity="0.6"/>
-          <stop offset="100%" stop-color="#D4A843" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
         </radialGradient>
         <filter id="glow">
           <feGaussianBlur stdDeviation="2" result="blur"/>
@@ -51,18 +51,18 @@ export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
               style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,168,67,0.3)', margin: '0 auto 8px', display: 'block' }} />
           ) : (
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '2px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', color: '#D4A843' }}>{light.name?.charAt(0) || '?'}</span>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.3rem', color: '#E8751A' }}>{light.name?.charAt(0) || '?'}</span>
             </div>
           )}
 
           {/* Name mittig */}
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', margin: '0 0 4px' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontWeight: 500, color: '#1A1A1A', margin: '0 0 4px' }}>
             {light.name}
           </p>
 
           {/* Statement mittig */}
           {light.statement && (
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
               "{light.statement.length > 80 ? light.statement.slice(0, 80).trim() + '...' : light.statement}"
             </p>
           )}
@@ -73,7 +73,7 @@ export function LightMarker({ light, onShowProfile }: LightMarkerProps) {
               onClick={(e) => { e.stopPropagation(); onShowProfile(light) }}
               style={{
                 fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 500,
-                color: '#D4A843', background: 'rgba(212,168,67,0.08)',
+                color: '#E8751A', background: 'rgba(212,168,67,0.08)',
                 border: '1px solid rgba(212,168,67,0.2)', borderRadius: '6px',
                 padding: '6px 18px', cursor: 'pointer',
               }}

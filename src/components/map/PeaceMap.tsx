@@ -184,7 +184,7 @@ const TILE_LAYERS = {
 export function PeaceMap({ onMapClick, placingLight, showLights = true, showEvents = true, onZoomChange, onCenterChange, onRadiusChange, flyTo, zoomToRadius, lichtungen = [], projects = [], onLichtungClick, onProjectClick, onShowProfile, onShowEvent, chainData = [], showChain }: PeaceMapProps) {
   const { lights, events } = useApp()
   const center: LatLngExpression = [50.0, 10.0]
-  const tileKey = (localStorage.getItem('lichtung-tile-layer') || 'osm_de') as keyof typeof TILE_LAYERS
+  const tileKey = (localStorage.getItem('macher-tile-layer') || 'osm_de') as keyof typeof TILE_LAYERS
   const tile = TILE_LAYERS[tileKey] || TILE_LAYERS.osm_de
 
   return (
@@ -220,7 +220,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
           const from: [number, number] = parentLight ? [parentLight.lat ?? parentLight.position?.[0], parentLight.lng ?? parentLight.position?.[1]] : userLight.position
           const to: [number, number] = [c.lat, c.lng]
           if (!from[0] || !to[0]) return null
-          return <Polyline key={i} positions={[from, to]} pathOptions={{ color: '#D4A843', weight: 2, opacity: 0.4, dashArray: '6 4' }} />
+          return <Polyline key={i} positions={[from, to]} pathOptions={{ color: '#E8751A', weight: 2, opacity: 0.4, dashArray: '6 4' }} />
         })
       })()}
 
@@ -237,8 +237,8 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
           const count = cluster.getChildCount()
           const size = count < 10 ? 36 : count < 50 ? 44 : 52
           return L.divIcon({
-            html: `<div class="lichtung-cluster-icon" style="width:${size}px;height:${size}px;">${count}</div>`,
-            className: 'lichtung-cluster-wrap',
+            html: `<div class="macher-cluster-icon" style="width:${size}px;height:${size}px;">${count}</div>`,
+            className: 'macher-cluster-wrap',
             iconSize: [size, size],
           })
         }}>

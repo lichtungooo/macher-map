@@ -45,7 +45,7 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
     }
   }
 
-  const inputStyle = { border: '1px solid rgba(10,10,10,0.12)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', background: '#fff' }
+  const inputStyle = { border: '1px solid rgba(10,10,10,0.12)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#1A1A1A', background: '#fff' }
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
@@ -57,9 +57,9 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
         {mode === 'forgot-sent' ? (
           <div className="text-center py-4">
             <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.1)' }}>
-              <Mail size={28} style={{ color: '#D4A843' }} />
+              <Mail size={28} style={{ color: '#E8751A' }} />
             </div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.5rem' }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.3rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '0.5rem' }}>
               Pruefe dein Postfach
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(10,10,10,0.5)', lineHeight: 1.6 }}>
@@ -68,11 +68,11 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
           </div>
         ) : (
           <>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.3rem', textAlign: 'center' }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.5rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '0.3rem', textAlign: 'center' }}>
               {mode === 'register' ? 'Konto erstellen' : mode === 'login' ? 'Anmelden' : 'Passwort vergessen'}
             </h2>
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.4)', textAlign: 'center', marginBottom: '1.5rem' }}>
-              {mode === 'forgot' ? 'Wir senden dir einen Link.' : 'Dein Licht wartet.'}
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.95rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.4)', textAlign: 'center', marginBottom: '1.5rem' }}>
+              {mode === 'forgot' ? 'Wir senden dir einen Link.' : 'Pack an.'}
             </p>
 
             <form onSubmit={handleSubmit}>
@@ -112,11 +112,11 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
                 <label className="flex items-start gap-3 mb-3 cursor-pointer">
                   <button type="button" onClick={() => setPrivacyAccepted(!privacyAccepted)}
                     className="w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ border: privacyAccepted ? 'none' : '1px solid rgba(10,10,10,0.15)', background: privacyAccepted ? '#D4A843' : '#fff', cursor: 'pointer' }}>
+                    style={{ border: privacyAccepted ? 'none' : '1px solid rgba(10,10,10,0.15)', background: privacyAccepted ? '#E8751A' : '#fff', cursor: 'pointer' }}>
                     {privacyAccepted && <Check size={14} color="#fff" />}
                   </button>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', lineHeight: 1.5, color: 'rgba(10,10,10,0.5)' }}>
-                    Ich habe die <a href="/datenschutz" target="_blank" rel="noopener noreferrer" style={{ color: '#D4A843' }}>Datenschutzerklaerung</a> gelesen und stimme der Verarbeitung meiner Daten zu.
+                    Ich habe die <a href="/datenschutz" target="_blank" rel="noopener noreferrer" style={{ color: '#E8751A' }}>Datenschutzerklaerung</a> gelesen und stimme der Verarbeitung meiner Daten zu.
                   </span>
                 </label>
               )}
@@ -126,11 +126,11 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
                 <label className="flex items-start gap-3 mb-4 cursor-pointer">
                   <button type="button" onClick={() => setNewsletter(!newsletter)}
                     className="w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ border: newsletter ? 'none' : '1px solid rgba(10,10,10,0.15)', background: newsletter ? '#D4A843' : '#fff', cursor: 'pointer' }}>
+                    style={{ border: newsletter ? 'none' : '1px solid rgba(10,10,10,0.15)', background: newsletter ? '#E8751A' : '#fff', cursor: 'pointer' }}>
                     {newsletter && <Check size={14} color="#fff" />}
                   </button>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', lineHeight: 1.5, color: 'rgba(10,10,10,0.5)' }}>
-                    Ueber Friedensveranstaltungen und Neuigkeiten informiert werden (freiwillig).
+                    Ueber Abenteuer, Werkstaetten und Neuigkeiten informiert werden (freiwillig).
                   </span>
                 </label>
               )}
@@ -138,7 +138,7 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
               {error && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#c44', marginBottom: '12px', textAlign: 'center' }}>{error}</p>}
 
               <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-3 rounded-lg"
-                style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
+                style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
                 {loading ? 'Bitte warten...' : mode === 'register' ? 'Konto erstellen' : mode === 'login' ? 'Anmelden' : 'Link senden'}
                 {!loading && <ArrowRight size={16} />}
               </button>
@@ -148,13 +148,13 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
             <div className="mt-4 text-center space-y-2">
               {mode === 'register' && (
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)' }}>
-                  Schon ein Konto? <button onClick={() => { setMode('login'); setError('') }} style={{ color: '#D4A843', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Anmelden</button>
+                  Schon ein Konto? <button onClick={() => { setMode('login'); setError('') }} style={{ color: '#E8751A', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Anmelden</button>
                 </p>
               )}
               {mode === 'login' && (
                 <>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)' }}>
-                    Noch kein Konto? <button onClick={() => { setMode('register'); setError('') }} style={{ color: '#D4A843', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Registrieren</button>
+                    Noch kein Konto? <button onClick={() => { setMode('register'); setError('') }} style={{ color: '#E8751A', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Registrieren</button>
                   </p>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.3)' }}>
                     <button onClick={() => { setMode('forgot'); setError('') }} style={{ color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Passwort vergessen?</button>
@@ -163,7 +163,7 @@ export function AuthDialog({ onClose, onSuccess }: AuthDialogProps) {
               )}
               {mode === 'forgot' && (
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(10,10,10,0.4)' }}>
-                  <button onClick={() => { setMode('login'); setError('') }} style={{ color: '#D4A843', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Zurueck zur Anmeldung</button>
+                  <button onClick={() => { setMode('login'); setError('') }} style={{ color: '#E8751A', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontSize: 'inherit' }}>Zurueck zur Anmeldung</button>
                 </p>
               )}
             </div>

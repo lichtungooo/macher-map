@@ -28,7 +28,7 @@ interface GlobalEventBannerProps {
 export function GlobalEventBanner({ onShowEvent }: GlobalEventBannerProps) {
   const [events, setEvents] = useState<any[]>([])
   const [dismissed, setDismissed] = useState<Set<string>>(() => {
-    const raw = localStorage.getItem('lichtung-dismissed-globals')
+    const raw = localStorage.getItem('macher-dismissed-globals')
     return raw ? new Set(raw.split(',')) : new Set()
   })
 
@@ -51,7 +51,7 @@ export function GlobalEventBanner({ onShowEvent }: GlobalEventBannerProps) {
     const next = new Set(dismissed)
     next.add(event.id)
     setDismissed(next)
-    localStorage.setItem('lichtung-dismissed-globals', Array.from(next).join(','))
+    localStorage.setItem('macher-dismissed-globals', Array.from(next).join(','))
   }
 
   return (
@@ -65,13 +65,13 @@ export function GlobalEventBanner({ onShowEvent }: GlobalEventBannerProps) {
       <div className="px-4 py-3 flex items-start gap-3">
         <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
           style={{ background: isWave ? 'rgba(80,120,200,0.1)' : 'rgba(212,168,67,0.1)' }}>
-          {isWave ? <Waves size={16} style={{ color: '#5078C8' }} /> : <Zap size={16} style={{ color: '#D4A843' }} />}
+          {isWave ? <Waves size={16} style={{ color: '#D4A020' }} /> : <Zap size={16} style={{ color: '#E8751A' }} />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', fontWeight: 500, color: isWave ? '#5078C8' : '#D4A843', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', fontWeight: 500, color: isWave ? '#D4A020' : '#E8751A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             <Globe size={10} /> Globale Veranstaltung
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontWeight: 500, color: '#0A0A0A', marginTop: '2px' }}>
+          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontWeight: 500, color: '#1A1A1A', marginTop: '2px' }}>
             {event.title}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)' }}>
@@ -85,7 +85,7 @@ export function GlobalEventBanner({ onShowEvent }: GlobalEventBannerProps) {
             <span>{formatTimeUntil(event.start_time)}</span>
           </div>
           {event.description && (
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', margin: '6px 0 0', lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.55)', margin: '6px 0 0', lineHeight: 1.5 }}>
               {event.description.length > 100 ? event.description.slice(0, 100).trim() + '...' : event.description}
             </p>
           )}
@@ -93,7 +93,7 @@ export function GlobalEventBanner({ onShowEvent }: GlobalEventBannerProps) {
             <button onClick={() => onShowEvent(event)}
               style={{
                 fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 500,
-                color: isWave ? '#5078C8' : '#D4A843',
+                color: isWave ? '#D4A020' : '#E8751A',
                 background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 0', textDecoration: 'underline',
               }}>
               Mehr erfahren

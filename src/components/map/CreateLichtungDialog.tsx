@@ -19,7 +19,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
   const fileRef = useRef<HTMLInputElement>(null)
 
   const font = { fontFamily: 'Inter, sans-serif' as const }
-  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }
+  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#1A1A1A', background: '#fff' }
   const labelStyle = { ...font, fontSize: '0.62rem', fontWeight: 500 as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,8 +57,8 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#7BAE5E' }} />
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.15rem', fontWeight: 500, color: '#0A0A0A' }}>
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#E8751A' }} />
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.15rem', fontWeight: 500, color: '#1A1A1A' }}>
               Lichtung erstellen
             </h2>
           </div>
@@ -76,7 +76,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
 
           {position && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(123,174,94,0.06)' }}>
-              <MapPin size={13} style={{ color: '#7BAE5E' }} />
+              <MapPin size={13} style={{ color: '#E8751A' }} />
               <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)' }}>
                 {position[0].toFixed(4)}, {position[1].toFixed(4)}
               </span>
@@ -130,14 +130,14 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4}
               placeholder="Was macht diesen Ort besonders? Was ist dort moeglich? Wie sieht er aus?"
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-              style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
+              style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
             <p style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '4px' }}>
               Markdown: **fett**, *kursiv*
             </p>
           </div>
 
           <button type="submit" disabled={loading} className="w-full py-3 rounded-lg"
-            style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
+            style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Wird erstellt...' : 'Lichtung erstellen'}
           </button>
         </form>

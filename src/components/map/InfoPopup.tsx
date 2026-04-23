@@ -13,7 +13,7 @@ function StepDots({ current, total }: { current: number; total: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <div key={i} className="h-1 rounded-full transition-all" style={{
           width: i === current ? '24px' : '8px',
-          background: i === current ? '#D4A843' : 'rgba(10,10,10,0.1)',
+          background: i === current ? '#E8751A' : 'rgba(10,10,10,0.1)',
         }} />
       ))}
     </div>
@@ -26,24 +26,24 @@ function InfoPopupInner({ onClose }: InfoPopupProps) {
   const steps = [
     {
       icon: Heart,
-      iconColor: '#D4A843',
-      title: 'Frieden beginnt hier',
-      text: 'Diese Karte zeigt Menschen, die fuer den Frieden leuchten. Jedes Licht ist ein Mensch, der sagt: Ich stehe fuer Verbindung, fuer Stille, fuer ein Miteinander aus dem Herzen heraus.',
-      subtext: 'Wir meditieren. Wir potenzieren. Wir verbinden uns — ueberall auf der Welt, zur gleichen Zeit.',
+      iconColor: '#E8751A',
+      title: 'Machen beginnt hier',
+      text: 'Diese Karte zeigt Macher, Werkstaetten und Abenteuer in deiner Naehe. Jeder Pin ist ein Mensch, der sagt: Ich bau was. Pack an.',
+      subtext: 'Wir bauen. Wir schweissen. Wir werkeln — zusammen, vor Ort, mit den eigenen Haenden.',
     },
     {
       icon: Users,
-      iconColor: '#5078C8',
+      iconColor: '#D4A020',
       title: 'Das groessere Bild',
       text: 'Diese Karte ist der Anfang. Dahinter entsteht das Real Life Network — eine Plattform fuer echte Begegnung im wirklichen Leben.',
-      subtext: 'Lokale Kreise, die sich gegenseitig unterstuetzen. Vertrauen, das von Mensch zu Mensch waechst. Workshops, Abenteuer, gemeinsames Wirken — dezentral, ohne Konzerne, in deiner Nachbarschaft.',
+      subtext: 'Werkstaetten, die fuer alle offen sind. Skills, die sichtbar werden. Workshops, Abenteuer, gemeinsames Bauen — dezentral, in deiner Nachbarschaft.',
     },
     {
       icon: HandHeart,
-      iconColor: '#7BAE5E',
-      title: 'Trage das Licht weiter',
-      text: 'Dezentrale Infrastruktur aufzubauen braucht Energie. Jeder Beitrag fliesst direkt in die Entwicklung — Server, Veranstaltungen, das Netzwerk.',
-      subtext: 'Gemeinnuetzig. Transparent. Kollektiv Lichtung e.V.',
+      iconColor: '#E8751A',
+      title: 'Mach mit',
+      text: 'Dezentrale Infrastruktur aufzubauen braucht Energie. Jeder Beitrag fliesst direkt in die Entwicklung — Server, Werkstaetten, das Netzwerk.',
+      subtext: 'Open Source. Fuer immer frei.',
     },
   ]
 
@@ -72,7 +72,7 @@ function InfoPopupInner({ onClose }: InfoPopupProps) {
           </div>
 
           {/* Title */}
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', textAlign: 'center', marginBottom: '12px' }}>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.4rem', fontWeight: 500, color: '#1A1A1A', textAlign: 'center', marginBottom: '12px' }}>
             {current.title}
           </h2>
 
@@ -81,7 +81,7 @@ function InfoPopupInner({ onClose }: InfoPopupProps) {
             {current.text}
           </p>
 
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', fontStyle: 'italic', lineHeight: 1.6, color: 'rgba(10,10,10,0.4)', textAlign: 'center', marginBottom: '20px' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', fontStyle: 'italic', lineHeight: 1.6, color: 'rgba(10,10,10,0.4)', textAlign: 'center', marginBottom: '20px' }}>
             {current.subtext}
           </p>
 
@@ -92,7 +92,7 @@ function InfoPopupInner({ onClose }: InfoPopupProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl mb-3 transition-all"
-              style={{ background: '#0A0A0A', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', fontWeight: 500, color: '#fff', textDecoration: 'none' }}
+              style={{ background: '#1A1A1A', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', fontWeight: 500, color: '#fff', textDecoration: 'none' }}
             >
               <HandHeart size={18} />
               Projekt unterstuetzen
@@ -113,7 +113,7 @@ function InfoPopupInner({ onClose }: InfoPopupProps) {
             {!isLast ? (
               <button onClick={() => setStep(step + 1)}
                 className="flex items-center gap-1 px-5 py-2.5 rounded-xl"
-                style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
+                style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#1A1A1A', border: 'none', cursor: 'pointer' }}>
                 Weiter
               </button>
             ) : (
@@ -134,7 +134,7 @@ export function InfoPopup() {
 
   useEffect(() => {
     // Nicht zeigen wenn schon gesehen (diese Session)
-    if (sessionStorage.getItem('lichtung-info-seen')) return
+    if (sessionStorage.getItem('macher-info-seen')) return
 
     const timer = setTimeout(() => setShow(true), DELAY_MS)
     return () => clearTimeout(timer)
@@ -142,7 +142,7 @@ export function InfoPopup() {
 
   const handleClose = () => {
     setShow(false)
-    sessionStorage.setItem('lichtung-info-seen', '1')
+    sessionStorage.setItem('macher-info-seen', '1')
   }
 
   if (!show) return null

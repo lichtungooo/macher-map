@@ -110,7 +110,7 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
           <button onClick={() => setSelectedDate(null)} className="flex items-center gap-1" style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
             <ArrowLeft size={14} /> Zurueck
           </button>
-          <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>{dayLabel}</span>
+          <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }}>{dayLabel}</span>
         </div>
 
         {/* Ganztag sperren (nur Hueter) */}
@@ -149,10 +149,10 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
                   <div key={s.id} className="flex items-center gap-2 rounded-lg p-3" style={{ background: slotFull ? '#FAFAF8' : 'rgba(123,174,94,0.06)', border: `1px solid ${slotFull ? 'rgba(10,10,10,0.08)' : 'rgba(123,174,94,0.2)'}` }}>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>
+                        <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }}>
                           {String(s.start_hour).padStart(2, '0')}:00 - {String(s.end_hour).padStart(2, '0')}:00
                         </span>
-                        <span style={{ ...font, fontSize: '0.65rem', color: slotFull ? '#c44' : '#7BAE5E' }}>
+                        <span style={{ ...font, fontSize: '0.65rem', color: slotFull ? '#c44' : '#E8751A' }}>
                           {eventsInSlot.length}/{s.parallel_slots} Gruppen
                         </span>
                       </div>
@@ -161,7 +161,7 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
                         <div className="mt-1.5 space-y-0.5">
                           {eventsInSlot.map((e: any) => (
                             <div key={e.id} className="flex items-center gap-1">
-                              <div className="w-1 h-1 rounded-full" style={{ background: '#D4A843' }} />
+                              <div className="w-1 h-1 rounded-full" style={{ background: '#E8751A' }} />
                               <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.55)' }}>{e.title}</span>
                             </div>
                           ))}
@@ -182,7 +182,7 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
             {isHueter && !showNewSlot && (
               <button onClick={() => setShowNewSlot(true)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg"
-                style={{ background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.25)', ...font, fontSize: '0.75rem', fontWeight: 500, color: '#7BAE5E', cursor: 'pointer' }}>
+                style={{ background: 'rgba(123,174,94,0.08)', border: '1px solid rgba(123,174,94,0.25)', ...font, fontSize: '0.75rem', fontWeight: 500, color: '#E8751A', cursor: 'pointer' }}>
                 <Plus size={14} /> Zeit-Slot oeffnen
               </button>
             )}
@@ -214,7 +214,7 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={handleCreateSlot} className="flex-1 py-2 rounded-lg"
-                    style={{ background: '#7BAE5E', border: 'none', ...font, fontSize: '0.75rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
+                    style={{ background: '#E8751A', border: 'none', ...font, fontSize: '0.75rem', fontWeight: 500, color: '#fff', cursor: 'pointer' }}>
                     Slot oeffnen
                   </button>
                   <button onClick={() => setShowNewSlot(false)} className="px-3 py-2 rounded-lg"
@@ -237,7 +237,7 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
         <button onClick={() => setMonthOffset(monthOffset - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}>
           <ChevronLeft size={16} />
         </button>
-        <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>{MONTHS[m]} {y}</span>
+        <span style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }}>{MONTHS[m]} {y}</span>
         <button onClick={() => setMonthOffset(monthOffset + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.35)' }}>
           <ChevronRight size={16} />
         </button>
@@ -264,12 +264,12 @@ export function SlotManager({ lichtungId, myRole }: SlotManagerProps) {
           return (
             <button key={i} onClick={() => day.inMonth && setSelectedDate(day.date)}
               className="aspect-square rounded-lg flex flex-col items-center justify-center"
-              style={{ background: bg, border: isToday ? '2px solid #D4A843' : 'none', cursor: day.inMonth ? 'pointer' : 'default' }}>
+              style={{ background: bg, border: isToday ? '2px solid #E8751A' : 'none', cursor: day.inMonth ? 'pointer' : 'default' }}>
               {day.inMonth && (
                 <>
                   <span style={{ ...font, fontSize: '0.68rem', fontWeight: isToday ? 700 : 400, color: isClosed ? '#c44' : 'rgba(10,10,10,0.6)' }}>{day.day}</span>
                   {isClosed && <span style={{ fontSize: '0.6rem', color: '#c44' }}>✕</span>}
-                  {!isClosed && hasSlots && <span style={{ ...font, fontSize: '0.5rem', color: '#7BAE5E', fontWeight: 600 }}>{info.slots}</span>}
+                  {!isClosed && hasSlots && <span style={{ ...font, fontSize: '0.5rem', color: '#E8751A', fontWeight: 600 }}>{info.slots}</span>}
                 </>
               )}
             </button>

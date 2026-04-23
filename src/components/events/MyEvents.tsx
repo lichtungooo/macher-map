@@ -3,8 +3,8 @@ import { CalendarDays, Eye, Heart, Link2, Copy, Check, HelpCircle, X } from 'luc
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
-  meditation: '#D4A843', gebet: '#A07CC0', stille: '#6BA3BE',
-  begegnung: '#7BAE5E', tanz: '#D4766E', fest: '#E0A050',
+  meditation: '#E8751A', gebet: '#A07CC0', stille: '#6BA3BE',
+  begegnung: '#E8751A', tanz: '#D4766E', fest: '#E0A050',
 }
 
 function formatDate(dateStr: string) {
@@ -47,14 +47,14 @@ export function MyEvents() {
       {joinedEvents.length > 0 && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
-            <Heart size={13} style={{ color: '#D4A843' }} />
+            <Heart size={13} style={{ color: '#E8751A' }} />
             <span style={{ ...font, fontSize: '0.68rem', fontWeight: 600, color: 'rgba(10,10,10,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Teilnahme</span>
           </div>
           {joinedEvents.map(e => (
             <div key={e.id} className="flex items-center gap-3 p-3 rounded-lg mb-1.5" style={{ background: '#FAFAF8' }}>
-              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: TYPE_COLORS[e.type] || '#E8751A' }} />
               <div className="flex-1 min-w-0">
-                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{e.title}</span>
+                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A' }} className="truncate block">{e.title}</span>
                 <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)' }}>
                   {formatDate(e.start_time)} · {formatTime(e.start_time)}
                 </span>
@@ -73,9 +73,9 @@ export function MyEvents() {
           </div>
           {watchingEvents.map(e => (
             <div key={e.id} className="flex items-center gap-3 p-3 rounded-lg mb-1.5" style={{ background: '#FAFAF8' }}>
-              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: TYPE_COLORS[e.type] || '#D4A843' }} />
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: TYPE_COLORS[e.type] || '#E8751A' }} />
               <div className="flex-1 min-w-0">
-                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A' }} className="truncate block">{e.title}</span>
+                <span style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A' }} className="truncate block">{e.title}</span>
                 <span style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.4)' }}>
                   {formatDate(e.start_time)} · {formatTime(e.start_time)}
                 </span>
@@ -100,8 +100,8 @@ export function MyEvents() {
         <div className="mt-4 rounded-xl p-4" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Link2 size={13} style={{ color: '#D4A843' }} />
-              <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#0A0A0A' }}>Kalender abonnieren</span>
+              <Link2 size={13} style={{ color: '#E8751A' }} />
+              <span style={{ ...font, fontSize: '0.72rem', fontWeight: 600, color: '#1A1A1A' }}>Kalender abonnieren</span>
             </div>
             <button onClick={() => setShowHelp(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
               <HelpCircle size={15} />
@@ -117,7 +117,7 @@ export function MyEvents() {
               onClick={e => (e.target as HTMLInputElement).select()}
             />
             <button onClick={handleCopy} className="shrink-0 rounded-lg px-3 py-2" style={{ background: copied ? 'rgba(123,174,94,0.1)' : '#fff', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer' }}>
-              {copied ? <Check size={14} style={{ color: '#7BAE5E' }} /> : <Copy size={14} style={{ color: 'rgba(10,10,10,0.4)' }} />}
+              {copied ? <Check size={14} style={{ color: '#E8751A' }} /> : <Copy size={14} style={{ color: 'rgba(10,10,10,0.4)' }} />}
             </button>
           </div>
 
@@ -132,7 +132,7 @@ export function MyEvents() {
         <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.25)' }}>
           <div className="w-full max-w-sm rounded-2xl p-6 shadow-xl" style={{ background: '#fff' }}>
             <div className="flex items-center justify-between mb-4">
-              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A' }}>
+              <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', fontWeight: 500, color: '#1A1A1A' }}>
                 Kalender abonnieren
               </h3>
               <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
@@ -142,19 +142,19 @@ export function MyEvents() {
 
             <div className="space-y-4" style={{ ...font, fontSize: '0.82rem', lineHeight: 1.6, color: 'rgba(10,10,10,0.6)' }}>
               <div>
-                <p style={{ fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>Google Kalender</p>
+                <p style={{ fontWeight: 600, color: '#1A1A1A', marginBottom: '4px' }}>Google Kalender</p>
                 <p>Oeffne Google Kalender → "Weitere Kalender" (+) → "Per URL" → URL einfuegen.</p>
               </div>
               <div>
-                <p style={{ fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>Android (CalenDAV Plus o.ae.)</p>
+                <p style={{ fontWeight: 600, color: '#1A1A1A', marginBottom: '4px' }}>Android (CalenDAV Plus o.ae.)</p>
                 <p>Einstellungen → Kalender hinzufuegen → "URL/ICS abonnieren" → URL einfuegen.</p>
               </div>
               <div>
-                <p style={{ fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>Apple Kalender</p>
+                <p style={{ fontWeight: 600, color: '#1A1A1A', marginBottom: '4px' }}>Apple Kalender</p>
                 <p>Einstellungen → Kalender → Accounts → "Kalenderabo hinzufuegen" → URL einfuegen.</p>
               </div>
               <div>
-                <p style={{ fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>Outlook</p>
+                <p style={{ fontWeight: 600, color: '#1A1A1A', marginBottom: '4px' }}>Outlook</p>
                 <p>Kalender → "Kalender hinzufuegen" → "Aus dem Internet abonnieren" → URL einfuegen.</p>
               </div>
             </div>

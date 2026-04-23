@@ -4,11 +4,11 @@
 @import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 /* Cluster-Icon */
-.lichtung-cluster-wrap {
+.macher-cluster-wrap {
   background: transparent !important;
   border: none !important;
 }
-.lichtung-cluster-icon {
+.macher-cluster-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,28 +159,28 @@ body {
   50% { transform: scale(1.08); }
 }
 
-.lichtung-marker {
-  animation: lichtung-glow 5s ease-in-out infinite;
+.macher-marker {
+  animation: macher-glow 5s ease-in-out infinite;
   filter: drop-shadow(0 0 8px rgba(232,117,26,0.4));
 }
 
-@keyframes lichtung-glow {
+@keyframes macher-glow {
   0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(232,117,26,0.4)); }
   50% { transform: scale(1.05); filter: drop-shadow(0 0 14px rgba(232,117,26,0.6)); }
 }
 
 /* ─── Markdown-Prose ─── */
 
-.prose-lichtung {
+.prose-macher {
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   line-height: 1.7;
   color: rgba(26, 26, 26, 0.65);
 }
 
-.prose-lichtung h1,
-.prose-lichtung h2,
-.prose-lichtung h3 {
+.prose-macher h1,
+.prose-macher h2,
+.prose-macher h3 {
   font-family: 'Space Grotesk', sans-serif;
   color: #1A1A1A;
   font-weight: 600;
@@ -188,19 +188,19 @@ body {
   margin: 1.4em 0 0.5em;
 }
 
-.prose-lichtung h1 { font-size: 1.55rem; line-height: 1.25; }
-.prose-lichtung h2 { font-size: 1.2rem; line-height: 1.3; margin-top: 1.6em; }
-.prose-lichtung h3 { font-size: 1rem; line-height: 1.35; margin-top: 1.4em; }
+.prose-macher h1 { font-size: 1.55rem; line-height: 1.25; }
+.prose-macher h2 { font-size: 1.2rem; line-height: 1.3; margin-top: 1.6em; }
+.prose-macher h3 { font-size: 1rem; line-height: 1.35; margin-top: 1.4em; }
 
-.prose-lichtung h1:first-child,
-.prose-lichtung h2:first-child,
-.prose-lichtung h3:first-child { margin-top: 0; }
+.prose-macher h1:first-child,
+.prose-macher h2:first-child,
+.prose-macher h3:first-child { margin-top: 0; }
 
-.prose-lichtung p { margin: 0.8em 0; }
-.prose-lichtung strong { color: #1A1A1A; font-weight: 600; }
-.prose-lichtung em { color: rgba(26, 26, 26, 0.7); font-style: italic; }
+.prose-macher p { margin: 0.8em 0; }
+.prose-macher strong { color: #1A1A1A; font-weight: 600; }
+.prose-macher em { color: rgba(26, 26, 26, 0.7); font-style: italic; }
 
-.prose-lichtung a {
+.prose-macher a {
   color: #E8751A;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -208,14 +208,14 @@ body {
   text-decoration-color: rgba(232, 117, 26, 0.4);
 }
 
-.prose-lichtung hr {
+.prose-macher hr {
   border: none;
   border-top: 1px solid rgba(26, 26, 26, 0.08);
   margin: 1.6em auto;
   width: 40%;
 }
 
-.prose-lichtung blockquote {
+.prose-macher blockquote {
   font-family: 'Inter', sans-serif;
   font-style: italic;
   font-size: 1rem;
@@ -225,13 +225,13 @@ body {
   margin: 1.2em 0;
 }
 
-.prose-lichtung blockquote p { margin: 0.4em 0; }
+.prose-macher blockquote p { margin: 0.4em 0; }
 
-.prose-lichtung ul, .prose-lichtung ol { margin: 0.9em 0; padding-left: 1.3em; }
-.prose-lichtung li { margin: 0.3em 0; }
-.prose-lichtung ul li::marker { color: #E8751A; }
+.prose-macher ul, .prose-macher ol { margin: 0.9em 0; padding-left: 1.3em; }
+.prose-macher li { margin: 0.3em 0; }
+.prose-macher ul li::marker { color: #E8751A; }
 
-.prose-lichtung code {
+.prose-macher code {
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.85em;
   background: rgba(232, 117, 26, 0.08);

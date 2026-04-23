@@ -98,7 +98,7 @@ export function GlobalEventsTab() {
 
   const font = { fontFamily: 'Inter, sans-serif' }
   const card = { background: '#fff', border: '1px solid rgba(10,10,10,0.06)', borderRadius: '12px', padding: '14px' }
-  const inp = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }
+  const inp = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#1A1A1A', background: '#fff' }
   const labelStyle = { ...font, fontSize: '0.64rem', fontWeight: 500 as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.4)', display: 'block', marginBottom: '4px' }
 
   const fmtDate = (s: string) => new Date(s).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })
@@ -110,7 +110,7 @@ export function GlobalEventsTab() {
       {!showCreate ? (
         <button onClick={() => setShowCreate(true)}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl"
-          style={{ ...font, fontSize: '0.82rem', color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
+          style={{ ...font, fontSize: '0.82rem', color: '#fff', background: '#1A1A1A', border: 'none', cursor: 'pointer' }}>
           <Plus size={16} /> Neue globale Veranstaltung
         </button>
       ) : (
@@ -129,7 +129,7 @@ export function GlobalEventsTab() {
                 style={{
                   ...font, fontSize: '0.74rem', cursor: 'pointer', border: 'none',
                   background: waveMode === 'timezone_wave' ? '#fff' : 'transparent',
-                  color: waveMode === 'timezone_wave' ? '#5078C8' : 'rgba(10,10,10,0.5)',
+                  color: waveMode === 'timezone_wave' ? '#D4A020' : 'rgba(10,10,10,0.5)',
                   fontWeight: waveMode === 'timezone_wave' ? 600 : 400,
                   boxShadow: waveMode === 'timezone_wave' ? '0 1px 2px rgba(0,0,0,0.04)' : 'none',
                 }}>
@@ -140,7 +140,7 @@ export function GlobalEventsTab() {
                 style={{
                   ...font, fontSize: '0.74rem', cursor: 'pointer', border: 'none',
                   background: waveMode === 'simultaneous' ? '#fff' : 'transparent',
-                  color: waveMode === 'simultaneous' ? '#D4A843' : 'rgba(10,10,10,0.5)',
+                  color: waveMode === 'simultaneous' ? '#E8751A' : 'rgba(10,10,10,0.5)',
                   fontWeight: waveMode === 'simultaneous' ? 600 : 400,
                   boxShadow: waveMode === 'simultaneous' ? '0 1px 2px rgba(0,0,0,0.04)' : 'none',
                 }}>
@@ -212,12 +212,12 @@ export function GlobalEventsTab() {
             <textarea ref={descRef} value={description} onChange={e => setDescription(e.target.value)} rows={3}
               placeholder="Intention, Ablauf..."
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-              style={{ ...inp, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92rem', lineHeight: 1.55 }} />
+              style={{ ...inp, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.92rem', lineHeight: 1.55 }} />
           </div>
 
           <div className="flex gap-2 pt-0.5">
             <button type="submit" disabled={loading} className="flex-1 py-2 rounded-lg"
-              style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', border: 'none', cursor: loading ? 'wait' : 'pointer' }}>
+              style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', border: 'none', cursor: loading ? 'wait' : 'pointer' }}>
               {loading ? 'Wird erstellt...' : 'Erstellen'}
             </button>
             <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-lg"
@@ -239,18 +239,18 @@ export function GlobalEventsTab() {
           <div className="flex items-center justify-between mb-2">
             <h3 style={{ ...font, fontSize: '0.82rem', fontWeight: 600 }}>Bestehende ({events.length})</h3>
             <div className="flex items-center gap-3" style={{ ...font, fontSize: '0.64rem', color: 'rgba(10,10,10,0.45)' }}>
-              <span className="flex items-center gap-1"><Waves size={10} style={{ color: '#5078C8' }} /> Welle</span>
-              <span className="flex items-center gap-1"><Zap size={10} style={{ color: '#D4A843' }} /> Gleichzeitig</span>
+              <span className="flex items-center gap-1"><Waves size={10} style={{ color: '#D4A020' }} /> Welle</span>
+              <span className="flex items-center gap-1"><Zap size={10} style={{ color: '#E8751A' }} /> Gleichzeitig</span>
             </div>
           </div>
           <div className="space-y-1.5">
             {events.map((e: any) => (
               <div key={e.id} className="flex items-start gap-2.5 p-2.5 rounded-lg" style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.04)' }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: e.wave_mode === 'timezone_wave' ? 'rgba(80,120,200,0.08)' : 'rgba(212,168,67,0.08)' }}>
-                  {e.wave_mode === 'timezone_wave' ? <Waves size={14} style={{ color: '#5078C8' }} /> : <Zap size={14} style={{ color: '#D4A843' }} />}
+                  {e.wave_mode === 'timezone_wave' ? <Waves size={14} style={{ color: '#D4A020' }} /> : <Zap size={14} style={{ color: '#E8751A' }} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div style={{ ...font, fontSize: '0.84rem', fontWeight: 600, color: '#0A0A0A' }}>{e.title}</div>
+                  <div style={{ ...font, fontSize: '0.84rem', fontWeight: 600, color: '#1A1A1A' }}>{e.title}</div>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap" style={{ ...font, fontSize: '0.68rem', color: 'rgba(10,10,10,0.5)' }}>
                     <Clock size={10} /> {fmtDate(e.start_time)}
                     {e.recurring && <span>&middot; {e.recurring}</span>}

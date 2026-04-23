@@ -19,10 +19,10 @@ interface MapFiltersProps {
 
 export function MapFilters({ showLights, showEvents, onToggleLights, onToggleEvents }: MapFiltersProps) {
   const [showLayerMenu, setShowLayerMenu] = useState(false)
-  const currentLayer = localStorage.getItem('lichtung-tile-layer') || 'osm_de'
+  const currentLayer = localStorage.getItem('macher-tile-layer') || 'osm_de'
 
   const switchLayer = (key: string) => {
-    localStorage.setItem('lichtung-tile-layer', key)
+    localStorage.setItem('macher-tile-layer', key)
     setShowLayerMenu(false)
     window.location.reload() // Leaflet braucht Reload fuer Tile-Wechsel
   }
@@ -40,7 +40,7 @@ export function MapFilters({ showLights, showEvents, onToggleLights, onToggleEve
                 className="px-3 py-1.5 rounded text-left"
                 style={{
                   fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: currentLayer === l.key ? 600 : 400,
-                  color: currentLayer === l.key ? '#D4A843' : 'rgba(10,10,10,0.5)',
+                  color: currentLayer === l.key ? '#E8751A' : 'rgba(10,10,10,0.5)',
                   background: currentLayer === l.key ? 'rgba(212,168,67,0.06)' : 'transparent',
                   border: 'none', cursor: 'pointer',
                 }}
@@ -67,12 +67,12 @@ export function MapFilters({ showLights, showEvents, onToggleLights, onToggleEve
         style={{
           width: BTN_SIZE, height: BTN_SIZE,
           background: '#fff',
-          border: showLights ? '2px solid #D4A843' : '2px solid rgba(10,10,10,0.12)',
+          border: showLights ? '2px solid #E8751A' : '2px solid rgba(10,10,10,0.12)',
           cursor: 'pointer',
           opacity: showLights ? 1 : 0.5,
         }}
       >
-        <Sparkles size={16} style={{ color: showLights ? '#D4A843' : 'rgba(10,10,10,0.3)' }} />
+        <Sparkles size={16} style={{ color: showLights ? '#E8751A' : 'rgba(10,10,10,0.3)' }} />
       </button>
 
       <button
@@ -82,12 +82,12 @@ export function MapFilters({ showLights, showEvents, onToggleLights, onToggleEve
         style={{
           width: BTN_SIZE, height: BTN_SIZE,
           background: '#fff',
-          border: showEvents ? '2px solid #0A0A0A' : '2px solid rgba(10,10,10,0.12)',
+          border: showEvents ? '2px solid #1A1A1A' : '2px solid rgba(10,10,10,0.12)',
           cursor: 'pointer',
           opacity: showEvents ? 1 : 0.5,
         }}
       >
-        <CalendarDays size={16} style={{ color: showEvents ? '#0A0A0A' : 'rgba(10,10,10,0.3)' }} />
+        <CalendarDays size={16} style={{ color: showEvents ? '#1A1A1A' : 'rgba(10,10,10,0.3)' }} />
       </button>
     </div>
   )

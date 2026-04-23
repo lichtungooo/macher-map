@@ -45,12 +45,12 @@ export function EventMarker({ event, onShowEvent }: EventMarkerProps) {
       <Popup className="event-popup">
         <div style={{ padding: '4px 0', minWidth: '160px', maxWidth: '220px', textAlign: 'center' }}>
           {/* Titel */}
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: '0 0 2px' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', fontWeight: 600, color: '#1A1A1A', margin: '0 0 2px' }}>
             {event.title}
           </p>
 
           {/* Hashtag */}
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#D4A843', margin: '0 0 4px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#E8751A', margin: '0 0 4px' }}>
             #{event.type}
           </p>
 

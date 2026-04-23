@@ -44,10 +44,10 @@ export function TagInput({ value, onChange }: TagInputProps) {
         <div className="flex flex-wrap gap-1 mb-1.5">
           {value.map(tag => (
             <span key={tag} className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', ...font, fontSize: '0.7rem', color: '#D4A843' }}>
+              style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', ...font, fontSize: '0.7rem', color: '#E8751A' }}>
               #{tag}
               <button type="button" onClick={() => removeTag(tag)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#D4A843', padding: 0, lineHeight: 1 }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E8751A', padding: 0, lineHeight: 1 }}>
                 <X size={10} />
               </button>
             </span>
@@ -69,7 +69,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
           }}
           placeholder="Hashtag eingeben..."
           className="w-full px-3 py-2 rounded-lg outline-none"
-          style={{ border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }}
+          style={{ border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#1A1A1A', background: '#fff' }}
         />
 
         {/* Suggestions Dropdown */}
@@ -81,7 +81,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
                 onMouseDown={e => { e.preventDefault(); addTag(tag) }}
                 className="w-full px-3 py-1.5 rounded text-left"
                 style={{ ...font, fontSize: '0.75rem', color: 'rgba(10,10,10,0.6)', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212,168,67,0.06)'; e.currentTarget.style.color = '#D4A843' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212,168,67,0.06)'; e.currentTarget.style.color = '#E8751A' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(10,10,10,0.6)' }}
               >
                 #{tag}

@@ -69,7 +69,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
   }
 
   const font = { fontFamily: 'Inter, sans-serif' as const }
-  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }
+  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#1A1A1A', background: '#fff' }
   const labelStyle = { ...font, fontSize: '0.62rem', fontWeight: 500 as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }
 
   return (
@@ -78,7 +78,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.15rem', fontWeight: 500, color: '#0A0A0A' }}>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.15rem', fontWeight: 500, color: '#1A1A1A' }}>
             Veranstaltung bearbeiten
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
@@ -142,11 +142,11 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
               placeholder="Beschreibe deine Absicht."
               rows={4}
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-              style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
+              style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
           </div>
 
           <button type="submit" disabled={loading} className="w-full py-3 rounded-lg"
-            style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
+            style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Wird gespeichert...' : 'Speichern'}
           </button>
         </form>

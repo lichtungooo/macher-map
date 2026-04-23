@@ -9,7 +9,7 @@ export default function ImpressumPage() {
           <ArrowLeft size={14} /> Zurueck
         </Link>
 
-        <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '2rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '3rem' }}>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '2rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '3rem' }}>
           Impressum
         </h1>
 
@@ -31,8 +31,8 @@ export default function ImpressumPage() {
 
           <h2 style={h2Style}>Kontakt</h2>
           <p>
-            E-Mail: <a href="mailto:frieden@lichtung.ooo" style={{ color: '#D4A843' }}>frieden@lichtung.ooo</a><br />
-            Telefon: <a href="tel:+491778539254" style={{ color: '#D4A843' }}>+49 177 853 9254</a>
+            E-Mail: <a href="mailto:hallo@macher-map.org" style={{ color: '#E8751A' }}>hallo@macher-map.org</a><br />
+            Telefon: <a href="tel:+491778539254" style={{ color: '#E8751A' }}>+49 177 853 9254</a>
           </p>
 
           <h2 style={h2Style}>Registereintrag</h2>
@@ -57,15 +57,15 @@ export default function ImpressumPage() {
           <h2 style={h2Style}>Hinweis zur Open-Source-Natur</h2>
           <p>
             Der Quellcode dieser Plattform ist offen einsehbar unter{' '}
-            <a href="https://github.com/lichtungooo/licht-fuer-frieden" target="_blank" rel="noopener noreferrer" style={{ color: '#D4A843' }}>
-              github.com/lichtungooo/licht-fuer-frieden
+            <a href="https://github.com/lichtungooo/macher-map" target="_blank" rel="noopener noreferrer" style={{ color: '#E8751A' }}>
+              github.com/lichtungooo/macher-map
             </a>.
           </p>
 
           <h2 style={h2Style}>Haftung fuer Inhalte</h2>
           <p>
             Als Betreiber sind wir fuer eigene Inhalte auf dieser Plattform nach den allgemeinen Gesetzen verantwortlich.
-            Nutzerbeitraege (Profile, Veranstaltungen, Lichtungen) geben die Meinung des jeweiligen Verfassers wieder,
+            Nutzerbeitraege (Profile, Abenteuer, Werkstaetten) geben die Meinung des jeweiligen Verfassers wieder,
             nicht die des Vereins.
           </p>
         </div>
@@ -75,10 +75,10 @@ export default function ImpressumPage() {
 }
 
 const h2Style = {
-  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontFamily: "'Space Grotesk', sans-serif",
   fontSize: '1.3rem',
   fontWeight: 500,
-  color: '#0A0A0A',
+  color: '#1A1A1A',
   marginTop: '2rem',
   marginBottom: '0.6rem',
 }

@@ -70,11 +70,11 @@ export function QRCodeDialog({ userName, onClose }: QRCodeDialogProps) {
           <X size={20} />
         </button>
 
-        <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.3rem' }}>
-          Dein Licht teilen
+        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.3rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '0.3rem' }}>
+          Macher verbinden
         </h2>
         <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.4)', marginBottom: '1.2rem' }}>
-          Zeige diesen QR-Code, damit sich andere mit deinem Licht verbinden.
+          Zeige diesen QR-Code, damit sich andere Macher mit dir verbinden.
         </p>
 
         {/* QR Code */}
@@ -85,7 +85,7 @@ export function QRCodeDialog({ userName, onClose }: QRCodeDialogProps) {
                 value={inviteUrl}
                 size={180}
                 bgColor="#FAFAF8"
-                fgColor="#0A0A0A"
+                fgColor="#1A1A1A"
                 level="H"
                 imageSettings={{
                   src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#FDFCF9"/><circle cx="18" cy="18" r="14" fill="#F4E3BB" opacity="0.6"/><circle cx="18" cy="18" r="8" fill="#FEF4D2" opacity="0.8"/><circle cx="18" cy="18" r="4" fill="#FFFFF3"/><circle cx="18" cy="18" r="1.5" fill="#fff"/></svg>'),
@@ -101,7 +101,7 @@ export function QRCodeDialog({ userName, onClose }: QRCodeDialogProps) {
           {expired && (
             <div className="absolute inset-0 flex items-center justify-center">
               <button onClick={generateInvite} className="flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg"
-                style={{ background: '#0A0A0A', ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', border: 'none', cursor: 'pointer' }}>
+                style={{ background: '#1A1A1A', ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', border: 'none', cursor: 'pointer' }}>
                 <RefreshCw size={14} />
                 Neuen Code
               </button>
@@ -116,7 +116,7 @@ export function QRCodeDialog({ userName, onClose }: QRCodeDialogProps) {
             <div className="w-full h-1 rounded-full mb-1.5" style={{ background: 'rgba(10,10,10,0.06)' }}>
               <div className="h-full rounded-full transition-all" style={{
                 width: `${progress * 100}%`,
-                background: timeLeft > 15 ? '#D4A843' : '#D4766E',
+                background: timeLeft > 15 ? '#E8751A' : '#D4766E',
                 transition: 'width 1s linear',
               }} />
             </div>
@@ -127,23 +127,23 @@ export function QRCodeDialog({ userName, onClose }: QRCodeDialogProps) {
         )}
 
         {/* Name */}
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', fontWeight: 500, color: '#0A0A0A' }}>
+        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', fontWeight: 500, color: '#1A1A1A' }}>
           {userName || 'Anonym'}
         </p>
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.3)', marginTop: '2px', marginBottom: '12px' }}>
-          laedt ein, ein Licht zu entzuenden.
+        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.3)', marginTop: '2px', marginBottom: '12px' }}>
+          laedt ein, mitzumachen.
         </p>
 
         {/* NFC Button */}
         {nfcAvailable && !expired && (
           <button onClick={handleNFC} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl"
-            style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
-            <Smartphone size={15} style={{ color: '#D4A843' }} />
+            style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#1A1A1A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', cursor: 'pointer' }}>
+            <Smartphone size={15} style={{ color: '#E8751A' }} />
             Per NFC teilen
           </button>
         )}
         {nfcStatus && (
-          <p style={{ ...font, fontSize: '0.68rem', color: '#D4A843', marginTop: '6px' }}>{nfcStatus}</p>
+          <p style={{ ...font, fontSize: '0.68rem', color: '#E8751A', marginTop: '6px' }}>{nfcStatus}</p>
         )}
       </div>
     </div>

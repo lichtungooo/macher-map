@@ -71,11 +71,11 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
           <p style={{ ...font, fontSize: '0.6rem', fontWeight: 500, color: ACCENT, letterSpacing: '0.2em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 8 }}>
             Projekt teilen
           </p>
-          <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#0A0A0A', textAlign: 'center', marginBottom: 20 }}>
+          <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.2rem', fontWeight: 500, color: '#1A1A1A', textAlign: 'center', marginBottom: 20 }}>
             {project.title}
           </h3>
           <div className="flex justify-center mb-4">
-            <QRCodeSVG value={qrUrl} size={Math.min(320, window.innerWidth - 120)} bgColor="#fff" fgColor="#0A0A0A" level="H" />
+            <QRCodeSVG value={qrUrl} size={Math.min(320, window.innerWidth - 120)} bgColor="#fff" fgColor="#1A1A1A" level="H" />
           </div>
           <p style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.45)', textAlign: 'center' }}>
             Scanne den Code, um direkt zum Projekt zu gelangen.
@@ -183,7 +183,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
   ]
 
   const shareUrl = `${window.location.origin}/api/share/project/${projectId}`
-  const shareText = project.description ? project.description.replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Friedensprojekt auf der Lichtung.'
+  const shareText = project.description ? project.description.replace(/[#*>]/g, '').trim().slice(0, 140) : 'Ein Bauprojekt auf der Macher-Map.'
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
@@ -229,7 +229,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
           <button onClick={onClose}
             className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
             style={{ background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', backdropFilter: 'blur(8px)', zIndex: 5 }}>
-            <X size={15} style={{ color: '#0A0A0A' }} />
+            <X size={15} style={{ color: '#1A1A1A' }} />
           </button>
 
           {/* Camera-Button fuer Bildwechsel (nur Owner, nicht wenn Video laeuft) */}
@@ -238,7 +238,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center"
               style={{ background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', backdropFilter: 'blur(8px)', zIndex: 5 }}
               title="Bild aendern">
-              <Camera size={14} style={{ color: '#0A0A0A' }} />
+              <Camera size={14} style={{ color: '#1A1A1A' }} />
             </button>
           )}
         </div>
@@ -265,7 +265,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 )}
               </button>
               <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-                style={{ background: '#0A0A0A', whiteSpace: 'nowrap', zIndex: 10 }}>
+                style={{ background: '#1A1A1A', whiteSpace: 'nowrap', zIndex: 10 }}>
                 <span style={{ ...font, fontSize: '0.6rem', color: '#fff' }}>{label}</span>
               </div>
             </div>
@@ -294,7 +294,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               </p>
 
               <div className="flex items-start justify-between gap-2 mb-3">
-                <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', lineHeight: 1.25, flex: 1 }}>
+                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.4rem', fontWeight: 500, color: '#1A1A1A', lineHeight: 1.25, flex: 1 }}>
                   {project.title}
                 </h2>
                 {isOwner && (
@@ -315,8 +315,8 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 )}
                 {project.lichtung_name && (
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'rgba(123,174,94,0.08)' }}>
-                    <Trees size={10} style={{ color: '#7BAE5E' }} />
-                    <span style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#7BAE5E' }}>{project.lichtung_name}</span>
+                    <Trees size={10} style={{ color: '#E8751A' }} />
+                    <span style={{ ...font, fontSize: '0.65rem', fontWeight: 500, color: '#E8751A' }}>{project.lichtung_name}</span>
                   </span>
                 )}
               </div>
@@ -325,7 +325,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               {goal > 0 && (
                 <div className="rounded-xl p-4 mb-4" style={{ background: '#FAFAF8' }}>
                   <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.15rem', fontWeight: 500, color: '#0A0A0A' }}>
+                    <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.15rem', fontWeight: 500, color: '#1A1A1A' }}>
                       {current} &euro;
                     </span>
                     <span style={{ ...font, fontSize: '0.72rem', color: 'rgba(10,10,10,0.5)' }}>
@@ -336,7 +336,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                     <div style={{
                       width: `${progressPct}%`,
                       height: '100%',
-                      background: progress >= 1 ? 'linear-gradient(90deg, #7BAE5E, #D4A843)' : `linear-gradient(90deg, ${ACCENT}, #E0A0B5)`,
+                      background: progress >= 1 ? 'linear-gradient(90deg, #E8751A, #E8751A)' : `linear-gradient(90deg, ${ACCENT}, #E0A0B5)`,
                       transition: 'width 0.6s',
                     }} />
                   </div>
@@ -355,7 +355,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               {/* Beschreibung */}
               {project.description && (
                 <div className="rounded-xl p-5 mb-4" style={{ background: '#FAFAF8' }}>
-                  <div className="prose-lichtung" dangerouslySetInnerHTML={{ __html: renderMarkdown(project.description) }} />
+                  <div className="prose-macher" dangerouslySetInnerHTML={{ __html: renderMarkdown(project.description) }} />
                 </div>
               )}
 
@@ -363,7 +363,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               {project.video_url && !getVideoEmbedUrl(project.video_url) && (
                 <a href={project.video_url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg mb-4"
-                  style={{ ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
+                  style={{ ...font, fontSize: '0.82rem', color: '#1A1A1A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
                   <Video size={14} style={{ color: ACCENT }} />
                   Video ansehen
                   <ExternalLink size={11} style={{ color: 'rgba(10,10,10,0.3)', marginLeft: 'auto' }} />
@@ -390,8 +390,8 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               {/* Navigation */}
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 rounded-xl mb-2"
-                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#0A0A0A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
-                <Navigation size={14} style={{ color: '#7BAE5E' }} />
+                style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#1A1A1A', background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.06)', textDecoration: 'none' }}>
+                <Navigation size={14} style={{ color: '#E8751A' }} />
                 Zum Standort navigieren
               </a>
 
@@ -431,7 +431,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                 <textarea ref={textareaRef} value={editDesc} onChange={e => setEditDesc(e.target.value)}
                   rows={6}
                   className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', border: '1px solid rgba(10,10,10,0.1)', background: '#fff' }} />
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', border: '1px solid rgba(10,10,10,0.1)', background: '#fff' }} />
               </div>
 
               <div>
@@ -465,7 +465,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
               <div className="flex gap-2 pt-2">
                 <button onClick={saveEdit}
                   className="flex-1 py-2.5 rounded-lg"
-                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#0A0A0A', border: 'none', cursor: 'pointer' }}>
+                  style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: '#1A1A1A', border: 'none', cursor: 'pointer' }}>
                   Speichern
                 </button>
                 <button onClick={() => setEditMode(false)}
@@ -511,7 +511,7 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                   <textarea value={newMilestoneDesc} onChange={e => setNewMilestoneDesc(e.target.value)}
                     placeholder="Was wird damit erreicht?" rows={2}
                     className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.88rem', border: '1px solid rgba(10,10,10,0.08)', background: '#fff' }} />
+                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.88rem', border: '1px solid rgba(10,10,10,0.08)', background: '#fff' }} />
                   <div className="flex gap-2">
                     <button onClick={addMilestone}
                       className="flex-1 py-2 rounded-lg" style={{ ...font, fontSize: '0.78rem', fontWeight: 500, color: '#fff', background: ACCENT, border: 'none', cursor: 'pointer' }}>
@@ -545,24 +545,24 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                       {isOwner ? (
                         <button onClick={() => toggleMilestone(m.id, !!m.reached)}
                           className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                          style={{ background: m.reached ? '#7BAE5E' : 'transparent', border: m.reached ? 'none' : '2px solid rgba(10,10,10,0.15)', cursor: 'pointer' }}>
+                          style={{ background: m.reached ? '#E8751A' : 'transparent', border: m.reached ? 'none' : '2px solid rgba(10,10,10,0.15)', cursor: 'pointer' }}>
                           {m.reached ? <Check size={11} style={{ color: '#fff' }} /> : null}
                         </button>
                       ) : (
                         <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                          style={{ background: m.reached ? '#7BAE5E' : 'transparent', border: m.reached ? 'none' : '2px solid rgba(10,10,10,0.15)' }}>
+                          style={{ background: m.reached ? '#E8751A' : 'transparent', border: m.reached ? 'none' : '2px solid rgba(10,10,10,0.15)' }}>
                           {m.reached ? <Check size={11} style={{ color: '#fff' }} /> : null}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#0A0A0A' }}>{m.title}</span>
+                          <span style={{ ...font, fontSize: '0.85rem', fontWeight: 600, color: '#1A1A1A' }}>{m.title}</span>
                           {m.goal_amount > 0 && (
                             <span style={{ ...font, fontSize: '0.7rem', color: 'rgba(10,10,10,0.45)', whiteSpace: 'nowrap' }}>{m.goal_amount} &euro;</span>
                           )}
                         </div>
                         {m.description && (
-                          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginTop: 2 }}>
+                          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', marginTop: 2 }}>
                             {m.description}
                           </p>
                         )}
@@ -598,13 +598,13 @@ export function ProjectDetail({ projectId, onClose, onDeleted }: ProjectDetailPr
                     <img src={project.creator_image} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(212,168,67,0.25)' }} />
                   ) : (
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '1.5px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', color: '#D4A843' }}>
+                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', color: '#E8751A' }}>
                         {project.creator_name.charAt(0)}
                       </span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#0A0A0A' }}>{project.creator_name}</p>
+                    <p style={{ ...font, fontSize: '0.82rem', fontWeight: 600, color: '#1A1A1A' }}>{project.creator_name}</p>
                     <p style={{ ...font, fontSize: '0.66rem', color: ACCENT, fontWeight: 500 }}>Initiator</p>
                   </div>
                 </div>

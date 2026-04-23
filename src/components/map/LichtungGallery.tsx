@@ -82,7 +82,7 @@ export function LichtungGallery({ lichtungId, canUpload }: LichtungGalleryProps)
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
                   className="flex-1 py-2 rounded-lg"
-                  style={{ background: '#0A0A0A', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 500, cursor: uploading ? 'wait' : 'pointer', border: 'none' }}
+                  style={{ background: '#1A1A1A', color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 500, cursor: uploading ? 'wait' : 'pointer', border: 'none' }}
                 >
                   {uploading ? 'Hochladen...' : 'Bild waehlen'}
                 </button>
@@ -168,7 +168,7 @@ export function LichtungGallery({ lichtungId, canUpload }: LichtungGalleryProps)
               className="max-w-full max-h-[70vh] rounded-lg object-contain"
             />
             {images[lightbox].caption && (
-              <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1rem', color: 'rgba(255,255,255,0.8)', marginTop: '12px', textAlign: 'center' }}>
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1rem', color: 'rgba(255,255,255,0.8)', marginTop: '12px', textAlign: 'center' }}>
                 {images[lightbox].caption}
               </p>
             )}

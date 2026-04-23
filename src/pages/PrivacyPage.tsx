@@ -9,7 +9,7 @@ export default function PrivacyPage() {
           <ArrowLeft size={14} /> Zurueck
         </Link>
 
-        <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '2rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '1rem' }}>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '2rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '1rem' }}>
           Datenschutzerklaerung
         </h1>
         <p style={{ fontSize: '0.85rem', color: 'rgba(10,10,10,0.45)', marginBottom: '3rem' }}>
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
             Kollektiv Lichtung e.V.<br />
             Waldstr. 9<br />
             34587 Felsberg<br />
-            E-Mail: frieden@lichtung.ooo
+            E-Mail: hallo@macher-map.org
           </p>
 
           <h2 style={h2Style}>2. Welche Daten wir erheben</h2>
@@ -32,11 +32,11 @@ export default function PrivacyPage() {
           </p>
           <ul style={listStyle}>
             <li><strong>Bei der Registrierung:</strong> E-Mail-Adresse, Passwort (verschluesselt gespeichert als bcrypt-Hash — wir sehen dein Passwort nie im Klartext).</li>
-            <li><strong>Im Profil (freiwillig):</strong> Name, Profilbild, Friedens-Statement, Biografie, Telegram-Name.</li>
-            <li><strong>Dein Licht:</strong> Die geografische Position, die du selbst waehlst.</li>
-            <li><strong>Veranstaltungen und Orte (Lichtungen):</strong> Titel, Beschreibung, Position, Zeit, Bild.</li>
+            <li><strong>Im Profil (freiwillig):</strong> Name, Profilbild, Macher-Motto, Biografie, Telegram-Name.</li>
+            <li><strong>Dein Pin:</strong> Die geografische Position, die du selbst waehlst.</li>
+            <li><strong>Abenteuer und Werkstaetten:</strong> Titel, Beschreibung, Position, Zeit, Bild.</li>
             <li><strong>Verbindungen:</strong> Wer durch wen zur Plattform eingeladen wurde.</li>
-            <li><strong>Newsletter:</strong> Wenn du zustimmst, senden wir dir Informationen zu Friedensveranstaltungen.</li>
+            <li><strong>Newsletter:</strong> Wenn du zustimmst, senden wir dir Informationen zu Abenteuern und Werkstaetten.</li>
           </ul>
 
           <h2 style={h2Style}>3. Was wir nicht tun</h2>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
 
           <h2 style={h2Style}>8. Kontakt</h2>
           <p>
-            Fragen zum Datenschutz: <a href="mailto:frieden@lichtung.ooo" style={{ color: '#D4A843' }}>frieden@lichtung.ooo</a>
+            Fragen zum Datenschutz: <a href="mailto:hallo@macher-map.org" style={{ color: '#E8751A' }}>hallo@macher-map.org</a>
           </p>
         </div>
       </div>
@@ -87,10 +87,10 @@ export default function PrivacyPage() {
 }
 
 const h2Style = {
-  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontFamily: "'Space Grotesk', sans-serif",
   fontSize: '1.3rem',
   fontWeight: 500,
-  color: '#0A0A0A',
+  color: '#1A1A1A',
   marginTop: '2rem',
   marginBottom: '0.6rem',
 }

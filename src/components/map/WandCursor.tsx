@@ -53,13 +53,13 @@ export function WandCursor({ active }: { active: boolean }) {
         <circle cx="39" cy="5" r="1.5" fill="#fff"/>
 
         {/* Strahlen */}
-        <line x1="39" y1="-4" x2="39" y2="0" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round">
+        <line x1="39" y1="-4" x2="39" y2="0" stroke="#E8751A" strokeWidth="1.5" strokeLinecap="round">
           <animate attributeName="opacity" values="0.2;1;0.2" dur="1.3s" repeatCount="indefinite"/>
         </line>
-        <line x1="39" y1="10" x2="39" y2="14" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round">
+        <line x1="39" y1="10" x2="39" y2="14" stroke="#E8751A" strokeWidth="1.5" strokeLinecap="round">
           <animate attributeName="opacity" values="0.2;1;0.2" dur="1.3s" repeatCount="indefinite" begin="0.35s"/>
         </line>
-        <line x1="30" y1="5" x2="34" y2="5" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round">
+        <line x1="30" y1="5" x2="34" y2="5" stroke="#E8751A" strokeWidth="1.5" strokeLinecap="round">
           <animate attributeName="opacity" values="0.2;1;0.2" dur="1.3s" repeatCount="indefinite" begin="0.65s"/>
         </line>
 

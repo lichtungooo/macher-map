@@ -33,18 +33,18 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
               style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(212,168,67,0.3)', flexShrink: 0 }} />
           ) : (
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(212,168,67,0.08)', border: '3px solid rgba(212,168,67,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.6rem', fontWeight: 500, color: '#D4A843' }}>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.6rem', fontWeight: 500, color: '#E8751A' }}>
                 {light.name?.charAt(0) || '?'}
               </span>
             </div>
           )}
           <div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 500, color: '#0A0A0A', margin: '0 0 2px' }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.4rem', fontWeight: 500, color: '#1A1A1A', margin: '0 0 2px' }}>
               {light.name}
             </h2>
             {data.telegram && (
               <a href={`https://t.me/${data.telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-                style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#5078C8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#D4A020', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                 <MessageCircle size={12} />
                 {data.telegram}
               </a>
@@ -54,7 +54,7 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
 
         {/* Statement */}
         {light.statement && (
-          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', lineHeight: 1.6, marginBottom: '12px' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(10,10,10,0.5)', lineHeight: 1.6, marginBottom: '12px' }}>
             "{light.statement}"
           </p>
         )}
@@ -62,7 +62,7 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
         {/* Bio */}
         {data.bio && (
           <div className="rounded-xl p-4" style={{ background: '#FAFAF8' }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.95rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.95rem', lineHeight: 1.7, color: 'rgba(10,10,10,0.55)' }}
               dangerouslySetInnerHTML={{ __html: renderMd(data.bio) }} />
           </div>
         )}

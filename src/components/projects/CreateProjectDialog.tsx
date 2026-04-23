@@ -82,7 +82,7 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
   }
 
   const font = { fontFamily: 'Inter, sans-serif' as const }
-  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#0A0A0A', background: '#fff' }
+  const inputStyle = { border: '1px solid rgba(10,10,10,0.1)', ...font, fontSize: '0.82rem', color: '#1A1A1A', background: '#fff' }
   const labelStyle = { ...font, fontSize: '0.62rem', fontWeight: 500 as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(10,10,10,0.35)', display: 'block', marginBottom: '4px' }
 
   return (
@@ -90,7 +90,7 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
       <div className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', maxHeight: '90vh' }}>
 
         <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.15rem', fontWeight: 500, color: '#0A0A0A' }}>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.15rem', fontWeight: 500, color: '#1A1A1A' }}>
             Projekt erstellen
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
@@ -102,8 +102,8 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
 
           {lichtungName && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(123,174,94,0.06)' }}>
-              <div className="w-2 h-2 rounded-full" style={{ background: '#7BAE5E' }} />
-              <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: '#7BAE5E' }}>Verknuepft mit {lichtungName}</span>
+              <div className="w-2 h-2 rounded-full" style={{ background: '#E8751A' }} />
+              <span style={{ ...font, fontSize: '0.72rem', fontWeight: 500, color: '#E8751A' }}>Verknuepft mit {lichtungName}</span>
             </div>
           )}
 
@@ -119,7 +119,7 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
           <div>
             <label style={labelStyle}>Titel</label>
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="z.B. Lichtung in Kassel ausbauen" required
+              placeholder="z.B. Werkstatt in Kassel ausbauen" required
               className="w-full px-3 py-2 rounded-lg outline-none" style={inputStyle} />
           </div>
 
@@ -130,7 +130,7 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
               placeholder="Was soll mit dem Projekt geschehen? Wofuer die Mittel?"
               rows={4}
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
-              style={{ ...inputStyle, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
+              style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
           </div>
 
           <div>
@@ -193,7 +193,7 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
                     <textarea value={m.description} onChange={e => updateMilestone(idx, 'description', e.target.value)}
                       placeholder="Was wird damit erreicht?" rows={2}
                       className="w-full px-2.5 py-1.5 rounded outline-none resize-none"
-                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.82rem', lineHeight: 1.5, border: '1px solid rgba(10,10,10,0.08)', background: '#fff' }} />
+                      style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.82rem', lineHeight: 1.5, border: '1px solid rgba(10,10,10,0.08)', background: '#fff' }} />
                   </div>
                 ))}
               </div>
@@ -217,7 +217,7 @@ export function CreateProjectDialog({ position, lichtungId, lichtungName, onClos
 
           <button type="submit" disabled={loading}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-2"
-            style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', border: 'none', cursor: loading ? 'wait' : 'pointer' }}>
+            style={{ ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', border: 'none', cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Wird erstellt...' : 'Projekt erstellen'}
           </button>
 

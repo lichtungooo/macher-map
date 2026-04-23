@@ -30,7 +30,7 @@ export function ResetPasswordDialog({ token, onClose, onSuccess }: ResetPassword
     } finally { setLoading(false) }
   }
 
-  const inp = { border: '1px solid rgba(10,10,10,0.12)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', background: '#fff' }
+  const inp = { border: '1px solid rgba(10,10,10,0.12)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#1A1A1A', background: '#fff' }
 
   return (
     <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)' }}>
@@ -42,9 +42,9 @@ export function ResetPasswordDialog({ token, onClose, onSuccess }: ResetPassword
         {done ? (
           <div className="text-center py-4">
             <div className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(123,174,94,0.12)' }}>
-              <Check size={24} style={{ color: '#7BAE5E' }} />
+              <Check size={24} style={{ color: '#E8751A' }} />
             </div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.3rem', color: '#0A0A0A', marginBottom: '0.4rem' }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.3rem', color: '#1A1A1A', marginBottom: '0.4rem' }}>
               Passwort gesetzt
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(10,10,10,0.5)' }}>
@@ -54,9 +54,9 @@ export function ResetPasswordDialog({ token, onClose, onSuccess }: ResetPassword
         ) : (
           <>
             <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3" style={{ background: 'rgba(212,168,67,0.1)' }}>
-              <KeyRound size={22} style={{ color: '#D4A843' }} />
+              <KeyRound size={22} style={{ color: '#E8751A' }} />
             </div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.5rem', textAlign: 'center' }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.4rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '0.5rem', textAlign: 'center' }}>
               Neues Passwort
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(10,10,10,0.5)', marginBottom: '1.5rem', textAlign: 'center', lineHeight: 1.5 }}>
@@ -77,7 +77,7 @@ export function ResetPasswordDialog({ token, onClose, onSuccess }: ResetPassword
 
               <button type="submit" disabled={loading}
                 className="w-full py-3 rounded-lg"
-                style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#0A0A0A', color: '#fff', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, cursor: loading ? 'wait' : 'pointer' }}>
+                style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', color: '#fff', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, cursor: loading ? 'wait' : 'pointer' }}>
                 {loading ? 'Wird gesetzt...' : 'Passwort setzen'}
               </button>
             </form>

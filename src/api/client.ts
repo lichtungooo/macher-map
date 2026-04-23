@@ -1,15 +1,15 @@
 const API_BASE = '/api'
 
 function getToken(): string | null {
-  return localStorage.getItem('lichtung-token')
+  return localStorage.getItem('macher-token')
 }
 
 function setToken(token: string) {
-  localStorage.setItem('lichtung-token', token)
+  localStorage.setItem('macher-token', token)
 }
 
 function clearToken() {
-  localStorage.removeItem('lichtung-token')
+  localStorage.removeItem('macher-token')
 }
 
 async function request(path: string, options: RequestInit = {}) {
@@ -97,7 +97,7 @@ export async function exportMyData() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'lichtung-meine-daten.json'
+  a.download = 'macher-map-meine-daten.json'
   document.body.appendChild(a)
   a.click()
   a.remove()

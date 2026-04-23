@@ -12,17 +12,17 @@ function createLichtungIcon() {
         <radialGradient id="lig" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#FFFFF0" stop-opacity="0.9"/>
           <stop offset="40%" stop-color="#D4E8C0" stop-opacity="0.7"/>
-          <stop offset="80%" stop-color="#7BAE5E" stop-opacity="0.5"/>
+          <stop offset="80%" stop-color="#E8751A" stop-opacity="0.5"/>
           <stop offset="100%" stop-color="#5A8A3C" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <circle cx="18" cy="18" r="16" fill="url(#lig)" stroke="#7BAE5E" stroke-width="1.5" opacity="0.9"/>
-      <circle cx="18" cy="18" r="5" fill="#FFF8D0" stroke="#D4A843" stroke-width="1" opacity="0.9"/>
+      <circle cx="18" cy="18" r="16" fill="url(#lig)" stroke="#E8751A" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="18" cy="18" r="5" fill="#FFF8D0" stroke="#E8751A" stroke-width="1" opacity="0.9"/>
       <circle cx="18" cy="18" r="2" fill="#FFFFF0"/>
     </svg>
   `
   return L.divIcon({
-    html: `<div class="lichtung-marker">${svg}</div>`,
+    html: `<div class="macher-marker">${svg}</div>`,
     className: '',
     iconSize: [36, 36],
     iconAnchor: [18, 18],
@@ -39,22 +39,22 @@ function createOriginIcon() {
           <stop offset="0%" stop-color="#FFFFF8" stop-opacity="1"/>
           <stop offset="30%" stop-color="#FFF8D0" stop-opacity="0.95"/>
           <stop offset="60%" stop-color="#F5E090" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#D4A843" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
         </radialGradient>
         <radialGradient id="originAura" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#D4A843" stop-opacity="0.4"/>
-          <stop offset="50%" stop-color="#7BAE5E" stop-opacity="0.15"/>
-          <stop offset="100%" stop-color="#7BAE5E" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#E8751A" stop-opacity="0.4"/>
+          <stop offset="50%" stop-color="#E8751A" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
         </radialGradient>
       </defs>
 
       <circle cx="60" cy="60" r="58" fill="url(#originAura)" class="origin-breathe"/>
 
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#D4A843" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-1"/>
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#D4A843" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-2"/>
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#D4A843" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-3"/>
+      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-1"/>
+      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-2"/>
+      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-3"/>
 
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#7BAE5E" stroke-width="2" opacity="0.75"/>
+      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="2" opacity="0.75"/>
 
       <circle cx="60" cy="60" r="14" fill="url(#originCore)" class="origin-breathe" style="animation-delay: 0.3s"/>
 
@@ -62,7 +62,7 @@ function createOriginIcon() {
     </svg>
   `
   return L.divIcon({
-    html: `<div class="origin-lichtung-marker">${svg}</div>`,
+    html: `<div class="origin-macher-marker">${svg}</div>`,
     className: '',
     iconSize: [42, 42],
     iconAnchor: [21, 21],
@@ -95,15 +95,15 @@ export function LichtungMarker({ lichtung, onClick }: LichtungMarkerProps) {
       icon={icon}
       zIndexOffset={isOrigin ? 1000 : 0}
     >
-      <Popup className="lichtung-popup">
+      <Popup className="macher-popup">
         <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 240, textAlign: 'center' }}>
           {/* Name — bei Ursprungs-Lichtung markant in Serife, bei anderen in klarer Schrift */}
           {isOrigin ? (
             <p style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: "'Space Grotesk', sans-serif",
               fontSize: '1.35rem',
               fontWeight: 500,
-              color: '#0A0A0A',
+              color: '#1A1A1A',
               margin: '0 0 8px',
               letterSpacing: '0.08em',
             }}>
@@ -111,10 +111,10 @@ export function LichtungMarker({ lichtung, onClick }: LichtungMarkerProps) {
             </p>
           ) : (
             <p style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: "'Space Grotesk', sans-serif",
               fontSize: '1.05rem',
               fontWeight: 500,
-              color: '#0A0A0A',
+              color: '#1A1A1A',
               margin: '0 0 8px',
             }}>
               {lichtung.name}
@@ -128,7 +128,7 @@ export function LichtungMarker({ lichtung, onClick }: LichtungMarkerProps) {
               fontFamily: 'Inter, sans-serif',
               fontSize: '0.7rem',
               fontWeight: 500,
-              color: '#7BAE5E',
+              color: '#E8751A',
               background: 'rgba(123,174,94,0.08)',
               border: '1px solid rgba(123,174,94,0.2)',
               borderRadius: '6px',

@@ -109,16 +109,16 @@ export default function AdminPanel() {
     else if (tag === 'i') insert = `<em>${sel || 'Text'}</em>`
     else if (tag === 'h') insert = `<h2>${sel || 'Ueberschrift'}</h2>`
     else if (tag === 'img') insert = `<img src="${sel || 'URL'}" style="max-width:100%;border-radius:8px;" />`
-    else if (tag === 'a') insert = `<a href="${sel || 'URL'}" style="color:#D4A843;">${sel || 'Link'}</a>`
+    else if (tag === 'a') insert = `<a href="${sel || 'URL'}" style="color:#E8751A;">${sel || 'Link'}</a>`
     setNlBody(nlBody.slice(0, s) + insert + nlBody.slice(e))
   }
 
   const card = { background: '#fff', border: '1px solid rgba(10,10,10,0.06)', borderRadius: '12px', padding: '20px' }
-  const inp = { border: '1px solid rgba(10,10,10,0.1)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#0A0A0A', background: '#fff' }
+  const inp = { border: '1px solid rgba(10,10,10,0.1)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#1A1A1A', background: '#fff' }
   const tabBtn = (t: Tab) => ({
     fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: tab === t ? 600 : 400,
-    color: tab === t ? '#D4A843' : 'rgba(10,10,10,0.4)', background: 'none', border: 'none',
-    borderBottom: tab === t ? '2px solid #D4A843' : '2px solid transparent',
+    color: tab === t ? '#E8751A' : 'rgba(10,10,10,0.4)', background: 'none', border: 'none',
+    borderBottom: tab === t ? '2px solid #E8751A' : '2px solid transparent',
     padding: '8px 16px', cursor: 'pointer',
   })
 
@@ -126,18 +126,18 @@ export default function AdminPanel() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#FAFAF8' }}>
         <div className="w-full max-w-sm p-8 rounded-2xl text-center" style={card}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.8rem' }}>Kein Admin</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.5rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '0.8rem' }}>Kein Admin</h1>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
             Du bist angemeldet, hast aber keine Admin-Rechte fuer dieses Panel.
           </p>
           <div className="flex gap-2">
             <button onClick={() => { api.clearToken(); setNotAdmin(false); setLoggedIn(false) }}
               className="flex-1 py-3 rounded-lg"
-              style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', cursor: 'pointer' }}>
+              style={{ background: '#1A1A1A', color: '#fff', border: 'none', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', cursor: 'pointer' }}>
               Als Admin anmelden
             </button>
             <a href="/app" className="flex-1 py-3 rounded-lg flex items-center justify-center"
-              style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', color: '#0A0A0A', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', textDecoration: 'none' }}>
+              style={{ background: '#FAFAF8', border: '1px solid rgba(10,10,10,0.08)', color: '#1A1A1A', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', textDecoration: 'none' }}>
               Zurueck zur App
             </a>
           </div>
@@ -150,14 +150,14 @@ export default function AdminPanel() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#FAFAF8' }}>
         <form onSubmit={handleLogin} className="w-full max-w-sm p-8 rounded-2xl" style={card}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.5rem', fontWeight: 400, color: '#0A0A0A', marginBottom: '0.3rem', textAlign: 'center' }}>Admin</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.5rem', fontWeight: 400, color: '#1A1A1A', marginBottom: '0.3rem', textAlign: 'center' }}>Admin</h1>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: 'rgba(10,10,10,0.4)', textAlign: 'center', marginBottom: '1.2rem' }}>
             Mit deiner normalen E-Mail und Passwort anmelden
           </p>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-Mail" required className="w-full px-4 py-3 rounded-lg outline-none mb-3" style={inp} />
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Passwort" required className="w-full px-4 py-3 rounded-lg outline-none mb-4" style={inp} />
           {error && <p style={{ color: '#c44', fontSize: '0.78rem', marginBottom: '12px', textAlign: 'center' }}>{error}</p>}
-          <button type="submit" className="w-full py-3 rounded-lg" style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontSize: '0.82rem', fontWeight: 500, cursor: 'pointer' }}>Anmelden</button>
+          <button type="submit" className="w-full py-3 rounded-lg" style={{ background: '#1A1A1A', color: '#fff', border: 'none', fontSize: '0.82rem', fontWeight: 500, cursor: 'pointer' }}>Anmelden</button>
         </form>
       </div>
     )
@@ -168,7 +168,7 @@ export default function AdminPanel() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.6rem', fontWeight: 400, color: '#0A0A0A' }}>Lichtung Admin</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.6rem', fontWeight: 400, color: '#1A1A1A' }}>Macher-Map Admin</h1>
           <button onClick={() => { api.clearToken(); setLoggedIn(false) }} className="flex items-center gap-2" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.4)', fontSize: '0.78rem' }}>
             <LogOut size={14} /> Abmelden
           </button>
@@ -191,14 +191,14 @@ export default function AdminPanel() {
               <p style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>Menschen</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { icon: Users, label: 'Nutzer', value: stats.users, color: '#D4A843' },
-                  { icon: UserCheck, label: 'E-Mail bestaetigt', value: stats.verified, color: '#7BAE5E' },
+                  { icon: Users, label: 'Nutzer', value: stats.users, color: '#E8751A' },
+                  { icon: UserCheck, label: 'E-Mail bestaetigt', value: stats.verified, color: '#E8751A' },
                   { icon: ShieldCheck, label: 'Admins', value: stats.admins, color: '#6B4C8A' },
-                  { icon: Mail, label: 'Newsletter', value: stats.newsletter, color: '#5078C8' },
+                  { icon: Mail, label: 'Newsletter', value: stats.newsletter, color: '#D4A020' },
                 ].map((s, i) => (
                   <div key={i} style={card}>
                     <s.icon size={18} style={{ color: s.color, marginBottom: '8px' }} />
-                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#1A1A1A' }}>{s.value}</div>
                     <div style={{ fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
                   </div>
                 ))}
@@ -210,14 +210,14 @@ export default function AdminPanel() {
               <p style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>Inhalte</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { icon: Sparkles, label: 'Lichter', value: stats.lights, color: '#D4A843' },
-                  { icon: Trees, label: 'Lichtungen', value: stats.lichtungen, color: '#7BAE5E' },
-                  { icon: CalendarDays, label: 'Events', value: stats.events, color: '#5078C8' },
+                  { icon: Sparkles, label: 'Macher-Pins', value: stats.lights, color: '#E8751A' },
+                  { icon: Trees, label: 'Werkstaetten', value: stats.lichtungen, color: '#E8751A' },
+                  { icon: CalendarDays, label: 'Abenteuer', value: stats.events, color: '#D4A020' },
                   { icon: ImagePlus, label: 'Galerie-Bilder', value: stats.gallery_images, color: '#C9A8E0' },
                 ].map((s, i) => (
                   <div key={i} style={card}>
                     <s.icon size={18} style={{ color: s.color, marginBottom: '8px' }} />
-                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#1A1A1A' }}>{s.value}</div>
                     <div style={{ fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
                   </div>
                 ))}
@@ -229,14 +229,14 @@ export default function AdminPanel() {
               <p style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.4)', marginBottom: '10px' }}>Verbindungen</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { icon: Link2, label: 'Mensch-zu-Mensch', value: stats.connections, color: '#D4A843' },
-                  { icon: Shield, label: 'Lichtung-Mitglieder', value: stats.lichtung_members, color: '#7BAE5E' },
-                  { icon: UserCheck, label: 'Event-Teilnahmen', value: stats.event_participants, color: '#5078C8' },
+                  { icon: Link2, label: 'Mensch-zu-Mensch', value: stats.connections, color: '#E8751A' },
+                  { icon: Shield, label: 'Werkstatt-Mitglieder', value: stats.lichtung_members, color: '#E8751A' },
+                  { icon: UserCheck, label: 'Event-Teilnahmen', value: stats.event_participants, color: '#D4A020' },
                   { icon: MessageCircle, label: 'Telegram-Gruppen', value: stats.telegram_groups + stats.telegram_links, color: '#6BA3BE' },
                 ].map((s, i) => (
                   <div key={i} style={card}>
                     <s.icon size={18} style={{ color: s.color, marginBottom: '8px' }} />
-                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#0A0A0A' }}>{s.value}</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 600, color: '#1A1A1A' }}>{s.value}</div>
                     <div style={{ fontSize: '0.7rem', color: 'rgba(10,10,10,0.4)' }}>{s.label}</div>
                   </div>
                 ))}
@@ -245,7 +245,7 @@ export default function AdminPanel() {
 
             {/* DSGVO-Hinweis */}
             <div style={{ ...card, background: 'rgba(212,168,67,0.04)', borderColor: 'rgba(212,168,67,0.2)' }}>
-              <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#0A0A0A', marginBottom: '6px' }}>
+              <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1A1A1A', marginBottom: '6px' }}>
                 Datenschutz
               </p>
               <p style={{ fontSize: '0.75rem', color: 'rgba(10,10,10,0.55)', lineHeight: 1.6 }}>
@@ -264,11 +264,11 @@ export default function AdminPanel() {
               <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '10px' }}>Admin per E-Mail hinzufuegen</h3>
               <div className="flex gap-2">
                 <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} placeholder="E-Mail des Nutzers" className="flex-1 px-4 py-2 rounded-lg outline-none" style={inp} />
-                <button onClick={handleSetAdmin} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontSize: '0.78rem', cursor: 'pointer' }}>
+                <button onClick={handleSetAdmin} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#1A1A1A', color: '#fff', border: 'none', fontSize: '0.78rem', cursor: 'pointer' }}>
                   <Shield size={14} /> Admin machen
                 </button>
               </div>
-              {adminMsg && <p style={{ fontSize: '0.75rem', color: adminMsg.includes('Fehler') ? '#c44' : '#D4A843', marginTop: '8px' }}>{adminMsg}</p>}
+              {adminMsg && <p style={{ fontSize: '0.75rem', color: adminMsg.includes('Fehler') ? '#c44' : '#E8751A', marginTop: '8px' }}>{adminMsg}</p>}
             </div>
 
             {/* User List mit Aktionen */}
@@ -290,12 +290,12 @@ export default function AdminPanel() {
                       <tr key={u.id} style={{ borderBottom: '1px solid rgba(10,10,10,0.03)' }}>
                         <td style={{ padding: '8px' }}>
                           <div className="flex items-center gap-1.5">
-                            {u.is_admin ? <Shield size={11} style={{ color: '#D4A843' }} /> : null}
+                            {u.is_admin ? <Shield size={11} style={{ color: '#E8751A' }} /> : null}
                             <span>{u.name || '—'}</span>
                           </div>
                         </td>
                         <td style={{ padding: '8px', color: 'rgba(10,10,10,0.5)' }}>{u.email}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', color: u.newsletter ? '#D4A843' : 'rgba(10,10,10,0.15)' }}>{u.newsletter ? '●' : '○'}</td>
+                        <td style={{ padding: '8px', textAlign: 'center', color: u.newsletter ? '#E8751A' : 'rgba(10,10,10,0.15)' }}>{u.newsletter ? '●' : '○'}</td>
                         <td style={{ padding: '8px', color: 'rgba(10,10,10,0.35)' }}>{u.created_at?.slice(0, 10)}</td>
                         <td style={{ padding: '8px', textAlign: 'right' }}>
                           <div className="flex items-center justify-end gap-1">
@@ -314,7 +314,7 @@ export default function AdminPanel() {
                                 background: u.is_admin ? 'rgba(212,168,67,0.12)' : 'transparent',
                                 border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer',
                                 padding: '4px 10px', borderRadius: '6px', fontSize: '0.68rem',
-                                color: u.is_admin ? '#D4A843' : 'rgba(10,10,10,0.45)',
+                                color: u.is_admin ? '#E8751A' : 'rgba(10,10,10,0.45)',
                                 fontFamily: 'Inter, sans-serif',
                               }}>
                               {u.is_admin ? 'Admin ✓' : 'Admin'}
@@ -374,14 +374,14 @@ export default function AdminPanel() {
               ))}
               <div className="flex-1" />
               <button onClick={() => setNlPreview(!nlPreview)} className="flex items-center gap-1 px-3 h-8 rounded"
-                style={{ background: nlPreview ? 'rgba(212,168,67,0.1)' : 'transparent', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer', color: nlPreview ? '#D4A843' : 'rgba(10,10,10,0.4)', fontSize: '0.72rem' }}>
+                style={{ background: nlPreview ? 'rgba(212,168,67,0.1)' : 'transparent', border: '1px solid rgba(10,10,10,0.08)', cursor: 'pointer', color: nlPreview ? '#E8751A' : 'rgba(10,10,10,0.4)', fontSize: '0.72rem' }}>
                 <Eye size={14} /> Vorschau
               </button>
             </div>
 
             {nlPreview ? (
               <div className="px-4 py-4 rounded-lg mb-4" style={{ background: '#FDFCF9', border: '1px solid rgba(10,10,10,0.06)', minHeight: '160px' }}>
-                <div style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', lineHeight: 1.7, color: '#0A0A0A' }} dangerouslySetInnerHTML={{ __html: nlBody || '<span style="color:rgba(10,10,10,0.3)">Vorschau erscheint hier...</span>' }} />
+                <div style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', lineHeight: 1.7, color: '#1A1A1A' }} dangerouslySetInnerHTML={{ __html: nlBody || '<span style="color:rgba(10,10,10,0.3)">Vorschau erscheint hier...</span>' }} />
               </div>
             ) : (
               <textarea id="nl-body" value={nlBody} onChange={e => setNlBody(e.target.value)}
@@ -392,10 +392,10 @@ export default function AdminPanel() {
 
             <div className="flex items-center gap-4">
               <button onClick={handleSendNL} disabled={sending} className="flex items-center gap-2 px-6 py-3 rounded-lg"
-                style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontSize: '0.82rem', fontWeight: 500, cursor: sending ? 'wait' : 'pointer' }}>
+                style={{ background: '#1A1A1A', color: '#fff', border: 'none', fontSize: '0.82rem', fontWeight: 500, cursor: sending ? 'wait' : 'pointer' }}>
                 <Send size={16} /> {sending ? 'Wird gesendet...' : 'Senden'}
               </button>
-              {nlResult && <span style={{ fontSize: '0.75rem', color: nlResult.includes('Fehler') ? '#c44' : '#D4A843' }}>{nlResult}</span>}
+              {nlResult && <span style={{ fontSize: '0.75rem', color: nlResult.includes('Fehler') ? '#c44' : '#E8751A' }}>{nlResult}</span>}
             </div>
           </div>
         )}
@@ -409,11 +409,11 @@ export default function AdminPanel() {
                 <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="Aktuelles Passwort" className="w-full px-4 py-2 rounded-lg outline-none" style={inp} autoComplete="current-password" />
                 <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Neues Passwort (mindestens 8 Zeichen)" className="w-full px-4 py-2 rounded-lg outline-none" style={inp} autoComplete="new-password" />
                 <input type="password" value={newPw2} onChange={e => setNewPw2(e.target.value)} placeholder="Neues Passwort wiederholen" className="w-full px-4 py-2 rounded-lg outline-none" style={inp} autoComplete="new-password" />
-                <button onClick={handleChangePw} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#0A0A0A', color: '#fff', border: 'none', fontSize: '0.78rem', cursor: 'pointer' }}>
+                <button onClick={handleChangePw} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#1A1A1A', color: '#fff', border: 'none', fontSize: '0.78rem', cursor: 'pointer' }}>
                   <KeyRound size={14} /> Passwort aendern
                 </button>
               </div>
-              {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('geaendert') ? '#7BAE5E' : '#c44', marginTop: '8px' }}>{pwMsg}</p>}
+              {pwMsg && <p style={{ fontSize: '0.75rem', color: pwMsg.includes('geaendert') ? '#E8751A' : '#c44', marginTop: '8px' }}>{pwMsg}</p>}
             </div>
 
             <div style={{ ...card, background: 'rgba(212,168,67,0.04)', borderColor: 'rgba(212,168,67,0.2)' }}>

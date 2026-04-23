@@ -62,7 +62,7 @@ export function MarkdownToolbar({ textareaRef, value, onChange }: MarkdownToolba
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = 'rgba(212,168,67,0.08)'
-            e.currentTarget.style.color = '#D4A843'
+            e.currentTarget.style.color = '#E8751A'
             e.currentTarget.style.borderColor = 'rgba(212,168,67,0.2)'
           }}
           onMouseLeave={e => {
