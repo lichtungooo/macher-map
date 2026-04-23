@@ -9,7 +9,7 @@ REPO="https://github.com/lichtungooo/macher-map.git"
 
 echo "=== Macher-Map Deployment ==="
 
-# 1. Repo clonen oder updaten
+# 1. Repo clonen oder updaten (fuer docker-compose.yml)
 if [ -d "$APP_DIR" ]; then
   echo "→ Repo updaten..."
   cd "$APP_DIR"
@@ -20,10 +20,9 @@ else
   cd "$APP_DIR"
 fi
 
-# 2. Docker bauen und starten
-echo "→ Docker Image bauen..."
-docker compose down 2>/dev/null || true
-docker compose build --no-cache
+# 2. Image von ghcr.io ziehen und starten
+echo "→ Neues Image ziehen..."
+docker compose pull
 docker compose up -d
 
 echo ""
