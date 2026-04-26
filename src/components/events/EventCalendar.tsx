@@ -13,12 +13,12 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  meditation: '#E8751A', gebet: '#A07CC0', stille: '#6BA3BE',
-  begegnung: '#E8751A', tanz: '#D4766E', fest: '#E0A050',
+  workshop: '#E8751A', kurs: '#2D7DD2', bau: '#45B764',
+  wettbewerb: '#D4A020', treffen: '#9B59B6', offen: '#7A8B99',
 }
 
 const RECURRING_LABELS: Record<string, string> = {
-  vollmond: 'Vollmond', neumond: 'Neumond', woechentlich: 'Woechentlich', monatlich: 'Monatlich',
+  woechentlich: 'Woechentlich', monatlich: 'Monatlich', einmalig: 'Einmalig',
 }
 
 const MONTHS = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']

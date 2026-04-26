@@ -9,8 +9,8 @@ import { ShareButton } from '../ShareButton'
 import * as api from '../../api/client'
 
 const TYPE_COLORS: Record<string, string> = {
-  meditation: '#E8751A', gebet: '#A07CC0', stille: '#6BA3BE',
-  begegnung: '#E8751A', tanz: '#D4766E', fest: '#E0A050',
+  workshop: '#E8751A', kurs: '#2D7DD2', bau: '#45B764',
+  wettbewerb: '#D4A020', treffen: '#9B59B6', offen: '#7A8B99',
 }
 
 function formatDate(d: string) { return new Date(d).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) }
@@ -57,7 +57,7 @@ export function LichtungDetail({ lichtungId, onClose, onCreateEvent, onMoveLicht
       id: e.id, title: e.title, description: e.description || '',
       position: [e.lat, e.lng] as [number, number],
       start: e.start_time, end: e.end_time,
-      type: e.type || 'meditation', recurring: e.recurring, createdBy: e.user_id,
+      type: e.type || 'workshop', recurring: e.recurring, createdBy: e.user_id,
     }))
     setGlobalEvents(mapped)
   }

@@ -1,37 +1,43 @@
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 
-// Projekt-Marker: rosa Herz mit optionalem Progress-Ring
 function createProjectIcon(progress: number) {
-  // progress: 0..1
-  const radius = 14
+  const color = '#45B764'
+  const radius = 13
   const circumference = 2 * Math.PI * radius
   const offset = circumference * (1 - Math.min(1, Math.max(0, progress)))
 
   const svg = `
-    <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+    <svg width="40" height="46" viewBox="0 0 40 46" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <radialGradient id="prj" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#FFF0F5" stop-opacity="0.95"/>
-          <stop offset="50%" stop-color="#E8C4D2" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#C07090" stop-opacity="0.4"/>
-        </radialGradient>
+        <filter id="pj" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="${color}" flood-opacity="0.35"/>
+        </filter>
       </defs>
-      <circle cx="18" cy="18" r="16" fill="url(#prj)" stroke="#C07090" stroke-width="1.5" opacity="0.9"/>
-      <circle cx="18" cy="18" r="${radius}" fill="none" stroke="rgba(192,112,144,0.2)" stroke-width="2"/>
-      ${progress > 0 ? `<circle cx="18" cy="18" r="${radius}" fill="none" stroke="#C07090" stroke-width="2"
+      <path d="M20 2C10 2 2 10 2 20c0 14 18 24 18 24s18-10 18-24C38 10 30 2 20 2z"
+        fill="${color}" filter="url(#pj)" stroke="white" stroke-width="1.5"/>
+      <circle cx="20" cy="18" r="12" fill="white" opacity="0.95"/>
+      <!-- Progress ring -->
+      <circle cx="20" cy="18" r="${radius}" fill="none" stroke="rgba(69,183,100,0.2)" stroke-width="2.5"/>
+      ${progress > 0 ? `<circle cx="20" cy="18" r="${radius}" fill="none" stroke="${color}" stroke-width="2.5"
         stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"
-        transform="rotate(-90 18 18)" opacity="0.9"/>` : ''}
-      <path d="M18 24 l-5.5 -5.5 a3.5 3.5 0 0 1 5.5 -4.5 a3.5 3.5 0 0 1 5.5 4.5 z"
-        fill="#C07090" opacity="0.95" transform="translate(0 -1)"/>
+        transform="rotate(-90 20 18)" opacity="0.9"/>` : ''}
+      <!-- Gear/cog icon -->
+      <g transform="translate(14, 12)" fill="${color}" opacity="0.8">
+        <circle cx="6" cy="6" r="2.5" fill="none" stroke="${color}" stroke-width="1.5"/>
+        <rect x="5" y="-1" width="2" height="3" rx="0.5"/>
+        <rect x="5" y="10" width="2" height="3" rx="0.5"/>
+        <rect x="-1" y="5" width="3" height="2" rx="0.5"/>
+        <rect x="10" y="5" width="3" height="2" rx="0.5"/>
+      </g>
     </svg>
   `
   return L.divIcon({
     html: `<div class="project-marker">${svg}</div>`,
     className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -20],
+    iconSize: [40, 46],
+    iconAnchor: [20, 46],
+    popupAnchor: [0, -48],
   })
 }
 
@@ -63,28 +69,23 @@ export function ProjectMarker({ project, onClick }: ProjectMarkerProps) {
       position={[project.lat, project.lng]}
       icon={icon}
     >
-      <Popup className="project-popup">
-        <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 240, textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontWeight: 500, color: '#1A1A1A', margin: '0 0 8px' }}>
+      <Popup className="macher-popup">
+        <div style={{ padding: '6px 0', minWidth: 180, maxWidth: 260, textAlign: 'center' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.05rem', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>
             {project.title}
           </p>
-          {project.goal_amount && project.goal_amount > 0 && project.current_amount && project.current_amount > 0 ? (
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(10,10,10,0.5)', margin: '0 0 8px' }}>
-              {Math.round(progress * 100)}% &middot; {project.current_amount} / {project.goal_amount} &euro;
+          {project.goal_amount && project.goal_amount > 0 ? (
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 500, color: '#45B764', margin: '0 0 8px' }}>
+              {Math.round(progress * 100)}% &middot; {project.current_amount || 0} / {project.goal_amount} &euro;
             </p>
           ) : null}
           <button
             onClick={(e) => { e.stopPropagation(); onClick(project.id) }}
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.7rem',
-              fontWeight: 500,
-              color: '#C07090',
-              background: 'rgba(192,112,144,0.08)',
-              border: '1px solid rgba(192,112,144,0.22)',
-              borderRadius: '6px',
-              padding: '6px 18px',
-              cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 600,
+              color: 'white', background: '#45B764',
+              border: 'none', borderRadius: '6px',
+              padding: '7px 20px', cursor: 'pointer',
             }}
           >
             Zum Projekt

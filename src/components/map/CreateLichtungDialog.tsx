@@ -59,7 +59,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#E8751A' }} />
             <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '1.15rem', fontWeight: 500, color: '#1A1A1A' }}>
-              Lichtung erstellen
+              Werkstatt erstellen
             </h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
@@ -71,7 +71,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
         <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-3" style={{ maxHeight: 'calc(85vh - 60px)' }}>
 
           <p style={{ ...font, fontSize: '0.78rem', color: 'rgba(10,10,10,0.45)', lineHeight: 1.6 }}>
-            Ein Ort der Begegnung. Ein Platz, an dem Menschen sich treffen, meditieren, feiern.
+            Ein Ort zum Bauen, Lernen und Machen. Deine Werkstatt auf der Karte.
           </p>
 
           {position && (
@@ -110,8 +110,8 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
 
           {/* Name */}
           <div>
-            <label style={labelStyle}>Name der Lichtung</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="z.B. Die Waldlichtung Kassel"
+            <label style={labelStyle}>Name der Werkstatt</label>
+            <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="z.B. Holzwerkstatt Ferropolis"
               className="w-full px-3 py-2 rounded-lg outline-none" style={inputStyle} />
           </div>
 
@@ -120,7 +120,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
             <label style={labelStyle}>Hashtags</label>
             <TagInput value={tags} onChange={setTags} />
             <p style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '4px' }}>
-              Hilft anderen, deinen Ort zu finden (z.B. wald, quelle, stille)
+              Hilft anderen, deine Werkstatt zu finden (z.B. holz, metall, elektronik)
             </p>
           </div>
 
@@ -128,7 +128,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
           <div>
             <label style={labelStyle}>Beschreibung</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4}
-              placeholder="Was macht diesen Ort besonders? Was ist dort moeglich? Wie sieht er aus?"
+              placeholder="Was kann man hier bauen? Welche Maschinen und Werkzeuge gibt es?"
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
               style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
             <p style={{ ...font, fontSize: '0.6rem', color: 'rgba(10,10,10,0.3)', marginTop: '4px' }}>
@@ -138,7 +138,7 @@ export function CreateLichtungDialog({ position, onClose, onCreated }: CreateLic
 
           <button type="submit" disabled={loading} className="w-full py-3 rounded-lg"
             style={{ background: loading ? 'rgba(10,10,10,0.5)' : '#1A1A1A', border: 'none', ...font, fontSize: '0.82rem', fontWeight: 500, color: '#fff', cursor: loading ? 'wait' : 'pointer' }}>
-            {loading ? 'Wird erstellt...' : 'Lichtung erstellen'}
+            {loading ? 'Wird erstellt...' : 'Werkstatt erstellen'}
           </button>
         </form>
       </div>

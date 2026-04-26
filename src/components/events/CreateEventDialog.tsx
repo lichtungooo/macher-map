@@ -14,8 +14,6 @@ interface CreateEventDialogProps {
 
 const RECURRING_OPTIONS = [
   { value: '', label: 'Einmalig' },
-  { value: 'vollmond', label: 'Vollmond' },
-  { value: 'neumond', label: 'Neumond' },
   { value: 'woechentlich', label: 'Woechentlich' },
   { value: 'monatlich', label: 'Monatlich' },
 ]
@@ -24,7 +22,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
   const { setEvents } = useApp()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState<string[]>(['meditation'])
+  const [tags, setTags] = useState<string[]>(['workshop'])
   const [recurring, setRecurring] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('18:00')
@@ -56,7 +54,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
         lat: position[0],
         lng: position[1],
         start_time: `${date}T${time}:00`,
-        type: tags[0] || 'meditation',
+        type: tags[0] || 'workshop',
         tags: tags.join(','),
         recurring: recurring || undefined,
         max_participants: maxParticipants ? Number(maxParticipants) : undefined,
@@ -67,7 +65,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
         id: ev.id, title: ev.title, description: ev.description || '',
         position: [ev.lat, ev.lng] as [number, number],
         start: ev.start_time, end: ev.end_time,
-        type: ev.type || 'meditation', recurring: ev.recurring, createdBy: ev.user_id,
+        type: ev.type || 'workshop', recurring: ev.recurring, createdBy: ev.user_id,
       }))
       setEvents(mapped)
       onClose()
@@ -103,7 +101,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
           <div>
             <label style={labelStyle}>Titel</label>
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="z.B. Vollmond-Meditation am See" required
+              placeholder="z.B. Holzworkshop fuer Anfaenger" required
               className="w-full px-3 py-2 rounded-lg outline-none" style={inputStyle} />
           </div>
 
@@ -149,7 +147,7 @@ export function CreateEventDialog({ position, lichtungId, lichtungName, onClose 
             <label style={labelStyle}>Beschreibung</label>
             <MarkdownToolbar textareaRef={textareaRef} value={description} onChange={setDescription} />
             <textarea ref={textareaRef} value={description} onChange={e => setDescription(e.target.value)}
-              placeholder="Beschreibe deine Absicht. Was wollt ihr gemeinsam tun?"
+              placeholder="Was wird gebaut? Was lernt man? Was soll man mitbringen?"
               rows={3}
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
               style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', lineHeight: 1.6 }} />

@@ -110,7 +110,7 @@ function MapAppInner() {
         position: [e.lat, e.lng] as [number, number],
         start: e.start_time,
         end: e.end_time,
-        type: e.type || 'meditation',
+        type: e.type || 'workshop',
         recurring: e.recurring,
         createdBy: e.user_id,
       }))

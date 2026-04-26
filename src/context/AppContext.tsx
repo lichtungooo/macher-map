@@ -18,8 +18,8 @@ export interface EventItem {
   position: [number, number]
   start: string
   end?: string
-  type: 'meditation' | 'gebet' | 'fest' | 'begegnung' | 'tanz' | 'stille'
-  recurring?: 'vollmond' | 'neumond' | 'woechentlich' | 'monatlich'
+  type: 'workshop' | 'treffen' | 'bau' | 'wettbewerb' | 'kurs' | 'offen'
+  recurring?: 'woechentlich' | 'monatlich' | 'einmalig'
   createdBy: string
 }
 

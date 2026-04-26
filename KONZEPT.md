@@ -1,152 +1,124 @@
 # Macher-Map — Space-Konzept
 
-## 1. Identität
+---
 
-**Wer ist der Macher?**
-Eltern mit Kindern (ab ~10), Jugendliche, Handwerksbetriebe, Schulen, Gemeinden.
-Familien, die zusammen bauen, schrauben, schweißen, erleben.
-Handwerker, die Nachwuchs suchen und Talente sichtbar machen wollen.
+## 1. Identitaet
 
-**Ermöglicher:** Hornbach, Bauhaus, OBI — die Infrastruktur-Partner.
-Lokale Handwerksbetriebe, FabLabs, Makerspaces — die Orte.
-
-**Sprache:** Straight, lustig, entspannt. Bauarbeiter-Style.
-Auf den Punkt. Projektsprache. Klare Ansagen.
-"Lass uns reinhauen." / "Es gibt nicht viel Gutes, außer man tut es." / "Das Wichtige am Projekt ist das Projekt."
-
-**Das Abenteuer:** Handwerk IST das Abenteuer.
-Seifenkisten-Workshop, Schweißen, Nageln, Bauen mit den eigenen Händen.
-Den goldenen Boden des Handwerks zeigen. Kinder an die Hand nehmen.
-Handwerk wieder sichtbar und geil machen.
-
-**Gefühl beim Öffnen:** Bock. Sofort rausgehen und was bauen wollen.
-Am liebsten direkt klicken → "Cool, ich komm, lass uns das bauen."
-Wo ist Material? Wer baut mit? Was kann ich in meiner Nähe erleben?
+| Frage | Antwort |
+|-------|---------|
+| **Name des Space** | Macher-Map |
+| **In einem Satz** | Die Karte, die Handwerk sichtbar, geil und gamifiziert macht — fuer alle die mit den eigenen Haenden bauen wollen. |
+| **Claim / Tagline** | "Lass uns was bauen." |
+| **Was fuehlt man beim Oeffnen?** | Bock. Sofort rausgehen und was bauen wollen. "Cool, ich komm, lass uns das bauen." |
+| **Was sagt der Space zum neuen Besucher?** | "Wo ist Material? Wer baut mit? Was kann ich in meiner Naehe erleben?" |
+| **Was unterscheidet ihn von ALLEM was es gibt?** | Keine Plattform kombiniert Karte + Skill-Tree + Peer-Community + Werkstatt-Finder + Materialboerse + Gamification. Komplett unbesetztes Territorium. |
 
 ---
 
 ## 2. Kern-Erlebnis
 
-**Erste 30 Sekunden:** "Geil, ich bin dabei."
-Profil ausfüllen. Offers & Needs. Was kann ich? Was brauch ich?
-Sich vernetzen mit Gleichgesinnten.
-
-**Unterschied zur Lichtung:**
-Lichtung = Herzensgeschichte, Frieden, Stille.
-Macher-Map = TUN. Bauen. Erleben. Erschaffen mit eigenen Händen.
-
-**Drei Kern-Aktionen:**
-1. **Karte** — Wo sind Gleichgesinnte? Werkstätten, Macher, Abenteuer in meiner Nähe.
-2. **Projekte** — Ich will das bauen. Wer baut mit mir?
-3. **Marktplatz** — Material, Werkzeug, Unterstützung. Geben und Nehmen. Monetär und frei.
+| Frage | Antwort |
+|-------|---------|
+| **Die EINE Sache, die man sofort tun kann** | Werkstaetten, Macher und Abenteuer in meiner Naehe auf der Karte finden |
+| **Was bringt Menschen dazu, wiederzukommen?** | Skill-Tree (Duolingo fuer Handwerk): Levels steigen, Badges sammeln, sichtbarer Fortschritt. "Ich bin Schweiss-Macher Level 10" |
+| **Was erzaehlt man Freunden?** | "Da gibts ne Karte wo du Werkstaetten findest, und du sammelst XP fuers Bauen wie bei Duolingo" |
+| **Welches Problem loest der Space?** | Handwerk ist unsichtbar, ungeil und disconnected. 73.000 Ausbildungsplaetze unbesetzt. Macher finden sich nicht. |
+| **Wie fuehlt sich Erfolg an? (fuer den Nutzer)** | "Geil, ich hab diese Werkstatt gefunden, die Leute dort sind cool, und mein Skill-Tree waechst." |
 
 ---
 
 ## 3. Module
 
-**Pflicht-Module:**
-- **Karte** — Werkstätten, Macher, Projekte, Abenteuer sichtbar
-- **Kalender** — Events, Workshops, Bau-Wochenenden
-- **Gamification** — Skill-Tree, Quests, Avatar, Activity-Log, Dashboard
-- **Marktplatz** — Material, Werkzeug, Angebote & Gesuche (Offers & Needs)
-- **Profile** — Offers & Needs, Skills, Hashtag-Matching
+### Welche RLN-Module braucht der Space?
 
-**Begriffe in diesem Space:**
-| RLN-Basis | Macher-Map |
-|-----------|------------|
-| Lichtung/Ort | Werkstatt |
-| Licht/Profil | Macher |
-| Event | Abenteuer |
-| Projekt | Bauprojekt |
-| Fähigkeitenbaum | Skill-Tree / Macher-Level |
-| Marktplatz | Materialbörse |
+| RLN-Modul | Brauchen wir? | Heisst im Space | Prioritaet |
+|-----------|---------------|-----------------|------------|
+| Map | Ja | Macher-Map (Karte) | Kritisch |
+| Profile | Ja | Macher-Profil | Kritisch |
+| Calendar | Ja | Abenteuer-Kalender | Hoch |
+| Gamification | Ja | Skill-Tree / Macher-Level | Kritisch |
+| Trust | Spaeter | Macher-Vertrauen | Niedrig |
+| Marktplatz | Ja | Materialboerse | Hoch |
+| Community | Ja | Gilden (Schweissergilde, Holzgilde...) | Mittel |
+| Dashboard | Ja | Mein Macher-Dashboard | Hoch |
+| Log | Ja | Activity-Log | Mittel |
 
-**Gamification — Detail:**
-- Skill-Tree: Holz, Metall, Elektro, Schweißen, 3D-Druck, Nähen, Motor, Fahrzeugbau
-- Wie Duolingo: Items sammeln, Levels steigen, Gilden (Schweißergilde, Holzgilde...)
-- Avatar mit sichtbarer Entwicklung
-- Activity-Log: Wo war ich? Was hab ich gemacht?
-- Dashboard: Mein Fortschritt auf einen Blick
-- Kinder lieben die Sichtbarkeit — "Ich bin Schweiß-Macher Level 10"
+### Modul-Uebersetzungstabelle
+
+| RLN-Begriff | Space-Begriff | Warum |
+|-------------|---------------|-------|
+| Events | Abenteuer | Handwerk IST das Abenteuer — Workshops, Bau-Wochenenden, Wettbewerbe |
+| Orte/Lichtungen | Werkstaetten | Makerspaces, FabLabs, offene Werkstaetten, Handwerksbetriebe |
+| Lichter | Macher-Pins | Du setzt deinen Pin — hier bin ich, das kann ich |
+| Projekte | Bauprojekte | "Ich will das bauen. Wer baut mit mir?" |
+| Verbindungen | Netzwerk | Macher vernetzen sich |
+| Mitglieder | Macher | Jeder der mitmacht ist ein Macher |
 
 ---
 
 ## 4. Visuelles Universum
 
-**Stimmung:** Laut. Erdig. Holzig. Technisch.
-Nach Arbeit aussehen. Nach coolen Sachen die man baut.
-Coole Sprüche. "Geiler Scheiß."
-Kein Clean-Tech-Startup. Kein Meditation-Wellness. WERKSTATT.
+| Frage | Antwort |
+|-------|---------|
+| **3 Adjektive fuer das Gefuehl** | Erdig, laut, technisch |
+| **Primaerfarbe** | Orange #E8751A — Energie, Feuer, Handwerk |
+| **Sekundaerfarbe** | Schwarz #1A1A1A — Kontrast, Kraft |
+| **Akzentfarbe** | Gold #D4A020 — Wertigkeit, Handwerks-Stolz |
+| **Hintergrund (hell/dunkel)** | Warm-hell #FAF8F5 (Cream) mit erdigen Sections #F5F0E8 |
+| **Schriftart Display** | Space Grotesk — markant, geometrisch, kraftvoll |
+| **Schriftart Body** | Inter — klar, lesbar, modern |
+| **Foto-Stil** | Echte Action: Haende die bauen, Funken fliegen, dreckige Werkbaenke. Kein Stock. |
+| **Icon-Stil** | Lucide (Basis) + Custom Handwerks-Icons: Hammer, Saege, Schweissmaske, Bohrer |
+| **Symbole / Maskottchen** | Werkzeug-Universum durchgehend. Jedes Icon = eine klare Aktion. |
 
-**Farbwelt:**
-- Orange (#E8751A) — Energie, Feuer, Handwerk
-- Schwarz (#1A1A1A) — Kontrast, Kraft
-- Holz/Erde-Töne — Wärme, Material
-- Gold (#D4A020) — Wertigkeit, Handwerks-Stolz
-- Akzente: Werkzeug-Grau, Schweißer-Blau
-
-**Schriften:** Markant, auf den Punkt. Keine Verschnörkelungen.
-Klar, abgerundet, gut designed. Harmonisch aber kraftvoll.
-
-**Icons:** Handwerks-Universum durchgehend.
-Lineal, Hammer, Schraubenschlüssel, Säge, Bohrer, Schweißmaske.
-Jedes Icon = eine klare Aktion. Klick → ich weiß was passiert.
-
-**Karte:** Constructor-Ausdruck.
-Schnell, interaktiv, direkt dahin wo man hinwill.
-Marker im Werkstatt-Stil, nicht Lichtung-Kreise.
-
-**Profile:** Klar, funktionell, schnell zum Ziel.
-Pop-ups die sofort zeigen: Was kann der? Was baut der? Was braucht der?
+### Referenzen ("So wie X, aber mit Y")
+1. Duolingo — aber fuer Handwerk statt Sprachen (Skill-Tree, Streaks, XP)
+2. Strava — aber fuer Macher statt Laeufer (Social Proof, Leaderboards, Community)
+3. Google Maps — aber nur fuer Werkstaetten, Macher und Abenteuer
 
 ---
 
-## 5. Theming-Architektur
+## 5. Zielgruppe & Pitch
 
-**Was ist GLEICH über alle Spaces:**
-- Grundstruktur (Navigation, Tabs, Panel-Layout)
-- Interaktionsmuster (Klick → Detail, Karte → Pop-up → Profil)
-- UX-Flow (Onboarding, Profil-Erstellung, Suche)
-- Modul-Funktionalität (was ein Modul KANN)
+### Top-3 Segmente
+| # | Segment | Groesse | Beduerfnis |
+|---|---------|---------|-----------|
+| 1 | Familien mit Kindern (10+) | 8.000+ Besucher Macher-Festival | Gemeinsam bauen, erleben, Skills aufbauen |
+| 2 | Jugendliche / Azubis | 342.000 Azubis im Handwerk | Sichtbarkeit, Gamification, Community, Berufsorientierung |
+| 3 | Handwerksbetriebe | 1.038.315 in Deutschland | Nachwuchs finden, Talente sichtbar machen, 73.000 Plaetze unbesetzt |
 
-**Was ist ANDERS pro Space (= Theme):**
-- Farben, Schriften, Icons
-- Begriffe (Lichtung→Werkstatt, Licht→Macher)
-- Marker-Styles auf der Karte
-- Animationen, Stimmung
-- Landingpage-Blöcke und Texte
+### Wer zahlt?
+| Partner-Typ | Warum er zahlt | Wie viel (Schaetzung) |
+|-------------|---------------|----------------------|
+| Baumaerkte (Hornbach) | Digitale Verlaengerung ihres Experience Marketing, Kundenbindung | Pitch-Fee + Lizenz + Rev-Share |
+| Werkzeughersteller (Bosch, Makita) | Produktplatzierung im Skill-Tree, Markenbindung ab Jugend | Sponsoring pro Skill-Bereich |
+| Handwerkskammern / ZDH | Nachwuchsgewinnung, unbesetzte Stellen fuellen | Institutionelles Budget |
 
-**Prinzip:** Theme DESIGNT das Modul. Funktionalität lebt IM Modul.
-Der User fühlt sich in jedem Space zuhause — "wie Facebook, nur anders angezogen."
-Vielleicht sogar: eigene Themes über alle Spaces legen.
-
----
-
-## 6. Zielgruppe & Pitch
-
-**Erster Pitch:** Intern (Team), dann Demo-Call mit YouTuber/Influencer/Handwerker.
-"Ich hab ne geile Idee aus deinem Bereich. Schau dir das an."
-
-**Der eine Satz:** "Wow, Alter, lass uns was bauen."
-
-**Partner:**
-- Hornbach (Haupt-Sponsor Macher-Festival, 10.000qm Werkstatt)
-- Bauhaus, OBI (Alternative)
-- Handwerksbetriebe (Nachwuchs-Gewinnung)
-- YouTuber: Real Life Guys, Lets-Bastel, Fynn Kliemann
-
-**Was der Partner braucht:**
-- Feature-Liste: Was bringen wir rein?
-- Ressourcen-Bedarf: Was brauchen wir von euch?
-- Zahlen: ROI, Skalierung, Kundenbindung, Markt-Wirkung
-- Marketing-Stärke: Wie erreichen wir die Community?
+### Zeitplan
+| Meilenstein | Datum | Was muss stehen |
+|-------------|-------|-----------------|
+| Konzept fertig | 2026-04-23 | KONZEPT.md ausgefuellt |
+| Deep Dive fertig | 2026-04-30 | DEEP-DIVE.md vollstaendig |
+| Prototyp live | 2026-06-01 | macher-map.org mit Karte + Skill-Tree MVP |
+| Erster Pitch | 2026-06-15 | Demo an Real Life Guys / Hornbach |
+| Launch | 2026-08-06 | Live am Macher-Festival Ferropolis |
 
 ---
 
-## 7. Nächste Schritte
+## 6. Naechste Schritte
 
-1. ☐ Landingpage → Macher-Universum (nicht Lichtung in Orange)
-2. ☐ Karten-Experience → Constructor-Stil, eigene Marker, eigene Pop-ups
-3. ☐ Profile → Offers & Needs, Skill-Anzeige
-4. ☐ Gamification-Modul → Skill-Tree MVP
-5. ☐ Theming-System → Basis für alle zukünftigen Spaces
+- [x] KONZEPT.md ausgefuellt (2026-04-23)
+- [x] Deep Dive fertig — DEEP-DIVE.md mit 10 Bloecken (2026-04-23)
+- [x] Design-Brief fuer Sebastian — DESIGN-BRIEF.md mit 10 Sektionen (2026-04-26)
+- [x] Bilder kuratiert — BILDER-REFERENZ.md mit 39 Bildern (2026-04-26)
+- [x] Demo-Daten Seed-Script — scripts/seed-demo.js mit 50+ Datenpunkten (2026-04-26)
+- [ ] Seed-Script auf Server ausfuehren
+- [ ] Sebastian briefen (10 offene Fragen, vor allem Farbwelt)
+- [ ] Landingpage bauen (Macher-Universum, nicht Lichtung in Orange)
+- [ ] App-Erlebnis aufbauen (Constructor-Stil, eigene Marker)
+- [ ] Sebastian-Review
+- [ ] Pitch vorbereiten (Real Life Guys + Hornbach)
+
+---
+
+*Vorlage: Real-Life-Forge/templates/KONZEPT.md*

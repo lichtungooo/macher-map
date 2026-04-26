@@ -1,77 +1,62 @@
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 
-// Die Ursprungs-Lichtung (Kassel, Harleshaeuser Wald) — von hier breitet sich das Licht aus
-const ORIGIN_LICHTUNG_ID = '24615195-da9f-4fd4-956a-8aceb374bfc3'
+const WERKSTATT_COLORS: Record<string, string> = {
+  holz: '#C4883C',
+  metall: '#7A8B99',
+  elektronik: '#2D7DD2',
+  '3ddruck': '#2D7DD2',
+  cnc: '#2D7DD2',
+  laser: '#2D7DD2',
+  naehen: '#C07090',
+  textil: '#C07090',
+  keramik: '#B06840',
+  toepfern: '#B06840',
+  schmieden: '#E8751A',
+  fahrrad: '#45B764',
+  reparatur: '#45B764',
+  siebdruck: '#9B59B6',
+  lehm: '#8B7355',
+  modellbau: '#E0A050',
+  default: '#E8751A',
+}
 
-function createLichtungIcon() {
-  // Normale Lichtung — gruener Kreis mit goldenem Kern
+function getWerkstattColor(tags?: string): string {
+  if (!tags) return WERKSTATT_COLORS.default
+  for (const tag of tags.split(',')) {
+    const c = WERKSTATT_COLORS[tag.trim()]
+    if (c) return c
+  }
+  return WERKSTATT_COLORS.default
+}
+
+function createWerkstattIconSvg(color: string) {
   const svg = `
-    <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+    <svg width="40" height="46" viewBox="0 0 40 46" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <radialGradient id="lig" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#FFFFF0" stop-opacity="0.9"/>
-          <stop offset="40%" stop-color="#D4E8C0" stop-opacity="0.7"/>
-          <stop offset="80%" stop-color="#E8751A" stop-opacity="0.5"/>
-          <stop offset="100%" stop-color="#5A8A3C" stop-opacity="0"/>
-        </radialGradient>
+        <filter id="ws" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="${color}" flood-opacity="0.35"/>
+        </filter>
       </defs>
-      <circle cx="18" cy="18" r="16" fill="url(#lig)" stroke="#E8751A" stroke-width="1.5" opacity="0.9"/>
-      <circle cx="18" cy="18" r="5" fill="#FFF8D0" stroke="#E8751A" stroke-width="1" opacity="0.9"/>
-      <circle cx="18" cy="18" r="2" fill="#FFFFF0"/>
+      <path d="M20 2C10 2 2 10 2 20c0 14 18 24 18 24s18-10 18-24C38 10 30 2 20 2z"
+        fill="${color}" filter="url(#ws)" stroke="white" stroke-width="1.5"/>
+      <circle cx="20" cy="18" r="11" fill="white" opacity="0.95"/>
+      <!-- Hammer icon -->
+      <g transform="translate(13, 11)" fill="${color}" opacity="0.85">
+        <rect x="6" y="0" width="2" height="8" rx="1"/>
+        <rect x="2" y="0" width="10" height="4" rx="2"/>
+        <rect x="6" y="7" width="2" height="7" rx="0.5"/>
+      </g>
     </svg>
   `
   return L.divIcon({
-    html: `<div class="macher-marker">${svg}</div>`,
+    html: `<div class="werkstatt-marker">${svg}</div>`,
     className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -20],
+    iconSize: [40, 46],
+    iconAnchor: [20, 46],
+    popupAnchor: [0, -48],
   })
 }
-
-function createOriginIcon() {
-  // Ursprungs-Lichtung — kraftvolle, pulsierende Aura mit goldenem Herzen
-  const svg = `
-    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-      <defs>
-        <radialGradient id="originCore" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#FFFFF8" stop-opacity="1"/>
-          <stop offset="30%" stop-color="#FFF8D0" stop-opacity="0.95"/>
-          <stop offset="60%" stop-color="#F5E090" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="originAura" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#E8751A" stop-opacity="0.4"/>
-          <stop offset="50%" stop-color="#E8751A" stop-opacity="0.15"/>
-          <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-
-      <circle cx="60" cy="60" r="58" fill="url(#originAura)" class="origin-breathe"/>
-
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-1"/>
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-2"/>
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="1.5" opacity="0.5" class="origin-ring origin-ring-3"/>
-
-      <circle cx="60" cy="60" r="22" fill="none" stroke="#E8751A" stroke-width="2" opacity="0.75"/>
-
-      <circle cx="60" cy="60" r="14" fill="url(#originCore)" class="origin-breathe" style="animation-delay: 0.3s"/>
-
-      <circle cx="60" cy="60" r="4" fill="#FFFFF8" opacity="0.95"/>
-    </svg>
-  `
-  return L.divIcon({
-    html: `<div class="origin-macher-marker">${svg}</div>`,
-    className: '',
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
-    popupAnchor: [0, -25],
-  })
-}
-
-const lichtungIcon = createLichtungIcon()
-const originIcon = createOriginIcon()
 
 interface LichtungMarkerProps {
   lichtung: {
@@ -81,62 +66,61 @@ interface LichtungMarkerProps {
     lat: number
     lng: number
     creator_name: string
+    tags?: string
   }
   onClick: (id: string) => void
 }
 
 export function LichtungMarker({ lichtung, onClick }: LichtungMarkerProps) {
-  const isOrigin = lichtung.id === ORIGIN_LICHTUNG_ID
-  const icon = isOrigin ? originIcon : lichtungIcon
+  const color = getWerkstattColor((lichtung as any).tags)
+  const icon = createWerkstattIconSvg(color)
 
   return (
     <Marker
       position={[lichtung.lat, lichtung.lng]}
       icon={icon}
-      zIndexOffset={isOrigin ? 1000 : 0}
     >
       <Popup className="macher-popup">
-        <div style={{ padding: '4px 0', minWidth: 160, maxWidth: 240, textAlign: 'center' }}>
-          {/* Name — bei Ursprungs-Lichtung markant in Serife, bei anderen in klarer Schrift */}
-          {isOrigin ? (
-            <p style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '1.35rem',
-              fontWeight: 500,
-              color: '#1A1A1A',
-              margin: '0 0 8px',
-              letterSpacing: '0.08em',
-            }}>
-              {lichtung.name}
-            </p>
-          ) : (
-            <p style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '1.05rem',
-              fontWeight: 500,
-              color: '#1A1A1A',
-              margin: '0 0 8px',
-            }}>
-              {lichtung.name}
-            </p>
+        <div style={{ padding: '6px 0', minWidth: 180, maxWidth: 260, textAlign: 'center' }}>
+          <p style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: '1.05rem',
+            fontWeight: 600,
+            color: '#1A1A1A',
+            margin: '0 0 4px',
+          }}>
+            {lichtung.name}
+          </p>
+
+          {(lichtung as any).tags && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'center', marginBottom: '8px' }}>
+              {(lichtung as any).tags.split(',').slice(0, 3).map((tag: string) => (
+                <span key={tag} style={{
+                  fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 500,
+                  color: color, background: `${color}15`, border: `1px solid ${color}30`,
+                  borderRadius: '4px', padding: '2px 6px',
+                }}>
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
           )}
 
-          {/* Zum Ort */}
           <button
             onClick={(e) => { e.stopPropagation(); onClick(lichtung.id) }}
             style={{
               fontFamily: 'Inter, sans-serif',
-              fontSize: '0.7rem',
-              fontWeight: 500,
-              color: '#E8751A',
-              background: 'rgba(123,174,94,0.08)',
-              border: '1px solid rgba(123,174,94,0.2)',
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              color: 'white',
+              background: color,
+              border: 'none',
               borderRadius: '6px',
-              padding: '6px 18px',
+              padding: '7px 20px',
               cursor: 'pointer',
             }}
           >
-            Zum Ort
+            Reinschauen
           </button>
         </div>
       </Popup>

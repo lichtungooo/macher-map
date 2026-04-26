@@ -132,41 +132,44 @@ body {
 }
 
 /* Marker Animationen */
-.light-pin-marker {
+.macher-pin-marker {
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
-  animation: light-breathe 4s ease-in-out infinite;
+  animation: macher-pulse 4s ease-in-out infinite;
 }
 
-.light-pin-marker svg {
-  filter: drop-shadow(0 0 8px rgba(232,117,26,0.5)) drop-shadow(0 0 16px rgba(232,117,26,0.2));
-}
-
-@keyframes light-breathe {
+@keyframes macher-pulse {
   0%, 100% { transform: translateZ(0) scale(1); }
-  50% { transform: translateZ(0) scale(1.1); }
+  50% { transform: translateZ(0) scale(1.08); }
 }
 
 .event-pin-marker {
-  animation: event-pulse 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 5px rgba(232,117,26,0.3));
+  animation: event-bounce 3s ease-in-out infinite;
 }
 
-@keyframes event-pulse {
+@keyframes event-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.werkstatt-marker {
+  animation: werkstatt-pulse 5s ease-in-out infinite;
+}
+
+@keyframes werkstatt-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.05); }
 }
 
-.macher-marker {
-  animation: macher-glow 5s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(232,117,26,0.4));
+.project-marker {
+  animation: project-glow 4s ease-in-out infinite;
 }
 
-@keyframes macher-glow {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(232,117,26,0.4)); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 0 14px rgba(232,117,26,0.6)); }
+@keyframes project-glow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(69,183,100,0.3)); }
+  50% { transform: scale(1.06); filter: drop-shadow(0 0 10px rgba(69,183,100,0.5)); }
 }
 
 /* ─── Markdown-Prose ─── */

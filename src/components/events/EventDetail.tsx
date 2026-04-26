@@ -22,8 +22,7 @@ function formatDist(km: number): string {
 }
 
 const RECURRING_LABELS: Record<string, string> = {
-  vollmond: 'Jeden Vollmond', neumond: 'Jeden Neumond',
-  woechentlich: 'Woechentlich', monatlich: 'Monatlich',
+  woechentlich: 'Woechentlich', monatlich: 'Monatlich', einmalig: 'Einmalig',
 }
 
 function formatDate(dateStr: string) {
@@ -381,7 +380,7 @@ export function EventDetail({ event, userPos, onClose, onBack }: EventDetailProp
                           id: e.id, title: e.title, description: e.description || '',
                           position: [e.lat, e.lng] as [number, number],
                           start: e.start_time, end: e.end_time,
-                          type: e.type || 'meditation', recurring: e.recurring, createdBy: e.user_id,
+                          type: e.type || 'workshop', recurring: e.recurring, createdBy: e.user_id,
                         })))
                       })
                       onClose()

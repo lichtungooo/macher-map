@@ -18,7 +18,7 @@ export function GlobalEventsTab() {
   const [date, setDate] = useState('')
   const [time, setTime] = useState('21:00')
   const [recurring, setRecurring] = useState<'' | 'vollmond' | 'neumond' | 'woechentlich' | 'monatlich'>('vollmond')
-  const [tags, setTags] = useState<string[]>(['meditation'])
+  const [tags, setTags] = useState<string[]>(['workshop'])
   const descRef = useRef<HTMLTextAreaElement>(null)
 
   const load = async () => {
@@ -76,7 +76,7 @@ export function GlobalEventsTab() {
         }),
       })
       if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
-      setTitle(''); setDescription(''); setDate(''); setTags(['meditation']); setShowCreate(false)
+      setTitle(''); setDescription(''); setDate(''); setTags(['workshop']); setShowCreate(false)
       const listRes = await fetch('/api/events/global')
       setEvents(await listRes.json())
     } catch (err: any) {
@@ -116,7 +116,7 @@ export function GlobalEventsTab() {
       ) : (
         <form onSubmit={handleCreate} style={card} className="space-y-2.5">
           <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-            placeholder="Titel — z.B. Vollmond-Meditation" required autoFocus
+            placeholder="Titel — z.B. Grosser Maker-Workshop" required autoFocus
             className="w-full px-3 py-2 rounded-lg outline-none"
             style={{ ...inp, fontSize: '0.95rem', fontWeight: 500 }} />
 

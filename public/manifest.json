@@ -1,11 +1,11 @@
 {
-  "name": "Lichtung — Dein Licht fuer den Frieden",
-  "short_name": "Lichtung",
-  "description": "Setze dein Licht auf die Weltkarte. Verbinde dich. Meditiere mit uns.",
+  "name": "Macher-Map — Lass uns was bauen.",
+  "short_name": "Macher-Map",
+  "description": "Finde Werkstaetten, Macher und Abenteuer in deiner Naehe. Lerne Skills, bau mit deiner Community.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1510",
-  "theme_color": "#1a1510",
+  "background_color": "#FAF8F5",
+  "theme_color": "#E8751A",
   "orientation": "portrait-primary",
   "icons": [
     {

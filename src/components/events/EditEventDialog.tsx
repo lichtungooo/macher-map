@@ -13,8 +13,6 @@ interface EditEventDialogProps {
 
 const RECURRING_OPTIONS = [
   { value: '', label: 'Einmalig' },
-  { value: 'vollmond', label: 'Vollmond' },
-  { value: 'neumond', label: 'Neumond' },
   { value: 'woechentlich', label: 'Woechentlich' },
   { value: 'monatlich', label: 'Monatlich' },
 ]
@@ -25,7 +23,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
   const [title, setTitle] = useState(event.title)
   const [description, setDescription] = useState(event.description || '')
   const initialTags = ((data.tags || event.type || '') as string).split(',').map(t => t.trim()).filter(Boolean)
-  const [tags, setTags] = useState<string[]>(initialTags.length ? initialTags : ['meditation'])
+  const [tags, setTags] = useState<string[]>(initialTags.length ? initialTags : ['workshop'])
   const [recurring, setRecurring] = useState(event.recurring || '')
   const startDate = new Date(event.start)
   const dateStr = startDate.toISOString().slice(0, 10)
@@ -45,7 +43,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
         title,
         description,
         start_time: `${date}T${time}:00`,
-        type: tags[0] || 'meditation',
+        type: tags[0] || 'workshop',
         tags: tags.join(','),
         recurring: recurring || null,
         max_participants: maxParticipants ? Number(maxParticipants) : null,
@@ -56,7 +54,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
         id: ev.id, title: ev.title, description: ev.description || '',
         position: [ev.lat, ev.lng] as [number, number],
         start: ev.start_time, end: ev.end_time,
-        type: ev.type || 'meditation', recurring: ev.recurring, createdBy: ev.user_id,
+        type: ev.type || 'workshop', recurring: ev.recurring, createdBy: ev.user_id,
       }))
       setEvents(mapped)
       onSaved?.()
@@ -93,7 +91,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
           <div>
             <label style={labelStyle}>Titel</label>
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="z.B. Vollmond-Meditation am See" required
+              placeholder="z.B. Holzworkshop fuer Anfaenger" required
               className="w-full px-3 py-2 rounded-lg outline-none" style={inputStyle} />
           </div>
 
@@ -139,7 +137,7 @@ export function EditEventDialog({ event, onClose, onSaved }: EditEventDialogProp
             <label style={labelStyle}>Beschreibung</label>
             <MarkdownToolbar textareaRef={textareaRef} value={description} onChange={setDescription} />
             <textarea ref={textareaRef} value={description} onChange={e => setDescription(e.target.value)}
-              placeholder="Beschreibe deine Absicht."
+              placeholder="Was wird gebaut? Was lernt man?"
               rows={4}
               className="w-full px-3 py-2 rounded-lg outline-none resize-none"
               style={{ ...inputStyle, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.9rem', lineHeight: 1.6 }} />
