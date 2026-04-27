@@ -321,7 +321,7 @@ export default function AdminPanel() {
                             </button>
                             <button
                               onClick={async () => {
-                                if (!confirm(`Nutzer ${u.email} wirklich loeschen? Alle Inhalte (Licht, Lichtungen, Events) werden entfernt.`)) return
+                                if (!confirm(`Nutzer ${u.email} wirklich loeschen? Alle Inhalte (Pin, Werkstaetten, Events) werden entfernt.`)) return
                                 try {
                                   const res = await fetch(`/api/admin/user/${u.id}`, { method: 'DELETE', headers: headers() })
                                   const data = await res.json()

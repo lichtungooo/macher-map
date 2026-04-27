@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents, Polyline } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
+import { createClusterIcon } from './pins'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
 import { EventMarker } from './EventMarker'
@@ -233,15 +234,7 @@ export function PeaceMap({ onMapClick, placingLight, showLights = true, showEven
         spiderfyOnMaxZoom={true}
         showCoverageOnHover={false}
         spiderfyDistanceMultiplier={1.6}
-        iconCreateFunction={(cluster: any) => {
-          const count = cluster.getChildCount()
-          const size = count < 10 ? 36 : count < 50 ? 44 : 52
-          return L.divIcon({
-            html: `<div class="macher-cluster-icon" style="width:${size}px;height:${size}px;">${count}</div>`,
-            className: 'macher-cluster-wrap',
-            iconSize: [size, size],
-          })
-        }}>
+        iconCreateFunction={createClusterIcon}>
         {showLights && lights.map(light => (
           <LightMarker key={`${light.id}-${light.position[0]}-${light.position[1]}`} light={light} onShowProfile={onShowProfile} />
         ))}

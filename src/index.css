@@ -8,19 +8,6 @@
   background: transparent !important;
   border: none !important;
 }
-.macher-cluster-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 45%, #FFF3E0, #FFCC80 45%, #E8751A 100%);
-  color: #1A1A1A;
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 0.82rem;
-  border: 2px solid rgba(255,255,255,0.85);
-  box-shadow: 0 0 12px rgba(232,117,26,0.45), 0 2px 6px rgba(0,0,0,0.15);
-}
 
 @theme {
   --color-gold: #E8751A;

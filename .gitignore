@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Local DB
+data/
+
 # Original Lichtung source (kept locally for reference)
 licht-fuer-frieden/

@@ -1,33 +1,8 @@
 import { Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
 import type { LightPin } from '../../context/AppContext'
+import { createMacherPin } from './pins'
 
-function createMacherIcon() {
-  const svg = `
-    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="mp" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#E8751A" flood-opacity="0.3"/>
-        </filter>
-      </defs>
-      <circle cx="16" cy="16" r="14" fill="#E8751A" filter="url(#mp)" stroke="white" stroke-width="2"/>
-      <!-- Wrench silhouette -->
-      <g transform="translate(9, 8)" fill="white" opacity="0.95">
-        <circle cx="7" cy="4" r="3.5" fill="none" stroke="white" stroke-width="1.8"/>
-        <rect x="6" y="6" width="2" height="8" rx="0.5"/>
-      </g>
-    </svg>
-  `
-  return L.divIcon({
-    html: `<div class="macher-pin-marker">${svg}</div>`,
-    className: '',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -18],
-  })
-}
-
-const macherIcon = createMacherIcon()
+const macherIcon = createMacherPin()
 
 interface LightMarkerProps {
   light: LightPin
