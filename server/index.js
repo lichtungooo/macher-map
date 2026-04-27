@@ -33,6 +33,8 @@ import {
   getGroupsDueForReminder, markReminderSent, getUpcomingEventsForLichtung,
   getAllProjects, getProjectById, createProject, updateProject, deleteProject, setProjectImage,
   getProjectMilestones, createMilestone, updateMilestone, deleteMilestone, getProjectOwner,
+  getSkillCategories, getUserSkills, getTotalXp, getTotalLevel, awardXp,
+  getUserBadges, getAllBadges, checkAndAwardBadges, getXpLog, getLeaderboard,
 } from './db.js'
 import { sendVerifyEmail, sendResetEmail, sendNewsletter } from './mail.js'
 import { moonPhasesBetween } from './moonphases.js'
@@ -476,6 +478,12 @@ app.post('/api/events/:id/join', auth, (req, res) => {
     }
   }
   joinEvent(req.params.id, req.userId)
+  const evt = getEventById(req.params.id)
+  if (evt) {
+    const skillMap = { workshop: 'holz', kurs: 'elektro', bau: 'bau', wettbewerb: 'metall', treffen: 'holz', offen: 'digital' }
+    const cat = skillMap[evt.type] || 'bau'
+    awardXp(req.userId, cat, 25, 'event_join', req.params.id)
+  }
   res.json({ ok: true, count: getEventParticipantCount(req.params.id) })
 })
 
@@ -593,7 +601,10 @@ app.get('/api/lichtungen/:id/cal.ics', (req, res) => {
 })
 
 app.post('/api/lichtungen', auth, (req, res) => {
-  res.json(createLichtung(req.userId, req.body))
+  const l = createLichtung(req.userId, req.body)
+  awardXp(req.userId, 'bau', 100, 'werkstatt_create', l.id)
+  checkAndAwardBadges(req.userId)
+  res.json(l)
 })
 
 app.put('/api/lichtungen/:id', auth, (req, res) => {
@@ -716,6 +727,10 @@ app.get('/api/connections/pending/outgoing', auth, (req, res) => {
 app.post('/api/connections/pending/:id/confirm', auth, (req, res) => {
   const result = confirmPendingConnection(req.params.id, req.userId)
   if (!result) return res.status(404).json({ error: 'Anfrage nicht gefunden.' })
+  awardXp(req.userId, 'bau', 15, 'connection', req.params.id)
+  awardXp(result.initiator_id, 'bau', 15, 'connection', req.params.id)
+  checkAndAwardBadges(req.userId)
+  checkAndAwardBadges(result.initiator_id)
   // Telegram an den Initiator: Verbindung bestaetigt
   const toNotify = getUsersToNotifyForConnection(result.initiator_id)
   const me = findUserById(req.userId)
@@ -1265,6 +1280,8 @@ app.post('/api/projects', auth, (req, res) => {
   const { title, description, lat, lng, lichtung_id, tags, goal_amount, opencollective_url, video_url } = req.body
   if (!title || lat == null || lng == null) return res.status(400).json({ error: 'Titel und Position noetig' })
   const p = createProject(req.userId, { title, description, lat, lng, lichtung_id, tags, goal_amount, opencollective_url, video_url })
+  awardXp(req.userId, 'bau', 75, 'project_create', p.id)
+  checkAndAwardBadges(req.userId)
   res.json(p)
 })
 
@@ -1330,6 +1347,49 @@ app.delete('/api/projects/:id/milestones/:mid', auth, (req, res) => {
   res.json({ ok: true })
 })
 
+// ─── Gamification: Skills, XP, Badges ───
+
+app.get('/api/skills/categories', (req, res) => {
+  res.json(getSkillCategories())
+})
+
+app.get('/api/skills/me', auth, (req, res) => {
+  const skills = getUserSkills(req.userId)
+  const totalXp = getTotalXp(req.userId)
+  const totalLevel = getTotalLevel(req.userId)
+  const badges = getUserBadges(req.userId)
+  res.json({ skills, totalXp, totalLevel, badges })
+})
+
+app.get('/api/skills/user/:id', (req, res) => {
+  const skills = getUserSkills(req.params.id)
+  const totalXp = getTotalXp(req.params.id)
+  const totalLevel = getTotalLevel(req.params.id)
+  const badges = getUserBadges(req.params.id)
+  res.json({ skills, totalXp, totalLevel, badges })
+})
+
+app.get('/api/skills/xp-log', auth, (req, res) => {
+  const limit = parseInt(req.query.limit) || 20
+  res.json(getXpLog(req.userId, limit))
+})
+
+app.get('/api/badges', (req, res) => {
+  res.json(getAllBadges())
+})
+
+app.get('/api/leaderboard', (req, res) => {
+  const limit = parseInt(req.query.limit) || 20
+  res.json(getLeaderboard(limit))
+})
+
+app.post('/api/skills/award', adminAuth, (req, res) => {
+  const { userId, categoryId, amount, sourceType, sourceId } = req.body
+  if (!userId || !categoryId || !amount) return res.status(400).json({ error: 'userId, categoryId, amount noetig' })
+  const result = awardXp(userId, categoryId, amount, sourceType || 'admin', sourceId)
+  res.json(result)
+})
+
 app.listen(PORT, () => {
-  console.log(`Lichtung API laeuft auf Port ${PORT}`)
+  console.log(`Macher-Map API laeuft auf Port ${PORT}`)
 })

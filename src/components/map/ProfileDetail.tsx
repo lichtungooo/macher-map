@@ -1,5 +1,6 @@
 import { X, MessageCircle } from 'lucide-react'
 import type { LightPin } from '../../context/AppContext'
+import { SkillTree } from '../gamification/SkillTree'
 
 function renderMd(t: string) {
   return t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br/>')
@@ -66,6 +67,11 @@ export function ProfileDetail({ light, onClose }: ProfileDetailProps) {
               dangerouslySetInnerHTML={{ __html: renderMd(data.bio) }} />
           </div>
         )}
+
+        {/* Skill-Tree */}
+        <div className="mt-4">
+          <SkillTree userId={data.user_id || data.id} />
+        </div>
       </div>
     </div>
   )

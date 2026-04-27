@@ -264,7 +264,7 @@ db.exec(`
 `)
 
 // Vorbefuellte Tags
-const defaultTags = ['meditation', 'gebet', 'stille', 'begegnung', 'tanz', 'fest', 'musik', 'natur', 'yoga', 'feuer', 'gesang', 'wald', 'wasser', 'vollmond', 'neumond', 'frieden', 'liebe', 'heilung', 'gemeinschaft', 'kunst']
+const defaultTags = ['workshop', 'kurs', 'bau', 'wettbewerb', 'treffen', 'offen', 'holz', 'metall', 'elektronik', 'schweissen', 'cnc', '3ddruck', 'laser', 'naehen', 'fahrrad', 'reparatur', 'schmieden', 'keramik', 'siebdruck', 'upcycling']
 for (const tag of defaultTags) {
   try { db.prepare('INSERT OR IGNORE INTO tags (id, name) VALUES (?, ?)').run(randomUUID(), tag) } catch {}
 }
@@ -646,7 +646,7 @@ export function createEvent(userId, { title, description, lat, lng, start_time, 
   db.prepare(`
     INSERT INTO events (id, user_id, title, description, lat, lng, start_time, end_time, type, recurring, is_global, image_path, tags, wave_mode, docked_to_event_id, lichtung_id, max_participants)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'meditation', recurring || null, is_global ? 1 : 0, image_path || null, tags || '', wave_mode || null, docked_to_event_id || null, lichtung_id || null, max_participants || null)
+  `).run(id, userId, title, description || '', lat, lng, start_time, end_time || null, type || 'workshop', recurring || null, is_global ? 1 : 0, image_path || null, tags || '', wave_mode || null, docked_to_event_id || null, lichtung_id || null, max_participants || null)
   return { id }
 }
 
@@ -1220,5 +1220,217 @@ export function getProjectOwner(projectId) {
   const row = db.prepare('SELECT user_id FROM projects WHERE id = ?').get(projectId)
   return row?.user_id || null
 }
+
+// ─── Gamification: Skill-Tree, XP, Badges ───
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS skill_categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS user_skills (
+    user_id TEXT NOT NULL REFERENCES users(id),
+    category_id TEXT NOT NULL REFERENCES skill_categories(id),
+    xp INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, category_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS badges (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    icon TEXT NOT NULL,
+    category_id TEXT,
+    requirement_type TEXT NOT NULL,
+    requirement_value INTEGER NOT NULL,
+    color TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS user_badges (
+    user_id TEXT NOT NULL REFERENCES users(id),
+    badge_id TEXT NOT NULL REFERENCES badges(id),
+    earned_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, badge_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS xp_log (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    category_id TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    source_type TEXT NOT NULL,
+    source_id TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`)
+
+const SKILL_CATS = [
+  { id: 'holz', name: 'Holz', color: '#C4883C', icon: 'axe', sort: 1 },
+  { id: 'metall', name: 'Metall', color: '#7A8B99', icon: 'anvil', sort: 2 },
+  { id: 'elektro', name: 'Elektro', color: '#2D7DD2', icon: 'zap', sort: 3 },
+  { id: 'digital', name: 'Digital', color: '#9B59B6', icon: 'cpu', sort: 4 },
+  { id: 'textil', name: 'Textil', color: '#C07090', icon: 'scissors', sort: 5 },
+  { id: 'bau', name: 'Bau', color: '#45B764', icon: 'hammer', sort: 6 },
+]
+
+for (const cat of SKILL_CATS) {
+  try { db.prepare('INSERT OR IGNORE INTO skill_categories (id, name, color, icon, sort_order) VALUES (?, ?, ?, ?, ?)').run(cat.id, cat.name, cat.color, cat.icon, cat.sort) } catch {}
+}
+
+const DEFAULT_BADGES = [
+  { id: 'erster-funke', name: 'Erster Funke', description: 'Erstes Event besucht', icon: 'flame', category_id: null, req_type: 'events_joined', req_value: 1, color: '#E8751A' },
+  { id: 'macher', name: 'Macher', description: '5 Events besucht', icon: 'hammer', category_id: null, req_type: 'events_joined', req_value: 5, color: '#D4A020' },
+  { id: 'holzwurm', name: 'Holzwurm', description: 'Holz Level 3', icon: 'axe', category_id: 'holz', req_type: 'skill_level', req_value: 3, color: '#C4883C' },
+  { id: 'schweisser', name: 'Schweisserkoenig', description: 'Metall Level 5', icon: 'anvil', category_id: 'metall', req_type: 'skill_level', req_value: 5, color: '#7A8B99' },
+  { id: 'stromberg', name: 'Stromberg', description: 'Elektro Level 3', icon: 'zap', category_id: 'elektro', req_type: 'skill_level', req_value: 3, color: '#2D7DD2' },
+  { id: 'werkstatt-gruender', name: 'Werkstatt-Gruender', description: 'Erste Werkstatt erstellt', icon: 'home', category_id: null, req_type: 'werkstaetten_created', req_value: 1, color: '#E8751A' },
+  { id: 'projektleiter', name: 'Projektleiter', description: 'Erstes Projekt erstellt', icon: 'target', category_id: null, req_type: 'projects_created', req_value: 1, color: '#45B764' },
+  { id: 'teamplayer', name: 'Teamplayer', description: '5 Verbindungen', icon: 'users', category_id: null, req_type: 'connections', req_value: 5, color: '#9B59B6' },
+  { id: 'meister', name: 'Meister', description: 'Einen Skill auf Level 10', icon: 'crown', category_id: null, req_type: 'any_skill_level', req_value: 10, color: '#D4A020' },
+  { id: 'allrounder', name: 'Allrounder', description: 'Level 2 in 3 Skills', icon: 'star', category_id: null, req_type: 'skills_at_level', req_value: 3, color: '#E8751A' },
+]
+
+for (const b of DEFAULT_BADGES) {
+  try { db.prepare('INSERT OR IGNORE INTO badges (id, name, description, icon, category_id, requirement_type, requirement_value, color, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)').run(b.id, b.name, b.description, b.icon, b.category_id, b.req_type, b.req_value, b.color) } catch {}
+}
+
+function xpToLevel(xp) {
+  return Math.floor(Math.sqrt(xp / 50))
+}
+
+function levelToXp(level) {
+  return level * level * 50
+}
+
+export function getSkillCategories() {
+  return db.prepare('SELECT * FROM skill_categories ORDER BY sort_order').all()
+}
+
+export function getUserSkills(userId) {
+  const cats = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order').all()
+  const skills = db.prepare('SELECT * FROM user_skills WHERE user_id = ?').all(userId)
+  const skillMap = Object.fromEntries(skills.map(s => [s.category_id, s.xp]))
+  return cats.map(cat => {
+    const xp = skillMap[cat.id] || 0
+    const level = xpToLevel(xp)
+    const nextLevelXp = levelToXp(level + 1)
+    return { ...cat, xp, level, nextLevelXp, progress: nextLevelXp > 0 ? (xp - levelToXp(level)) / (nextLevelXp - levelToXp(level)) : 0 }
+  })
+}
+
+export function getTotalXp(userId) {
+  const row = db.prepare('SELECT COALESCE(SUM(xp), 0) as total FROM user_skills WHERE user_id = ?').get(userId)
+  return row.total
+}
+
+export function getTotalLevel(userId) {
+  return xpToLevel(getTotalXp(userId))
+}
+
+export function awardXp(userId, categoryId, amount, sourceType, sourceId = null) {
+  db.prepare('INSERT OR IGNORE INTO user_skills (user_id, category_id, xp) VALUES (?, ?, 0)').run(userId, categoryId)
+  db.prepare('UPDATE user_skills SET xp = xp + ? WHERE user_id = ? AND category_id = ?').run(amount, userId, categoryId)
+  const logId = randomUUID()
+  db.prepare('INSERT INTO xp_log (id, user_id, category_id, amount, source_type, source_id) VALUES (?, ?, ?, ?, ?, ?)').run(logId, userId, categoryId, amount, sourceType, sourceId)
+  checkAndAwardBadges(userId)
+  return { category_id: categoryId, amount }
+}
+
+export function getUserBadges(userId) {
+  return db.prepare(`
+    SELECT b.*, ub.earned_at
+    FROM user_badges ub JOIN badges b ON ub.badge_id = b.id
+    WHERE ub.user_id = ?
+    ORDER BY ub.earned_at DESC
+  `).all(userId)
+}
+
+export function getAllBadges() {
+  return db.prepare('SELECT * FROM badges ORDER BY sort_order, name').all()
+}
+
+export function checkAndAwardBadges(userId) {
+  const badges = db.prepare('SELECT * FROM badges').all()
+  const earned = new Set(db.prepare('SELECT badge_id FROM user_badges WHERE user_id = ?').all(userId).map(r => r.badge_id))
+  const skills = getUserSkills(userId)
+  const newBadges = []
+
+  for (const badge of badges) {
+    if (earned.has(badge.id)) continue
+    let qualifies = false
+
+    switch (badge.requirement_type) {
+      case 'skill_level': {
+        const skill = skills.find(s => s.id === badge.category_id)
+        if (skill && skill.level >= badge.requirement_value) qualifies = true
+        break
+      }
+      case 'any_skill_level': {
+        if (skills.some(s => s.level >= badge.requirement_value)) qualifies = true
+        break
+      }
+      case 'skills_at_level': {
+        const count = skills.filter(s => s.level >= 2).length
+        if (count >= badge.requirement_value) qualifies = true
+        break
+      }
+      case 'events_joined': {
+        const count = db.prepare("SELECT COUNT(*) as c FROM event_participants WHERE user_id = ? AND status = 'joined'").get(userId).c
+        if (count >= badge.requirement_value) qualifies = true
+        break
+      }
+      case 'werkstaetten_created': {
+        const count = db.prepare('SELECT COUNT(*) as c FROM lichtungen WHERE user_id = ?').get(userId).c
+        if (count >= badge.requirement_value) qualifies = true
+        break
+      }
+      case 'projects_created': {
+        const count = db.prepare('SELECT COUNT(*) as c FROM projects WHERE user_id = ?').get(userId).c
+        if (count >= badge.requirement_value) qualifies = true
+        break
+      }
+      case 'connections': {
+        const count = db.prepare('SELECT COUNT(*) as c FROM connections WHERE user_a = ? OR user_b = ?').get(userId, userId).c
+        if (count >= badge.requirement_value) qualifies = true
+        break
+      }
+    }
+
+    if (qualifies) {
+      db.prepare('INSERT OR IGNORE INTO user_badges (user_id, badge_id) VALUES (?, ?)').run(userId, badge.id)
+      newBadges.push(badge)
+    }
+  }
+  return newBadges
+}
+
+export function getXpLog(userId, limit = 20) {
+  return db.prepare(`
+    SELECT xl.*, sc.name as category_name, sc.color as category_color
+    FROM xp_log xl JOIN skill_categories sc ON xl.category_id = sc.id
+    WHERE xl.user_id = ?
+    ORDER BY xl.created_at DESC LIMIT ?
+  `).all(userId, limit)
+}
+
+export function getLeaderboard(limit = 20) {
+  return db.prepare(`
+    SELECT u.id, u.name, u.image_path,
+           COALESCE(SUM(us.xp), 0) as total_xp,
+           (SELECT COUNT(*) FROM user_badges WHERE user_id = u.id) as badge_count
+    FROM users u LEFT JOIN user_skills us ON u.id = us.user_id
+    GROUP BY u.id
+    HAVING total_xp > 0
+    ORDER BY total_xp DESC
+    LIMIT ?
+  `).all(limit)
+}
+
+export { xpToLevel, levelToXp }
 
 export default db

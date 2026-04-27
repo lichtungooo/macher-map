@@ -334,4 +334,66 @@ export async function searchTags(query: string) {
   return request(`/tags?q=${encodeURIComponent(query)}`)
 }
 
+// ─── Gamification ───
+
+export interface SkillCategory {
+  id: string
+  name: string
+  color: string
+  icon: string
+  sort_order: number
+}
+
+export interface UserSkill {
+  category_id: string
+  category_name: string
+  color: string
+  icon: string
+  xp: number
+  level: number
+}
+
+export interface Badge {
+  id: string
+  name: string
+  description: string
+  icon: string
+  color: string
+  category_id: string | null
+  requirement_type: string
+  requirement_value: number
+  earned_at?: string
+}
+
+export interface LeaderboardEntry {
+  user_id: string
+  name: string
+  total_xp: number
+  level: number
+}
+
+export async function getSkillCategories(): Promise<SkillCategory[]> {
+  return request('/skills/categories')
+}
+
+export async function getMySkills(): Promise<{ skills: UserSkill[]; badges: Badge[]; total_xp: number; level: number }> {
+  return request('/skills/me')
+}
+
+export async function getUserSkills(userId: string): Promise<{ skills: UserSkill[]; badges: Badge[]; total_xp: number; level: number }> {
+  return request(`/skills/user/${userId}`)
+}
+
+export async function getXpLog(): Promise<{ id: string; category_id: string; amount: number; source_type: string; created_at: string }[]> {
+  return request('/skills/xp-log')
+}
+
+export async function getAllBadges(): Promise<Badge[]> {
+  return request('/badges')
+}
+
+export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
+  return request('/leaderboard')
+}
+
 export { getToken, setToken, clearToken }

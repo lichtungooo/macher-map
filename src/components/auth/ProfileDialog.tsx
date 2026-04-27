@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map, User, ShieldCheck } from 'lucide-react'
+import { X, Camera, Settings, LogOut, KeyRound, Check, CalendarDays, Users, MessageCircle, Map, User, ShieldCheck, Flame } from 'lucide-react'
 import { MyEvents } from '../events/MyEvents'
 import { MyConnections } from './MyConnections'
+import { SkillTree } from '../gamification/SkillTree'
+import { BadgeGallery } from '../gamification/BadgeGallery'
 import { useApp } from '../../context/AppContext'
 import { MarkdownToolbar } from './MarkdownToolbar'
 import * as api from '../../api/client'
@@ -18,7 +20,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
   const [bio, setBio] = useState('')
   const [imagePreview, setImagePreview] = useState<string | undefined>(user?.imageUrl)
   const [showPreview, setShowPreview] = useState(false)
-  const [view, setView] = useState<'profile' | 'events' | 'connections' | 'settings'>('profile')
+  const [view, setView] = useState<'profile' | 'events' | 'connections' | 'skills' | 'settings'>('profile')
   const [telegram, setTelegram] = useState('')
   const [pwMsg, setPwMsg] = useState('')
   const [autoLight, setAutoLightState] = useState(() => localStorage.getItem('macher-auto-pin') === '1')
@@ -98,6 +100,7 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
                 ['profile', 'Profil', User],
                 ['events', 'Termine', CalendarDays],
                 ['connections', 'Netz', Users],
+                ['skills', 'Skills', Flame],
                 ['settings', 'Einstellungen', Settings],
               ] as [string, string, any][]).map(([key, label, Icon]) => (
                 <div key={key} className="relative group">
@@ -123,6 +126,11 @@ export function ProfileDialog({ onClose, onShowChainOnMap }: ProfileDialogProps)
           <MyEvents />
         ) : view === 'connections' ? (
           <MyConnections onShowOnMap={onShowChainOnMap ? () => { onShowChainOnMap(); onClose() } : undefined} />
+        ) : view === 'skills' ? (
+          <div className="space-y-4 px-1">
+            <SkillTree />
+            <BadgeGallery />
+          </div>
         ) : view === 'settings' ? (
           /* ─── Settings View ─── */
           <div className="space-y-4">

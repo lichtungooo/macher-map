@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, QrCode, CalendarDays, LocateFixed, Check, X as XIcon, Settings } from 'lucide-react'
+import { User, QrCode, CalendarDays, LocateFixed, Check, X as XIcon, Settings, Trophy } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AppProvider, useApp } from '../context/AppContext'
 import { PeaceMap } from '../components/map/PeaceMap'
@@ -22,6 +22,7 @@ import { InfoPopup } from '../components/map/InfoPopup'
 import { LichtungDetail } from '../components/map/LichtungDetail'
 import { CreateLichtungDialog } from '../components/map/CreateLichtungDialog'
 import { ProfileDetail } from '../components/map/ProfileDetail'
+import { Leaderboard } from '../components/gamification/Leaderboard'
 import * as api from '../api/client'
 
 const BTN_SIZE = 46
@@ -66,6 +67,7 @@ function MapAppInner() {
   const [selectedProfile, setSelectedProfile] = useState<any>(null)
   const [selectedEvent, setSelectedEvent] = useState<any>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [showChain, setShowChain] = useState(false)
   const [chainData, setChainData] = useState<any[]>([])
   const [invitedBy, setInvitedBy] = useState<string | null>(null)
@@ -574,8 +576,17 @@ function MapAppInner() {
         </div>
       )}
 
-      {/* Standort-Pointer — unten links */}
-      <div className="fixed left-4 bottom-6 z-[1000]">
+      {/* Standort + Leaderboard — unten links */}
+      <div className="fixed left-4 bottom-6 z-[1000] flex flex-col gap-2">
+        <MapTooltip label="Top Macher">
+          <button
+            onClick={() => setShowLeaderboard(!showLeaderboard)}
+            className="rounded-full flex items-center justify-center shadow-lg"
+            style={{ width: BTN_SIZE, height: BTN_SIZE, background: showLeaderboard ? '#F5EDD8' : '#fff', border: '1px solid ' + (showLeaderboard ? 'rgba(212,168,67,0.35)' : 'rgba(10,10,10,0.08)'), cursor: 'pointer' }}
+          >
+            <Trophy size={18} style={{ color: showLeaderboard ? '#E8751A' : 'rgba(10,10,10,0.35)' }} />
+          </button>
+        </MapTooltip>
         <MapTooltip label="Standort">
           <button
             onClick={handleLocateMe}
@@ -586,6 +597,22 @@ function MapAppInner() {
           </button>
         </MapTooltip>
       </div>
+
+      {/* Leaderboard Panel */}
+      {showLeaderboard && (
+        <div className="fixed left-4 bottom-24 z-[1100] w-72 rounded-2xl shadow-xl overflow-hidden"
+          style={{ background: '#fff', border: '1px solid rgba(10,10,10,0.06)', maxHeight: 'calc(100vh - 200px)', animation: 'fade-in-up 0.2s ease-out' }}>
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(10,10,10,0.04)' }}>
+            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.95rem', fontWeight: 500, color: '#1A1A1A' }}>Rangliste</span>
+            <button onClick={() => setShowLeaderboard(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(10,10,10,0.3)' }}>
+              <XIcon size={16} />
+            </button>
+          </div>
+          <div className="px-3 py-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+            <Leaderboard />
+          </div>
+        </div>
+      )}
 
       <ActionButton onSetLight={handleSetLight} onCreateEvent={handleCreateEvent} onCreateLichtung={handleCreateLichtung} onCreateProject={handleCreateProject} />
       {tutorialStep && <GuidedTutorial step={tutorialStep} onNext={handleTutorialNext} onClose={closeTutorial} />}
