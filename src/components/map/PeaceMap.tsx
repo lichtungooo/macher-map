@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents, Polyline } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
-import L from 'leaflet'
 import { createClusterIcon } from './pins'
 import { useApp } from '../../context/AppContext'
 import { LightMarker } from './LightMarker'
