@@ -28,3 +28,8 @@ data/
 
 # Original Lichtung source (kept locally for reference)
 licht-fuer-frieden/
+
+# Strategische Dokumente (nicht oeffentlich)
+HORNBACH-*.md
+PARTNER-PITCH.md
+ONE-PAGER.md
