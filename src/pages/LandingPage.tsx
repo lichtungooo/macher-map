@@ -7,7 +7,6 @@ function GitHubIcon({ size = 16 }: { size?: number }) {
     </svg>
   )
 }
-import { Link } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 
 export default function LandingPage() {
@@ -52,17 +51,11 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                <Link
-                  to="/app"
-                  className="px-6 py-3 text-white font-medium rounded-lg transition-colors"
-                  style={{ background: '#E8751A' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#C4620A'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#E8751A'}
-                >
-                  Prototyp ansehen
-                </Link>
-                <a href="#werkzeugkasten" className="px-6 py-3 border border-ink-faint font-medium rounded-lg hover:border-gold hover:text-gold transition-colors">
+                <a href="#werkzeugkasten" className="px-6 py-3 text-white font-medium rounded-lg transition-colors" style={{ background: '#E8751A' }} onMouseEnter={e => e.currentTarget.style.background = '#C4620A'} onMouseLeave={e => e.currentTarget.style.background = '#E8751A'}>
                   Werkzeugkasten entdecken
+                </a>
+                <a href="#bildung" className="px-6 py-3 border border-ink-faint font-medium rounded-lg hover:border-gold hover:text-gold transition-colors">
+                  Bildung und Schulen
                 </a>
               </div>
 
@@ -274,8 +267,8 @@ export default function LandingPage() {
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>Rechtliches</h3>
               <div className="flex flex-col gap-1.5">
-                <Link to="/impressum" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>Impressum</Link>
-                <Link to="/datenschutz" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>Datenschutz</Link>
+                <a href="/impressum" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>Impressum</a>
+                <a href="/datenschutz" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>Datenschutz</a>
               </div>
             </div>
           </div>
