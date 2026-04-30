@@ -9,6 +9,7 @@ import { MapSettingsPanel } from "./MapSettingsPanel"
 import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
 import { QuickCreateForm } from "./QuickCreateForm"
 import { renderPinIcon, renderPinHtml, type PinStyle } from "./pin-styles"
+import { EmptyMapBanner } from "../../demo/EmptyMapBanner"
 
 // ============================================================
 // Default-Pin-Konfiguration pro Item-Typ
@@ -88,13 +89,28 @@ export const TILE_PROVIDERS: Record<NonNullable<MapModuleConfig["tileProvider"]>
   },
 }
 
+/**
+ * Default-Konfig — "alles an" (Demo-First / Subtraction-Design).
+ *
+ * Ein frisch erstellter Space zeigt die Karte mit voller Funktionspalette.
+ * Admins schalten ueber das Inline-Zahnrad ab, was sie nicht brauchen —
+ * statt sich aus einer leeren Karte alles zusammenzukonfigurieren.
+ */
 export const mapDefaultConfig: MapModuleConfig = {
-  pinTypes: ["place", "event"],
+  pinTypes: ["place", "event", "offer", "need", "quest", "profile"],
   tileProvider: "osm-de",
   defaultCenter: [50.0, 10.0],
   defaultZoom: 6,
-  actionButton: { enabled: false, actions: [] },
-  search: { enabled: false },
+  actionButton: {
+    enabled: true,
+    actions: [
+      { id: "place", label: "Werkstatt eintragen", createItemType: "place" },
+      { id: "event", label: "Event anlegen", createItemType: "event" },
+      { id: "quest", label: "Quest setzen", createItemType: "quest" },
+      { id: "offer", label: "Angebot teilen", createItemType: "offer" },
+    ],
+  },
+  search: { enabled: true, placeholder: "Suche... #hashtag @user" },
 }
 
 /**
@@ -367,6 +383,14 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Empty-State: keine Pins → Demo-Banner mit Lade-Knopf (nur fuer Admins) */}
+      {!isPreview && activeGroup && (
+        <EmptyMapBanner
+          visible={markers.length === 0 && !creatingType && !searchQuery}
+          isAdmin={isAdmin}
+        />
       )}
 
       {/* Karten-Suche oben links (konfigurierbar, nicht im Preview) */}
