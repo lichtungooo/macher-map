@@ -33,7 +33,13 @@ import type { Group } from "@real-life-stack/data-interface"
 import { ThemeView } from "../modules/theme/ThemeView"
 import { MembersView } from "../modules/members/MembersView"
 import { DemoSection } from "../demo/DemoSection"
-import { getAllModules } from "../modules/registry"
+import { getAllModules, getModule, getModuleConfig } from "../modules/registry"
+import { useModuleConfig } from "../modules/use-module-config"
+import { MapSettingsPanel } from "../modules/map/MapSettingsPanel"
+import { MapView, DEFAULT_PIN_STYLES, type MapModuleConfig } from "../modules/map/MapView"
+import { CalendarSettingsPanel } from "../modules/calendar/CalendarSettingsPanel"
+import { CalendarView, type CalendarModuleConfig } from "../modules/calendar/CalendarView"
+import { ChevronDown } from "lucide-react"
 
 /**
  * SpaceSettings — Vollbild-Konfigurations-Dialog pro Space.
@@ -482,21 +488,25 @@ function GeneralTab({ group }: { group: Group }) {
 // ============================================================
 
 // ============================================================
-// Tab: Module — An/Aus-Liste + (Phase B2) Sub-Konfig
+// Tab: Module — An/Aus + Sub-Konfig mit Live-Preview
 // ============================================================
 
 const FUNCTION_MODULE_IDS = ["map", "kanban", "calendar", "marketplace"]
 
+const MODULES_WITH_CONFIG = new Set(["map", "calendar"])
+
 function ModulesTab({ group }: { group: Group }) {
   const updateGroup = useUpdateGroup()
+  const { setModuleConfig } = useModuleConfig()
   const [busy, setBusy] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [draft, setDraft] = useState<unknown>(null)
 
   const enabled = useMemo<string[]>(
     () => (group.data?.modules as string[] | undefined) ?? FUNCTION_MODULE_IDS,
     [group.data?.modules]
   )
 
-  // Alle registrierten Module — Funktions-Module zuerst, dann der Rest.
   const sortedModules = useMemo(() => {
     const all = getAllModules()
     const fn = FUNCTION_MODULE_IDS
@@ -520,66 +530,252 @@ function ModulesTab({ group }: { group: Group }) {
     }
   }
 
+  const openConfig = (id: string) => {
+    if (!MODULES_WITH_CONFIG.has(id)) {
+      setSelectedId(id)
+      setDraft(null)
+      return
+    }
+    const mod = getModule(id)
+    if (!mod) return
+    const current = getModuleConfig(group, id, mod.defaultConfig)
+    setSelectedId(id)
+    setDraft(current ?? mod.defaultConfig ?? {})
+  }
+
+  const closeConfig = () => {
+    setSelectedId(null)
+    setDraft(null)
+  }
+
+  const handleSaveConfig = async () => {
+    if (!selectedId || draft === null) return
+    setBusy(true)
+    try {
+      await setModuleConfig(group, selectedId, draft)
+      closeConfig()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="max-w-2xl space-y-4">
-      <div>
+    <div className="space-y-4">
+      <div className="max-w-2xl">
         <h3 className="text-base font-semibold mb-1">Module</h3>
         <p className="text-xs text-muted-foreground">
-          Schalte ein, was dieser Space koennen soll. Aktive Module
-          erscheinen sofort als Tab in der Navbar oben.
+          Schalte ein, was dieser Space koennen soll. Aktive Module erscheinen
+          sofort als Tab in der Navbar oben. Klick auf den Modul-Namen
+          oeffnet die Konfiguration mit Live-Vorschau.
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-2xl">
         {sortedModules.map((mod) => {
           const Icon = mod.icon
           const isOn = enabled.includes(mod.id)
           const isFunction = FUNCTION_MODULE_IDS.includes(mod.id)
+          const hasConfig = MODULES_WITH_CONFIG.has(mod.id)
+          const isSelected = selectedId === mod.id
           return (
             <div
               key={mod.id}
-              className={`flex items-center gap-3 p-3 border rounded-md transition-colors ${
+              className={`border rounded-md transition-colors ${
                 isOn ? "bg-card" : "bg-muted/20"
-              }`}
+              } ${isSelected ? "ring-2 ring-primary" : ""}`}
             >
-              <Icon className={`h-5 w-5 shrink-0 ${isOn ? "text-primary" : "text-muted-foreground"}`} />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium leading-tight">{mod.label}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  {isFunction
-                    ? "Funktions-Modul — erscheint als Tab in der Navbar"
-                    : "Konfigurations-Modul — sichtbar als Tab wenn aktiv"}
-                  {mod.itemTypes && mod.itemTypes.length > 0 && (
-                    <span> · Item-Typen: {mod.itemTypes.join(", ")}</span>
-                  )}
-                </div>
+              <div className="flex items-center gap-3 p-3">
+                <Icon className={`h-5 w-5 shrink-0 ${isOn ? "text-primary" : "text-muted-foreground"}`} />
+                <button
+                  type="button"
+                  onClick={() => (hasConfig && isOn ? (isSelected ? closeConfig() : openConfig(mod.id)) : null)}
+                  disabled={!hasConfig || !isOn}
+                  className={`flex-1 min-w-0 text-left ${
+                    hasConfig && isOn ? "cursor-pointer hover:opacity-80" : "cursor-default"
+                  }`}
+                >
+                  <div className="text-sm font-medium leading-tight flex items-center gap-1.5">
+                    {mod.label}
+                    {hasConfig && isOn && (
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 transition-transform ${
+                          isSelected ? "rotate-180" : ""
+                        } text-muted-foreground`}
+                      />
+                    )}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {isFunction
+                      ? "Funktions-Modul — erscheint als Tab in der Navbar"
+                      : "Konfigurations-Modul — sichtbar als Tab wenn aktiv"}
+                    {hasConfig && isOn && " · Klick fuer Konfiguration"}
+                  </div>
+                </button>
+                <label className="inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={isOn}
+                    onChange={() => toggleModule(mod.id)}
+                    disabled={busy}
+                    className="sr-only peer"
+                  />
+                  <div className={`relative w-10 h-5 rounded-full transition-colors ${
+                    isOn ? "bg-primary" : "bg-muted-foreground/30"
+                  }`}>
+                    <div className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      isOn ? "translate-x-5" : "translate-x-0"
+                    }`} />
+                  </div>
+                </label>
               </div>
-              <label className="inline-flex items-center cursor-pointer shrink-0">
-                <input
-                  type="checkbox"
-                  checked={isOn}
-                  onChange={() => toggleModule(mod.id)}
-                  disabled={busy}
-                  className="sr-only peer"
+
+              {/* Aufgeklappte Konfig + Live-Preview */}
+              {isSelected && hasConfig && draft !== null && (
+                <ModuleConfigSplit
+                  moduleId={mod.id}
+                  draft={draft}
+                  setDraft={setDraft}
+                  onSave={handleSaveConfig}
+                  onCancel={closeConfig}
+                  saving={busy}
                 />
-                <div className={`relative w-10 h-5 rounded-full transition-colors ${
-                  isOn ? "bg-primary" : "bg-muted-foreground/30"
-                }`}>
-                  <div className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                    isOn ? "translate-x-5" : "translate-x-0"
-                  }`} />
-                </div>
-              </label>
+              )}
             </div>
           )
         })}
       </div>
+    </div>
+  )
+}
 
-      <div className="border border-dashed rounded-md p-3 text-[11px] text-muted-foreground/80 leading-relaxed">
-        💡 <strong>Sub-Konfiguration pro Modul</strong> kommt im naechsten Schritt
-        — dann oeffnet ein Klick auf ein aktives Modul einen Editor mit
-        Live-Vorschau der Karte/des Kalenders rechts daneben.
+// ============================================================
+// ModuleConfigSplit — Editor + Live-Preview pro Modul
+// ============================================================
+
+function ModuleConfigSplit({
+  moduleId,
+  draft,
+  setDraft,
+  onSave,
+  onCancel,
+  saving,
+}: {
+  moduleId: string
+  draft: unknown
+  setDraft: (next: unknown) => void
+  onSave: () => void
+  onCancel: () => void
+  saving: boolean
+}) {
+  return (
+    <div className="border-t bg-muted/10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:divide-x">
+        {/* Editor */}
+        <div className="p-3 max-h-[60vh] overflow-y-auto">
+          <div className="text-[10px] uppercase font-semibold text-muted-foreground mb-2 tracking-wider">
+            Konfiguration
+          </div>
+          <ModuleConfigEditor
+            moduleId={moduleId}
+            draft={draft}
+            setDraft={setDraft}
+          />
+        </div>
+
+        {/* Live-Preview */}
+        <div className="p-3 bg-background max-h-[60vh] overflow-hidden flex flex-col">
+          <div className="text-[10px] uppercase font-semibold text-muted-foreground mb-2 tracking-wider shrink-0">
+            Live-Vorschau
+          </div>
+          <div className="flex-1 min-h-0 border rounded-md overflow-hidden">
+            <ModuleConfigPreview moduleId={moduleId} draft={draft} />
+          </div>
+        </div>
       </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2 px-3 py-2 border-t bg-card">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+          Abbrechen
+        </Button>
+        <Button type="button" size="sm" onClick={onSave} disabled={saving}>
+          {saving ? "Speichere..." : "Speichern"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// Modul-spezifische Editor + Preview Adapter
+// ============================================================
+
+function ModuleConfigEditor({
+  moduleId,
+  draft,
+  setDraft,
+}: {
+  moduleId: string
+  draft: unknown
+  setDraft: (next: unknown) => void
+}) {
+  if (moduleId === "map") {
+    const pinTypeOptions = Object.entries(DEFAULT_PIN_STYLES).map(([id, s]) => ({
+      id,
+      label: s.label,
+      defaultColor: s.color,
+    }))
+    return (
+      <MapSettingsPanel
+        config={draft as MapModuleConfig}
+        onChange={(next) => setDraft(next)}
+        pinTypeOptions={pinTypeOptions}
+      />
+    )
+  }
+  if (moduleId === "calendar") {
+    return (
+      <CalendarSettingsPanel
+        config={draft as CalendarModuleConfig}
+        onChange={(next) => setDraft(next)}
+      />
+    )
+  }
+  return (
+    <div className="text-xs text-muted-foreground">
+      Kein Konfigurations-Editor verfuegbar.
+    </div>
+  )
+}
+
+function ModuleConfigPreview({ moduleId, draft }: { moduleId: string; draft: unknown }) {
+  if (moduleId === "map") {
+    return (
+      <MapView
+        spaceId={null}
+        activeGroup={null}
+        allGroups={[]}
+        config={draft as MapModuleConfig}
+        isPreview
+      />
+    )
+  }
+  if (moduleId === "calendar") {
+    return (
+      <div className="h-full overflow-y-auto p-3">
+        <CalendarView
+          spaceId={null}
+          activeGroup={null}
+          allGroups={[]}
+          config={draft as CalendarModuleConfig}
+          isPreview
+        />
+      </div>
+    )
+  }
+  return (
+    <div className="h-full grid place-items-center text-xs text-muted-foreground p-4">
+      Keine Vorschau verfuegbar.
     </div>
   )
 }
