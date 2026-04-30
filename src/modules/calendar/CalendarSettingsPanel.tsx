@@ -1,5 +1,6 @@
 import { Label, Input } from "@real-life-stack/toolkit"
 import type { CalendarModuleConfig, CalendarMode, CalendarView, FirstDayOfWeek, TimeFormat } from "./CalendarView"
+import { CalendarManagerPanel } from "./CalendarManagerPanel"
 
 /**
  * CalendarSettingsPanel — Editor fuer Kalender-Konfig (Phase 1).
@@ -22,8 +23,10 @@ const MODES: Array<{ value: CalendarMode; label: string; description: string }> 
 ]
 
 const VIEWS: Array<{ value: CalendarView; label: string }> = [
-  { value: "month", label: "Monat" },
+  { value: "day", label: "Tag (Stunden-Raster)" },
   { value: "week", label: "Woche" },
+  { value: "month", label: "Monat" },
+  { value: "year", label: "Jahr (12 Mini-Monate)" },
   { value: "agenda", label: "Agenda (Liste)" },
   { value: "events", label: "Event-Liste (mit Bildern)" },
 ]
@@ -226,6 +229,14 @@ export function CalendarSettingsPanel({ config, onChange }: CalendarSettingsPane
             Wird automatisch hinzugefuegt wenn ein Event keine eigenen Erinnerungen hat. 0 = bei Start, 1440 = 1 Tag.
           </p>
         </div>
+      </section>
+
+      {/* Multi-Kalender-Manager */}
+      <section>
+        <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+          Kalender (Privat / Arbeit / Locations)
+        </h4>
+        <CalendarManagerPanel />
       </section>
     </div>
   )

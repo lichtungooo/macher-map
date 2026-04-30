@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react"
-import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket, Search } from "lucide-react"
+import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket, Search, Clock, Grid3x3 } from "lucide-react"
 import {
   useItems,
   useCreateItem,
@@ -34,13 +34,16 @@ import { useReminderScheduler } from "./useReminderScheduler"
 import { ParticipationControls } from "./ParticipationControls"
 import { useMyParticipations } from "./useParticipation"
 import { CalendarFilterBar, applyCalendarFilter, collectHashtags, emptyFilter, type CalendarFilterState } from "./CalendarFilterBar"
+import { DayView } from "./views/DayView"
+import { YearView } from "./views/YearView"
+import { useCalendars } from "./useCalendars"
 
 // ============================================================
 // Types
 // ============================================================
 
 export type CalendarMode = "event-calendar" | "group-calendar" | "mixed"
-export type CalendarView = "month" | "week" | "agenda" | "events"
+export type CalendarView = "day" | "week" | "month" | "year" | "agenda" | "events"
 export type FirstDayOfWeek = "monday" | "sunday"
 export type TimeFormat = "24h" | "12h"
 
@@ -104,6 +107,8 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
   const [editOpen, setEditOpen] = useState(false)
   const [activeView, setActiveView] = useState<CalendarView>(cfg.defaultView)
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
+  const [currentDay, setCurrentDay] = useState(() => new Date())
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear())
   const [creating, setCreating] = useState(false)
   const [editItem, setEditItem] = useState<Item | null>(null)
   const [filter, setFilter] = useState<CalendarFilterState>(emptyFilter)
@@ -126,15 +131,29 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
   // Participation fuer Filter
   const { acceptedEventIds, observingEventIds } = useMyParticipations()
 
+  // Multi-Calendar: nur Events sichtbarer Kalender zeigen
+  const { calendars, visibleCalendarIds, defaultCalendar } = useCalendars()
+
+  const itemsAfterCalendarFilter = useMemo(() => {
+    // Wenn keine Kalender existieren: zeige alles (Backward-Compat)
+    if (calendars.length === 0) return rawItems
+    return rawItems.filter((it) => {
+      const calId = it.data.calendarId as string | undefined
+      // Events ohne calendarId zeigen (legacy / vor Phase 8)
+      if (!calId) return true
+      return visibleCalendarIds.has(calId)
+    })
+  }, [rawItems, calendars.length, visibleCalendarIds])
+
   // Filter anwenden
   const allItems = useMemo(
     () =>
-      applyCalendarFilter(rawItems, filter, {
+      applyCalendarFilter(itemsAfterCalendarFilter, filter, {
         currentUserId: currentUser?.id,
         acceptedEventIds,
         observingEventIds,
       }),
-    [rawItems, filter, currentUser?.id, acceptedEventIds, observingEventIds]
+    [itemsAfterCalendarFilter, filter, currentUser?.id, acceptedEventIds, observingEventIds]
   )
 
   const availableHashtags = useMemo(() => collectHashtags(rawItems), [rawItems])
@@ -157,14 +176,16 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
   const handleCreate = useCallback(
     async (data: Record<string, unknown>) => {
       const itemType = cfg.mode === "group-calendar" ? "appointment" : "event"
+      // Default-Calendar zuweisen wenn nicht explizit gesetzt
+      const calendarId = data.calendarId ?? defaultCalendar?.id
       await createItem({
         type: itemType,
         createdBy: currentUser?.id ?? "anonymous",
-        data,
+        data: { ...data, calendarId },
       })
       setCreating(false)
     },
-    [createItem, currentUser?.id, cfg.mode]
+    [createItem, currentUser?.id, cfg.mode, defaultCalendar?.id]
   )
 
   const handleUpdate = useCallback(
@@ -214,10 +235,22 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
       <div className="flex gap-2 items-center flex-wrap">
         {/* View-Switcher */}
         <div className="inline-flex rounded-md border bg-muted/30 p-0.5">
-          {(["month", "week", "agenda", "events"] as CalendarView[]).map((v) => {
-            const Icon = v === "month" ? CalendarDays : v === "week" ? Layers : v === "agenda" ? List : Layers
+          {(["day", "week", "month", "year", "agenda", "events"] as CalendarView[]).map((v) => {
+            const Icon =
+              v === "day" ? Clock
+              : v === "week" ? Layers
+              : v === "month" ? CalendarDays
+              : v === "year" ? Grid3x3
+              : v === "agenda" ? List
+              : Layers
             const isActive = activeView === v
-            const label = v === "month" ? "Monat" : v === "week" ? "Woche" : v === "agenda" ? "Agenda" : "Events"
+            const label =
+              v === "day" ? "Tag"
+              : v === "week" ? "Woche"
+              : v === "month" ? "Monat"
+              : v === "year" ? "Jahr"
+              : v === "agenda" ? "Agenda"
+              : "Events"
             return (
               <button
                 key={v}
@@ -279,6 +312,16 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
       )}
 
       {/* View-Inhalt */}
+      {activeView === "day" && (
+        <DayView
+          items={allItems}
+          currentDay={currentDay}
+          onDayChange={setCurrentDay}
+          timeFormat={cfg.timeFormat}
+          colors={cfg.colors ?? {}}
+          onItemClick={setEditItem}
+        />
+      )}
       {activeView === "month" && (
         <MonthView
           items={allItems}
@@ -287,6 +330,18 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
           firstDayOfWeek={cfg.firstDayOfWeek}
           colors={cfg.colors ?? {}}
           onItemClick={setEditItem}
+        />
+      )}
+      {activeView === "year" && (
+        <YearView
+          items={allItems}
+          currentYear={currentYear}
+          onYearChange={setCurrentYear}
+          firstDayOfWeek={cfg.firstDayOfWeek}
+          onDaySelect={(d) => {
+            setCurrentMonth(d)
+            setActiveView("month")
+          }}
         />
       )}
       {activeView === "week" && (
@@ -766,6 +821,10 @@ function EventForm({
   onDelete?: () => void
   defaultDuration: number
 }) {
+  const { calendars, defaultCalendar } = useCalendars()
+  const [calendarId, setCalendarId] = useState<string | undefined>(
+    (initialData.calendarId as string | undefined) ?? defaultCalendar?.id
+  )
   const [title, setTitle] = useState(String(initialData.title ?? ""))
   const [start, setStart] = useState(toDateTimeLocal(initialData.start))
   const [end, setEnd] = useState(toDateTimeLocal(initialData.end))
@@ -836,6 +895,7 @@ function EventForm({
         hashtags: hashtags.length > 0 ? hashtags : undefined,
         recurrence,
         reminders: reminders.length > 0 ? reminders : undefined,
+        calendarId,
       })
     } finally {
       setSaving(false)
@@ -850,6 +910,24 @@ function EventForm({
         <Label className="text-xs">Titel</Label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="z.B. Werkstatt-Treffen" />
       </div>
+
+      {/* Kalender-Auswahl (nur wenn mehrere existieren) */}
+      {calendars.length > 1 && (
+        <div>
+          <Label className="text-xs">Kalender</Label>
+          <select
+            value={calendarId ?? ""}
+            onChange={(e) => setCalendarId(e.target.value || undefined)}
+            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            {calendars.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.data.name}{c.data.type === "location" ? " (Location)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Coverbild */}
       <ImageUploadField
