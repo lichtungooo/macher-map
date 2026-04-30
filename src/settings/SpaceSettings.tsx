@@ -117,6 +117,7 @@ export function SpaceSettings({
       <DialogContent
         className="max-w-none w-screen h-screen sm:w-[95vw] sm:h-[92vh] sm:max-w-6xl p-0 gap-0 overflow-hidden"
         onInteractOutside={(e) => e.preventDefault()}
+        showCloseButton={false}
       >
         <div className="flex flex-col h-full">
           {/* Header */}

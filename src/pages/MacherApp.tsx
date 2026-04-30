@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
 import { useNavigate, useParams, Routes, Route } from 'react-router-dom'
-import { Sun, Moon, Plus, Settings as SettingsIcon } from 'lucide-react'
+import { Sun, Moon, Plus } from 'lucide-react'
 import { LocalConnector } from '@real-life-stack/local-connector'
 import { MockConnector } from '@real-life-stack/mock-connector'
 import type { DataInterface, Group } from '@real-life-stack/data-interface'
@@ -64,7 +64,6 @@ import { membersModule } from '../modules/members'
 import { themeModule } from '../modules/theme'
 import { useSpaceTheme } from '../themes/use-space-theme'
 import { SpaceSettings, type SpaceSettingsTab } from '../settings/SpaceSettings'
-import { useIsSpaceAdmin } from '../modules/use-module-config'
 
 registerModule(mapModule)
 registerModule(kanbanModule)
@@ -211,7 +210,6 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
 
   const isOverview = activeWorkspace?.scope === 'overview'
   const activeGroup = isOverview ? null : groups.find((g) => g.id === activeWorkspace?.id) ?? null
-  const isSpaceAdmin = useIsSpaceAdmin(activeGroup?.id ?? null)
 
   // Theme aus group.data.theme aufs Document anwenden — bei Space-Wechsel
   // werden die CSS-Variablen automatisch aktualisiert.
@@ -300,11 +298,11 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
 
   const openEditDialog = useCallback((workspace: Workspace) => {
     if (workspace.scope === 'overview') return
-    const group = groups.find((g) => g.id === workspace.id)
-    if (!group) return
-    setGroupDialogMode({ type: 'edit', group })
-    setGroupDialogOpen(true)
-  }, [groups])
+    // Edit-Aktion am Workspace-Switcher → Vollbild-Space-Settings
+    setSpaceSettingsTab('general')
+    setSpaceSettingsModuleId(null)
+    setSpaceSettingsOpen(true)
+  }, [])
 
   // Master-Profil (name, bio, avatar) aus Antons WoT-Connector
   const [masterProfile, setMasterProfile] = useState<Record<string, unknown>>({})
@@ -392,18 +390,6 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
         </NavbarCenter>
         <NavbarEnd>
           {supportsMessaging && <RelayStatusBadgeWrapper />}
-          {activeGroup && isSpaceAdmin && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openSpaceSettings('general')}
-              className="h-9 w-9"
-              title="Space-Einstellungen"
-              aria-label="Space-Einstellungen"
-            >
-              <SettingsIcon className="h-4 w-4" />
-            </Button>
-          )}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
