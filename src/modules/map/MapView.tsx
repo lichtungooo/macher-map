@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from "react"
 import { Settings, Plus, X, Search as SearchIcon } from "lucide-react"
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet"
 import L from "leaflet"
 import { useItems, useCreateItem, useCurrentUser, Button, AdaptivePanel } from "@real-life-stack/toolkit"
 import type { ModuleViewProps } from "../registry"
@@ -10,6 +10,7 @@ import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
 import { QuickCreateForm } from "./QuickCreateForm"
 import { renderPinIcon, renderPinHtml, type PinStyle } from "./pin-styles"
 import { EmptyMapBanner } from "../../demo/EmptyMapBanner"
+import { MapCalendarWidget } from "./MapCalendarWidget"
 
 // ============================================================
 // Default-Pin-Konfiguration pro Item-Typ
@@ -244,6 +245,9 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
   // Karten-Suche (#hashtag, @user, Freitext)
   const [searchQuery, setSearchQuery] = useState("")
 
+  // FlyTo-Ziel (z.B. wenn ein Event aus dem Kalender-Widget angeklickt wird)
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; itemId?: string } | null>(null)
+
   const pinTypes = cfg.pinTypes ?? mapDefaultConfig.pinTypes!
   const tileUrl = cfg.tileUrl ?? TILE_PROVIDERS[cfg.tileProvider ?? "osm-de"].url
 
@@ -393,6 +397,13 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
         />
       )}
 
+      {/* Kompakt-Kalender: schwebender Auszug der naechsten Termine */}
+      {!isPreview && !creatingType && (
+        <MapCalendarWidget
+          onEventSelect={(ev) => setFlyTarget({ ...ev })}
+        />
+      )}
+
       {/* Karten-Suche oben links (konfigurierbar, nicht im Preview) */}
       {!isPreview && cfg.search?.enabled && !creatingType && (
         <div className="absolute top-3 left-3 z-[1000] flex items-center bg-background/95 backdrop-blur rounded-md shadow-md border">
@@ -468,6 +479,9 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
 
         {/* Map-Click-Handler — nur wenn Quick-Create aktiv */}
         {creatingType && <MapClickHandler onClick={handleMapClick} />}
+
+        {/* FlyTo: wenn jemand im Kalender-Widget einen Termin auswaehlt */}
+        <MapFlyTo target={flyTarget} />
 
         {/* Gepickter Standort als pulsierender Pin */}
         {pickedLocation && (
@@ -604,5 +618,20 @@ function MapClickHandler({ onClick }: { onClick: (latlng: L.LatLng) => void }) {
       onClick(e.latlng)
     },
   })
+  return null
+}
+
+// ============================================================
+// MapFlyTo — fliegt zu einem Ziel und zoomt rein
+// (muss innerhalb von <MapContainer> sitzen wegen useMap)
+// ============================================================
+
+function MapFlyTo({ target }: { target: { lat: number; lng: number } | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (target) {
+      map.flyTo([target.lat, target.lng], 14, { animate: true, duration: 0.8 })
+    }
+  }, [target, map])
   return null
 }
