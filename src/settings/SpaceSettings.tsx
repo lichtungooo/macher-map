@@ -9,6 +9,11 @@ import {
   Sparkles,
   Wrench,
   X,
+  PanelRightOpen,
+  PanelRightClose,
+  Heart,
+  Star,
+  ArrowRight,
   type LucideIcon,
 } from "lucide-react"
 import {
@@ -18,6 +23,10 @@ import {
   Label,
   Input,
   Textarea,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   useUpdateGroup,
 } from "@real-life-stack/toolkit"
 import type { Group } from "@real-life-stack/data-interface"
@@ -82,6 +91,7 @@ export function SpaceSettings({
   initialTab = "general",
 }: SpaceSettingsProps) {
   const [activeTab, setActiveTab] = useState<SpaceSettingsTab>(initialTab)
+  const [previewVisible, setPreviewVisible] = useState(true)
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
@@ -101,6 +111,21 @@ export function SpaceSettings({
                 {activeGroup?.name ?? "Kein Space gewaehlt"}
               </p>
             </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setPreviewVisible((v) => !v)}
+              className="h-8 w-8 hidden md:inline-flex"
+              title={previewVisible ? "Vorschau ausblenden" : "Vorschau einblenden"}
+              aria-label="Vorschau umschalten"
+            >
+              {previewVisible ? (
+                <PanelRightClose className="h-4 w-4" />
+              ) : (
+                <PanelRightOpen className="h-4 w-4" />
+              )}
+            </Button>
             <Button
               type="button"
               variant="ghost"
@@ -150,7 +175,7 @@ export function SpaceSettings({
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-background">
+            <div className="flex-1 bg-background min-w-0">
               {!activeGroup && (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   Bitte einen Space waehlen, um die Einstellungen zu oeffnen.
@@ -158,37 +183,12 @@ export function SpaceSettings({
               )}
 
               {activeGroup && (
-                <div className="p-4 sm:p-6">
-                  {activeTab === "general" && <GeneralTab group={activeGroup} />}
-                  {activeTab === "theme" && (
-                    <EmbeddedView>
-                      <ThemeView
-                        spaceId={spaceId}
-                        activeGroup={activeGroup}
-                        allGroups={[]}
-                        config={undefined}
-                      />
-                    </EmbeddedView>
-                  )}
-                  {activeTab === "modules" && <ModulesPlaceholder />}
-                  {activeTab === "modulschmiede" && <ModulschmiedePlaceholder />}
-                  {activeTab === "members" && (
-                    <EmbeddedView>
-                      <MembersView
-                        spaceId={spaceId}
-                        activeGroup={activeGroup}
-                        allGroups={[]}
-                        config={undefined}
-                      />
-                    </EmbeddedView>
-                  )}
-                  {activeTab === "demo" && (
-                    <div className="max-w-md mx-auto">
-                      <DemoSection />
-                    </div>
-                  )}
-                  {activeTab === "advanced" && <AdvancedPlaceholder />}
-                </div>
+                <SplitContent
+                  previewVisible={previewVisible}
+                  hasPreview={tabHasPreview(activeTab)}
+                  editor={renderEditor(activeTab, spaceId, activeGroup)}
+                  preview={renderPreview(activeTab, activeGroup)}
+                />
               )}
             </div>
           </div>
@@ -199,12 +199,204 @@ export function SpaceSettings({
 }
 
 // ============================================================
+// SplitContent — Layout fuer Editor + optionale Live-Vorschau
+// ============================================================
+
+function SplitContent({
+  previewVisible,
+  hasPreview,
+  editor,
+  preview,
+}: {
+  previewVisible: boolean
+  hasPreview: boolean
+  editor: React.ReactNode
+  preview: React.ReactNode
+}) {
+  const showPreview = previewVisible && hasPreview
+  return (
+    <div className="flex h-full">
+      <div className={`overflow-y-auto ${showPreview ? "flex-1 lg:w-1/2" : "w-full"}`}>
+        <div className="p-4 sm:p-6">{editor}</div>
+      </div>
+      {showPreview && (
+        <div className="hidden lg:flex flex-1 lg:w-1/2 border-l bg-muted/10 overflow-y-auto">
+          <div className="w-full p-4 sm:p-6">
+            <div className="text-[10px] uppercase font-semibold text-muted-foreground mb-3 tracking-wider">
+              Live-Vorschau
+            </div>
+            {preview}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
 // EmbeddedView — Wrapper damit eingebettete Modul-Views
 // nicht ihren eigenen Page-Container nochmal mitbringen
 // ============================================================
 
 function EmbeddedView({ children }: { children: React.ReactNode }) {
   return <div className="-m-4 sm:-m-6">{children}</div>
+}
+
+// ============================================================
+// Tab-Renderer
+// ============================================================
+
+function tabHasPreview(tab: SpaceSettingsTab): boolean {
+  // Nur Tabs mit sinnvoller Live-Vorschau melden true. Phase B (Module-Tab)
+  // schaltet sein Preview spaeter anhand des aktiven Sub-Moduls ein.
+  return tab === "theme" || tab === "general"
+}
+
+function renderEditor(
+  tab: SpaceSettingsTab,
+  spaceId: string | null,
+  activeGroup: Group
+): React.ReactNode {
+  switch (tab) {
+    case "general":
+      return <GeneralTab group={activeGroup} />
+    case "theme":
+      return (
+        <EmbeddedView>
+          <ThemeView
+            spaceId={spaceId}
+            activeGroup={activeGroup}
+            allGroups={[]}
+            config={undefined}
+          />
+        </EmbeddedView>
+      )
+    case "modules":
+      return <ModulesPlaceholder />
+    case "modulschmiede":
+      return <ModulschmiedePlaceholder />
+    case "members":
+      return (
+        <EmbeddedView>
+          <MembersView
+            spaceId={spaceId}
+            activeGroup={activeGroup}
+            allGroups={[]}
+            config={undefined}
+          />
+        </EmbeddedView>
+      )
+    case "demo":
+      return (
+        <div className="max-w-md mx-auto">
+          <DemoSection />
+        </div>
+      )
+    case "advanced":
+      return <AdvancedPlaceholder />
+  }
+}
+
+function renderPreview(tab: SpaceSettingsTab, activeGroup: Group): React.ReactNode {
+  switch (tab) {
+    case "theme":
+      return <ThemePreview groupName={activeGroup.name} />
+    case "general":
+      return <GeneralPreview groupName={activeGroup.name} description={typeof activeGroup.data?.description === "string" ? activeGroup.data.description : ""} />
+    default:
+      return null
+  }
+}
+
+// ============================================================
+// Vorschauen
+// ============================================================
+
+function ThemePreview({ groupName }: { groupName: string }) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">{groupName}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            So sehen Karten und Buttons in deinem Space aus. Klick auf ein
+            Theme links — die Vorschau wechselt sofort mit.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm">Werkstatt eintragen</Button>
+            <Button size="sm" variant="outline">Mehr erfahren</Button>
+            <Button size="sm" variant="ghost">Abbrechen</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-3">
+          <Heart className="h-4 w-4 text-primary mb-1.5" />
+          <div className="text-xs font-semibold mb-0.5">Akzent-Box</div>
+          <div className="text-[10px] text-muted-foreground">Primary-Farbe</div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 shadow-sm">
+          <Star className="h-4 w-4 text-secondary mb-1.5" />
+          <div className="text-xs font-semibold mb-0.5">Card-Beispiel</div>
+          <div className="text-[10px] text-muted-foreground">Standard-Look</div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border p-3 bg-card">
+        <div className="text-[10px] uppercase font-semibold text-muted-foreground mb-2 tracking-wider">
+          Sample-Liste
+        </div>
+        <ul className="space-y-1.5 text-xs">
+          {["Holzwerkstatt Kreuzberg", "FabLab Schwabing", "Reparatur-Cafe Ehrenfeld"].map((name, i) => (
+            <li
+              key={i}
+              className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 transition-colors"
+            >
+              <span className="h-2 w-2 rounded-full bg-primary" />
+              <span className="flex-1 truncate">{name}</span>
+              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function GeneralPreview({ groupName, description }: { groupName: string; description: string }) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">{groupName || "(ohne Namen)"}</CardTitle>
+          {description && (
+            <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+              {description}
+            </p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <p className="text-[11px] text-muted-foreground">
+            So erscheint dein Space im Workspace-Switcher und in Einladungen.
+            Aenderungen sind erst nach "Speichern" sichtbar.
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="rounded-md border bg-muted/30 px-3 py-2 flex items-center gap-2">
+        <div className="h-7 w-7 rounded-full bg-primary/20 grid place-items-center text-[10px] font-semibold text-primary">
+          {(groupName.trim()[0] ?? "?").toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium truncate">{groupName || "(ohne Namen)"}</div>
+          <div className="text-[10px] text-muted-foreground">Workspace-Switcher</div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ============================================================
