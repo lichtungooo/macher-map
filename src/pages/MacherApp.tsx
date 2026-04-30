@@ -24,7 +24,6 @@ import {
   NavbarStart,
   NavbarCenter,
   NavbarEnd,
-  WorkspaceSwitcher,
   ModuleTabs,
   BottomNav,
   UserMenu,
@@ -64,6 +63,7 @@ import { membersModule } from '../modules/members'
 import { themeModule } from '../modules/theme'
 import { useSpaceTheme } from '../themes/use-space-theme'
 import { SpaceSettings, type SpaceSettingsTab } from '../settings/SpaceSettings'
+import { MacherWorkspaceSwitcher } from '../spaces/MacherWorkspaceSwitcher'
 
 registerModule(mapModule)
 registerModule(kanbanModule)
@@ -367,8 +367,9 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
       <Navbar>
         <NavbarStart>
           {activeWorkspace ? (
-            <WorkspaceSwitcher
+            <MacherWorkspaceSwitcher
               workspaces={workspaces}
+              groups={groups}
               activeWorkspace={activeWorkspace}
               onWorkspaceChange={handleWorkspaceChange}
               onCreateWorkspace={openCreateDialog}
