@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
 import { useNavigate, useParams, Routes, Route } from 'react-router-dom'
-import { Sun, Moon, Plus } from 'lucide-react'
+import { Sun, Moon, Plus, Settings as SettingsIcon } from 'lucide-react'
 import { LocalConnector } from '@real-life-stack/local-connector'
 import { MockConnector } from '@real-life-stack/mock-connector'
 import type { DataInterface, Group } from '@real-life-stack/data-interface'
@@ -63,6 +63,8 @@ import { modulschmiedeModule, useAvailableModules } from '../modules/modulschmie
 import { membersModule } from '../modules/members'
 import { themeModule } from '../modules/theme'
 import { useSpaceTheme } from '../themes/use-space-theme'
+import { SpaceSettings, type SpaceSettingsTab } from '../settings/SpaceSettings'
+import { useIsSpaceAdmin } from '../modules/use-module-config'
 
 registerModule(mapModule)
 registerModule(kanbanModule)
@@ -164,6 +166,8 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
   const [groupDialogMode, setGroupDialogMode] = useState<GroupDialogMode>({ type: 'create' })
   const [isDark, setIsDark] = useState(false)
+  const [spaceSettingsOpen, setSpaceSettingsOpen] = useState(false)
+  const [spaceSettingsTab, setSpaceSettingsTab] = useState<SpaceSettingsTab>('general')
 
   const OVERVIEW_WORKSPACE: Workspace = { id: '__overview__', name: 'Alle Werkstaetten', scope: 'overview' }
   const workspaces: Workspace[] = useMemo(
@@ -193,18 +197,29 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
   }, [urlSpaceId, workspaces])
 
   // Default-Module fuer Overview oder Spaces ohne eigene Konfig
-  const DEFAULT_MODULE_IDS = ['map', 'kanban', 'calendar', 'marketplace', 'modulschmiede', 'members', 'theme']
+  // Funktions-Module — diese erscheinen als Tabs in der Navbar.
+  // Konfigurations-Module (theme, members, modulschmiede) leben jetzt im
+  // Vollbild-Settings unter dem Zahnrad in der Navbar.
+  const DEFAULT_MODULE_IDS = ['map', 'kanban', 'calendar', 'marketplace']
   // Meta-Module die IMMER sichtbar sind (auch wenn ein Space sie nicht in
   // group.data.modules hat). Das sind die Schaufenster-Module der Macher-Map:
   // Marketplace + Kalender zum Probieren, Modulschmiede zum Bauen.
-  const ALWAYS_VISIBLE_MODULES = ['marketplace', 'calendar', 'modulschmiede', 'members', 'theme']
+  // Funktions-Module die immer als Tab sichtbar sein sollen, auch wenn ein
+  // Space sie nicht in group.data.modules hat.
+  const ALWAYS_VISIBLE_MODULES = ['marketplace', 'calendar']
 
   const isOverview = activeWorkspace?.scope === 'overview'
   const activeGroup = isOverview ? null : groups.find((g) => g.id === activeWorkspace?.id) ?? null
+  const isSpaceAdmin = useIsSpaceAdmin(activeGroup?.id ?? null)
 
   // Theme aus group.data.theme aufs Document anwenden — bei Space-Wechsel
   // werden die CSS-Variablen automatisch aktualisiert.
   useSpaceTheme(activeGroup)
+
+  const openSpaceSettings = useCallback((tab: SpaceSettingsTab = 'general') => {
+    setSpaceSettingsTab(tab)
+    setSpaceSettingsOpen(true)
+  }, [])
   const groupModuleIds = useMemo(() => {
     if (isOverview) return DEFAULT_MODULE_IDS
     const groupMods = (activeGroup?.data?.modules as string[] | undefined) ?? DEFAULT_MODULE_IDS
@@ -375,6 +390,18 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
         </NavbarCenter>
         <NavbarEnd>
           {supportsMessaging && <RelayStatusBadgeWrapper />}
+          {activeGroup && isSpaceAdmin && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openSpaceSettings('general')}
+              className="h-9 w-9"
+              title="Space-Einstellungen"
+              aria-label="Space-Einstellungen"
+            >
+              <SettingsIcon className="h-4 w-4" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
@@ -481,6 +508,14 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
       />
 
       <IncomingEventDialogs onCloseVerifyDialog={() => setVerifyDialogOpen(false)} />
+
+      <SpaceSettings
+        open={spaceSettingsOpen}
+        onClose={() => setSpaceSettingsOpen(false)}
+        spaceId={activeGroup?.id ?? null}
+        activeGroup={activeGroup}
+        initialTab={spaceSettingsTab}
+      />
 
       {new URLSearchParams(window.location.search).has('dev') && (
         <div className="fixed bottom-20 left-4 z-50">
