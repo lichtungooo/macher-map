@@ -20,10 +20,19 @@ export default function LandingPage() {
               <Logo size={32} />
               <span className="font-bold text-lg">Macher-Map</span>
             </a>
-            <div className="flex items-center gap-6">
-              <a href="#werkzeugkasten" className="hidden sm:block text-sm font-medium text-ink-soft hover:text-gold transition-colors">Werkzeugkasten</a>
-              <a href="#bildung" className="hidden sm:block text-sm font-medium text-ink-soft hover:text-gold transition-colors">Bildung</a>
-              <a href="https://github.com/lichtungooo/macher-map" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-ink-faint rounded-lg hover:border-gold hover:text-gold transition-colors">
+            <div className="flex items-center gap-3 sm:gap-6">
+              <a href="#werkzeugkasten" className="hidden md:block text-sm font-medium text-ink-soft hover:text-gold transition-colors">Werkzeugkasten</a>
+              <a href="#bildung" className="hidden md:block text-sm font-medium text-ink-soft hover:text-gold transition-colors">Bildung</a>
+              <a
+                href="https://real-life.network/macher"
+                className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors"
+                style={{ background: '#E8751A' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#C4620A'}
+                onMouseLeave={e => e.currentTarget.style.background = '#E8751A'}
+              >
+                Zur Macher-App →
+              </a>
+              <a href="https://github.com/lichtungooo/rln" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-ink-faint rounded-lg hover:border-gold hover:text-gold transition-colors">
                 <GitHubIcon size={16} />
                 <span className="hidden sm:inline">GitHub</span>
               </a>
@@ -51,13 +60,25 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                <a href="#werkzeugkasten" className="px-6 py-3 text-white font-medium rounded-lg transition-colors" style={{ background: '#E8751A' }} onMouseEnter={e => e.currentTarget.style.background = '#C4620A'} onMouseLeave={e => e.currentTarget.style.background = '#E8751A'}>
-                  Werkzeugkasten entdecken
+                <a
+                  href="https://real-life.network/macher"
+                  className="px-8 py-4 text-white font-semibold rounded-lg transition-colors text-lg shadow-lg"
+                  style={{ background: '#E8751A' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#C4620A'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#E8751A'}
+                >
+                  Macher-App oeffnen →
                 </a>
-                <a href="#bildung" className="px-6 py-3 border border-ink-faint font-medium rounded-lg hover:border-gold hover:text-gold transition-colors">
-                  Bildung und Schulen
+                <a href="#werkzeugkasten" className="px-6 py-3 border border-ink-faint font-medium rounded-lg hover:border-gold hover:text-gold transition-colors">
+                  Mehr erfahren
                 </a>
               </div>
+
+              <p className="text-sm text-ink-soft mb-8">
+                Die App lebt im{' '}
+                <a href="https://real-life.network" className="font-medium text-gold hover:underline">Real Life Network</a>
+                {' '}— der offenen Werkzeug-Ebene fuer alle Communities.
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
@@ -229,12 +250,12 @@ export default function LandingPage() {
                 ))}
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="https://github.com/lichtungooo/macher-map" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-lg transition-colors" style={{ background: '#1A1A1A' }}>
+                <a href="https://real-life.network/macher" className="inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold rounded-lg transition-colors" style={{ background: '#E8751A' }} onMouseEnter={e => e.currentTarget.style.background = '#C4620A'} onMouseLeave={e => e.currentTarget.style.background = '#E8751A'}>
+                  Macher-App oeffnen →
+                </a>
+                <a href="https://github.com/lichtungooo/rln" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 border border-ink-faint font-medium rounded-lg hover:border-gold hover:text-gold transition-colors">
                   <GitHubIcon size={18} />
                   GitHub
-                </a>
-                <a href="https://real-life-stack.de/app" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 border border-ink-faint font-medium rounded-lg hover:border-gold hover:text-gold transition-colors">
-                  Real Life Stack Demo
                 </a>
               </div>
             </div>
@@ -261,7 +282,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-1.5">
                 <a href="https://web-of-trust.de" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>Web of Trust</a>
                 <a href="https://real-life-stack.de" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>Real Life Stack</a>
-                <a href="https://github.com/lichtungooo/macher-map" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>GitHub</a>
+                <a href="https://github.com/lichtungooo/rln" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>GitHub</a>
               </div>
             </div>
             <div>

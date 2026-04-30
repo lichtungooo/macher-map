@@ -17,30 +17,7 @@ jobs:
       packages: write
 
     steps:
-      # Macher-Map (dieses Repo) — checken in Subdir damit Sibling-Repos daneben passen
-      - name: Checkout macher-map
-        uses: actions/checkout@v4
-        with:
-          path: macher-map
-
-      # Real-Life-Stack: lichtungooo-Fork (Timos eigener Stand). Antons
-      # real-life-org/master hat einen mid-flight Refactor (@real-life/wot-core)
-      # der noch nicht mit web-of-trust synchronisiert ist. Spaeter mit Anton
-      # abstimmen und ggf. wieder auf real-life-org/master umstellen.
-      - name: Checkout real-life-stack (Timo-Fork)
-        uses: actions/checkout@v4
-        with:
-          repository: lichtungooo/real-life-stack
-          ref: master
-          path: real-life-stack
-
-      # Web-of-Trust (Antons Identitaets-Stack) — main-HEAD ist stabil
-      - name: Checkout web-of-trust
-        uses: actions/checkout@v4
-        with:
-          repository: antontranelis/web-of-trust
-          ref: main
-          path: web-of-trust
+      - uses: actions/checkout@v4
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -52,8 +29,6 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
-          # Build-Context = Parent-Verzeichnis mit allen drei Repos
           context: .
-          file: ./macher-map/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

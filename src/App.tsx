@@ -1,22 +1,22 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
 import LandingPage from './pages/LandingPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ImpressumPage from './pages/ImpressumPage'
 
-const MacherApp = lazy(() => import('./pages/MacherApp'))
-
+/**
+ * macher-map.org — reduzierte Landing-Seite.
+ *
+ * Die App selbst lebt jetzt unter https://real-life.network/macher
+ * Diese Domain zeigt nur noch die Macher-DNA + Verweise zur App.
+ */
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-ink-soft">Laden...</div>}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/app/*" element={<MacherApp />} />
-          <Route path="/datenschutz" element={<PrivacyPage />} />
-          <Route path="/impressum" element={<ImpressumPage />} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/datenschutz" element={<PrivacyPage />} />
+        <Route path="/impressum" element={<ImpressumPage />} />
+      </Routes>
     </BrowserRouter>
   )
 }

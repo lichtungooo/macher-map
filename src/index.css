@@ -1,18 +1,4 @@
 @import "tailwindcss";
-@import "@real-life-stack/toolkit/styles/globals.css";
-@import "leaflet/dist/leaflet.css";
-
-/* Tailwind v4: scan toolkit sources so Toolkit-Komponenten ihre CSS-Klassen
-   bekommen (Dialog/Card/Border etc. — sonst rendern Dialoge transparent). */
-@source "../../real-life-stack/packages/toolkit/src/**/*.tsx";
-
-@custom-variant dark (&:is(.dark *));
-
-/* Cluster-Icon */
-.macher-cluster-wrap {
-  background: transparent !important;
-  border: none !important;
-}
 
 @theme {
   --color-gold: #E8751A;
