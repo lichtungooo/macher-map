@@ -34,7 +34,17 @@ import { ThemeView } from "../modules/theme/ThemeView"
 import { MembersView } from "../modules/members/MembersView"
 import { ModulschmiedeView } from "../modules/modulschmiede/ModulschmiedeView"
 import { DemoSection } from "../demo/DemoSection"
+import { TagInput } from "../modules/profile/TagInput"
 import { getAllModules, getModule, getModuleConfig } from "../modules/registry"
+import {
+  generateSlug,
+  isValidSlug,
+  isSlugFree,
+  canBeParent,
+  collectAllHashtags,
+  getSpaceMeta,
+} from "../spaces/space-data"
+import { useGroups } from "@real-life-stack/toolkit"
 import { useModuleConfig } from "../modules/use-module-config"
 import { MapSettingsPanel } from "../modules/map/MapSettingsPanel"
 import { MapView, DEFAULT_PIN_STYLES, type MapModuleConfig } from "../modules/map/MapView"
@@ -332,7 +342,7 @@ function renderPreview(tab: SpaceSettingsTab, activeGroup: Group): React.ReactNo
     case "theme":
       return <ThemePreview groupName={activeGroup.name} />
     case "general":
-      return <GeneralPreview groupName={activeGroup.name} description={typeof activeGroup.data?.description === "string" ? activeGroup.data.description : ""} />
+      return <GeneralPreview group={activeGroup} />
     default:
       return null
   }
@@ -396,33 +406,67 @@ function ThemePreview({ groupName }: { groupName: string }) {
   )
 }
 
-function GeneralPreview({ groupName, description }: { groupName: string; description: string }) {
+function GeneralPreview({ group }: { group: Group }) {
+  const { data: allGroups } = useGroups()
+  const meta = getSpaceMeta(group)
+  const parent = meta.parentSpaceId
+    ? allGroups.find((g) => g.id === meta.parentSpaceId)
+    : null
+  const slugUrl = meta.slug ? `/spaces/${meta.slug}` : `/spaces/${group.id.slice(0, 8)}…`
+
   return (
     <div className="space-y-4">
+      {/* URL-Pfad-Vorschau */}
+      <div className="rounded-md border bg-muted/40 px-3 py-2 font-mono text-xs">
+        <span className="text-muted-foreground">real-life.network</span>
+        <span className="text-primary font-semibold">{slugUrl}</span>
+        <span className="text-muted-foreground">/karte</span>
+      </div>
+
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{groupName || "(ohne Namen)"}</CardTitle>
-          {description && (
+          {parent && (
+            <div className="text-[10px] text-muted-foreground mb-1">
+              Sub-Space von <span className="text-foreground font-medium">{parent.name}</span>
+            </div>
+          )}
+          <CardTitle className="text-base">{group.name || "(ohne Namen)"}</CardTitle>
+          {meta.description && (
             <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-              {description}
+              {meta.description}
             </p>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
+          {meta.hashtags && meta.hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {meta.hashtags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="text-[11px] text-muted-foreground">
-            So erscheint dein Space im Workspace-Switcher und in Einladungen.
-            Aenderungen sind erst nach "Speichern" sichtbar.
+            So erscheint dein Space im Workspace-Switcher, in Einladungen
+            und im Spaces-Browser.
           </p>
         </CardContent>
       </Card>
 
+      {/* Workspace-Switcher-Darstellung */}
       <div className="rounded-md border bg-muted/30 px-3 py-2 flex items-center gap-2">
         <div className="h-7 w-7 rounded-full bg-primary/20 grid place-items-center text-[10px] font-semibold text-primary">
-          {(groupName.trim()[0] ?? "?").toUpperCase()}
+          {(group.name.trim()[0] ?? "?").toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-medium truncate">{groupName || "(ohne Namen)"}</div>
-          <div className="text-[10px] text-muted-foreground">Workspace-Switcher</div>
+          <div className="text-xs font-medium truncate">{group.name || "(ohne Namen)"}</div>
+          <div className="text-[10px] text-muted-foreground">
+            {parent ? `↳ unter ${parent.name}` : "Root-Space"}
+          </div>
         </div>
       </div>
     </div>
@@ -435,40 +479,93 @@ function GeneralPreview({ groupName, description }: { groupName: string; descrip
 
 function GeneralTab({ group }: { group: Group }) {
   const updateGroup = useUpdateGroup()
+  const { data: allGroups } = useGroups()
+  const meta = getSpaceMeta(group)
+
   const [name, setName] = useState(group.name)
-  const [description, setDescription] = useState(
-    typeof group.data?.description === "string" ? group.data.description : ""
-  )
+  const [description, setDescription] = useState(meta.description ?? "")
+  const [slug, setSlug] = useState(meta.slug ?? "")
+  const [hashtags, setHashtags] = useState<string[]>(meta.hashtags ?? [])
+  const [parentSpaceId, setParentSpaceId] = useState<string>(meta.parentSpaceId ?? "")
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // Slug-Validierung
+  const slugError = useMemo(() => {
+    if (!slug) return null
+    if (!isValidSlug(slug)) {
+      return "Slug nur Kleinbuchstaben, Zahlen, Bindestriche."
+    }
+    if (!isSlugFree(allGroups, slug, group.id)) {
+      return "Dieser Slug wird schon von einem anderen Space genutzt."
+    }
+    return null
+  }, [slug, allGroups, group.id])
+
+  // Parent-Optionen — alle Spaces ausser self und seine Nachfahren
+  const parentOptions = useMemo(() => {
+    return allGroups.filter(
+      (g) => g.id !== group.id && canBeParent(allGroups, group.id, g.id)
+    )
+  }, [allGroups, group.id])
+
+  // Hashtag-Vorschlaege aus allen Spaces
+  const hashtagSuggestions = useMemo(() => collectAllHashtags(allGroups), [allGroups])
+
+  const handleAutoSlug = () => {
+    const generated = generateSlug(name.trim() || group.name)
+    setSlug(generated)
+  }
 
   const handleSave = async () => {
+    setError(null)
+    if (slugError) {
+      setError(slugError)
+      return
+    }
     setSaving(true)
     try {
+      const nextData: Record<string, unknown> = { ...(group.data ?? {}) }
+      nextData.description = description.trim()
+      nextData.slug = slug.trim() || undefined
+      nextData.hashtags = hashtags.length > 0 ? hashtags : undefined
+      nextData.parentSpaceId = parentSpaceId || undefined
+      // undefined-Felder loeschen, damit data sauber bleibt
+      Object.keys(nextData).forEach((k) => {
+        if (nextData[k] === undefined) delete nextData[k]
+      })
       await updateGroup(group.id, {
         name: name.trim() || group.name,
-        data: { ...(group.data ?? {}), description: description.trim() },
+        data: nextData,
       })
       setSavedAt(Date.now())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen")
     } finally {
       setSaving(false)
     }
   }
 
-  const dirty = name.trim() !== group.name ||
-    description.trim() !== (typeof group.data?.description === "string" ? group.data.description : "")
+  const dirty =
+    name.trim() !== group.name ||
+    description.trim() !== (meta.description ?? "") ||
+    slug.trim() !== (meta.slug ?? "") ||
+    parentSpaceId !== (meta.parentSpaceId ?? "") ||
+    JSON.stringify(hashtags) !== JSON.stringify(meta.hashtags ?? [])
 
   return (
     <div className="max-w-2xl space-y-5">
       <div>
         <h3 className="text-base font-semibold mb-1">Allgemeine Angaben</h3>
         <p className="text-xs text-muted-foreground">
-          Name und Beschreibung erscheinen im Workspace-Switcher und in
-          Einladungen.
+          Name, Beschreibung, URL-Slug, Eltern-Space und Hashtags. Diese Werte
+          erscheinen im Workspace-Switcher, in Einladungen und im Spaces-
+          Browser.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
           <Label className="text-xs">Name des Space</Label>
           <Input
@@ -484,10 +581,81 @@ function GeneralTab({ group }: { group: Group }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Worum geht es in diesem Space? Wer ist hier zuhause?"
-            className="min-h-24"
+            className="min-h-20"
           />
         </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">URL-Slug</Label>
+            <button
+              type="button"
+              onClick={handleAutoSlug}
+              className="text-[10px] text-primary hover:underline"
+            >
+              Aus Name erzeugen
+            </button>
+          </div>
+          <Input
+            value={slug}
+            onChange={(e) => setSlug(e.target.value.toLowerCase())}
+            placeholder="z.B. macher-berlin-mitte"
+            className={slugError ? "border-destructive" : ""}
+          />
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-[10px] text-muted-foreground">
+              {slug
+                ? <>Erscheint als <code className="text-foreground">{`/spaces/${slug}/...`}</code></>
+                : "Leer lassen heisst: URL nutzt die ID."}
+            </p>
+            {slugError && (
+              <p className="text-[10px] text-destructive">{slugError}</p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-xs">Eltern-Space (optional)</Label>
+          <select
+            value={parentSpaceId}
+            onChange={(e) => setParentSpaceId(e.target.value)}
+            className="w-full h-9 px-3 rounded-md border bg-background text-sm"
+          >
+            <option value="">— ohne (Root-Space) —</option>
+            {parentOptions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Wenn dieser Space ein Sub-Space von z.B. "Macher" ist, traegt er
+            zur Aggregation in den Macher-Root bei. Der Workspace-Switcher
+            zeigt Sub-Spaces eingeklappt unter dem Root.
+          </p>
+        </div>
+
+        <div>
+          <Label className="text-xs">Hashtags / Kategorien</Label>
+          <TagInput
+            value={hashtags}
+            onChange={(next) => setHashtags(next.map((t) => t.replace(/^#/, "").toLowerCase()))}
+            placeholder="handwerk, regional, jugendarbeit ..."
+            suggestions={hashtagSuggestions}
+            quickSuggestions={8}
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Macht den Space im Spaces-Browser auffindbar. Mehrere Tags sind
+            erlaubt — Enter oder Komma fuegt hinzu.
+          </p>
+        </div>
       </div>
+
+      {error && (
+        <div className="text-xs text-destructive bg-destructive/5 border border-destructive/30 rounded px-2 py-1.5">
+          {error}
+        </div>
+      )}
 
       <div className="flex items-center justify-end gap-2 pt-2 border-t">
         {savedAt && !dirty && (
@@ -497,7 +665,7 @@ function GeneralTab({ group }: { group: Group }) {
           type="button"
           size="sm"
           onClick={handleSave}
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || Boolean(slugError)}
         >
           {saving ? "Speichere..." : "Speichern"}
         </Button>
