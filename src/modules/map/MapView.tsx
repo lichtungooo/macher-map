@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useCallback } from "react"
 import { Settings } from "lucide-react"
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet"
 import L from "leaflet"
-import { useItems, Button } from "@real-life-stack/toolkit"
+import { useItems, useCreateItem, useCurrentUser, Button, AdaptivePanel } from "@real-life-stack/toolkit"
 import type { ModuleViewProps } from "../registry"
 import { useModuleConfig, useIsSpaceAdmin } from "../use-module-config"
 import { MapSettingsPanel } from "./MapSettingsPanel"
 import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
+import { QuickCreateForm } from "./QuickCreateForm"
 
 // ============================================================
 // Pin-Stile (Default-Set, spaeter konfigurierbar im Pin-Generator)
@@ -100,7 +101,13 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
   const cfg = { ...mapDefaultConfig, ...(config ?? {}) }
   const isAdmin = useIsSpaceAdmin(spaceId)
   const { setModuleConfig } = useModuleConfig()
+  const { mutate: createItem } = useCreateItem()
+  const { data: currentUser } = useCurrentUser()
   const [editOpen, setEditOpen] = useState(false)
+
+  // Quick-Create-Flow von der Karte aus
+  const [creatingType, setCreatingType] = useState<string | null>(null)
+  const [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   const pinTypes = cfg.pinTypes ?? mapDefaultConfig.pinTypes!
   const tileUrl = cfg.tileUrl ?? TILE_PROVIDERS[cfg.tileProvider ?? "osm-de"].url
@@ -151,6 +158,30 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
     if (!activeGroup) return
     await setModuleConfig(activeGroup, "map", next)
   }
+
+  const startQuickCreate = useCallback(() => {
+    const type = cfg.actionButton?.createItemType?.trim() || "place"
+    setCreatingType(type)
+    setPickedLocation(null)
+  }, [cfg.actionButton?.createItemType])
+
+  const handleQuickCreate = useCallback(
+    async (data: Record<string, unknown>) => {
+      if (!creatingType) return
+      await createItem({
+        type: creatingType,
+        createdBy: currentUser?.id ?? "anonymous",
+        data,
+      })
+      setCreatingType(null)
+      setPickedLocation(null)
+    },
+    [createItem, creatingType, currentUser?.id]
+  )
+
+  const handleMapClick = useCallback((latlng: L.LatLng) => {
+    setPickedLocation({ lat: latlng.lat, lng: latlng.lng })
+  }, [])
 
   const pinTypeOptions = Object.entries(DEFAULT_PIN_STYLES).map(([id, s]) => ({
     id,
@@ -217,6 +248,27 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
           url={tileUrl}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
+
+        {/* Map-Click-Handler — nur wenn Quick-Create aktiv */}
+        {creatingType && <MapClickHandler onClick={handleMapClick} />}
+
+        {/* Gepickter Standort als pulsierender Pin */}
+        {pickedLocation && (
+          <Marker
+            position={[pickedLocation.lat, pickedLocation.lng]}
+            icon={L.divIcon({
+              html: `<div style="position:relative;width:32px;height:32px">
+                <div style="position:absolute;inset:0;background:#E8751A;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);animation:pulse 1.5s infinite"></div>
+                <div style="position:absolute;inset:8px;background:#fff;border-radius:50%"></div>
+              </div>
+              <style>@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}</style>`,
+              className: "",
+              iconSize: [32, 32],
+              iconAnchor: [16, 16],
+            })}
+          />
+        )}
+
         {markers.map((m) => (
           <Marker key={m.item.id} position={[m.lat, m.lng]} icon={m.icon}>
             <Popup>
@@ -235,18 +287,59 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
       </MapContainer>
 
       {/* Action-Button unten rechts (konfigurierbar) */}
-      {cfg.actionButton?.enabled && (
+      {!isPreview && cfg.actionButton?.enabled && !creatingType && (
         <button
           className="absolute bottom-6 right-4 z-[1000] h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
           title={cfg.actionButton.label ?? "Neu"}
-          onClick={() => {
-            // TODO: Item-Create-Dialog fuer cfg.actionButton.createItemType oeffnen
-            console.log("[MapView] action click — create", cfg.actionButton?.createItemType)
-          }}
+          onClick={startQuickCreate}
         >
           <span className="text-2xl leading-none">+</span>
         </button>
       )}
+
+      {/* Hint waehrend Picker aktiv */}
+      {!isPreview && creatingType && !pickedLocation && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-primary text-primary-foreground px-3 py-1.5 rounded-full shadow-lg text-xs font-medium pointer-events-none">
+          Tippe auf die Karte um Standort zu waehlen
+        </div>
+      )}
+
+      {/* Quick-Create Side-Panel */}
+      <AdaptivePanel
+        open={creatingType !== null}
+        onClose={() => {
+          setCreatingType(null)
+          setPickedLocation(null)
+        }}
+        allowedModes={["sidebar", "drawer"]}
+        sidebarWidth="380px"
+      >
+        {creatingType && (
+          <QuickCreateForm
+            itemType={creatingType}
+            pickedLocation={pickedLocation}
+            onSubmit={handleQuickCreate}
+            onCancel={() => {
+              setCreatingType(null)
+              setPickedLocation(null)
+            }}
+          />
+        )}
+      </AdaptivePanel>
     </div>
   )
+}
+
+// ============================================================
+// MapClickHandler — registriert click-Listener auf der Karte
+// (muss innerhalb von <MapContainer> sein, sonst ist useMapEvents kein Hook)
+// ============================================================
+
+function MapClickHandler({ onClick }: { onClick: (latlng: L.LatLng) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick(e.latlng)
+    },
+  })
+  return null
 }
