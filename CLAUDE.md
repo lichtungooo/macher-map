@@ -194,14 +194,15 @@ Lese-Prioritaet: **Extension > Master (Antons WoT) > currentUser fallback**.
 
 | Modul | Typ | Status |
 |-------|-----|--------|
-| **Karte** | Code | ✅ Mit Zahnrad: Pin-Typen-Filter, Pin-Farben, Tile-Layer-Auswahl, optionaler Action-Button |
+| **Karte** | Code | ✅ Inline-Zahnrad + Pin-Typen-Filter, Pin-Farben, Tile-Layer-Auswahl, **FAB → Quick-Create + Standort-Picker** |
 | **Kanban** (Projekte) | Code | ✅ Drag-Drop, Filter, Edit-Panel, Comments — von Sebastian gebaut |
+| **Kalender** | Code | ✅ **Vorzeige-Modul.** 7 Ansichten (Tag/Woche/Monat/Jahr/Agenda/Events/Meine), Markdown+Bilder+Location+Preis, Wiederholungen, Reminders mit Browser-Notifications, Participation, Multi-Kalender, ICS-Export |
 | **Marktplatz** | Daten | ✅ Cards-Grid + Map-Layout, Anbieten/Suchen mit Pin-Farbe |
-| **Modulschmiede** | Code | ✅ MVP: Template-Liste + Editor, neue Module per Klick anlegbar |
+| **Modulschmiede** | Code | ✅ Konfigurator-UI: Template-Liste + Schema-Editor + Live-Preview + Auto-Tab-Registrierung |
 | **Profil** | Dialog | ✅ Schema-basiert mit Skills/Offers/Needs/Address/Phone, Visibility pro Feld |
-| **Kalender** | — | ❌ noch zu bauen |
 | **Skill-Tree / Gamification** | — | ❌ noch zu bauen |
 | **Spaces-Browser** | — | ❌ noch zu bauen |
+| **Quest** | — | ❌ noch zu bauen (Items mit `type: "quest"` erscheinen schon im Kalender wenn aktiviert) |
 | **Log** | — | ❌ noch zu bauen |
 
 ---
