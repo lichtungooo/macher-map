@@ -8,31 +8,19 @@ import { useModuleConfig, useIsSpaceAdmin } from "../use-module-config"
 import { MapSettingsPanel } from "./MapSettingsPanel"
 import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
 import { QuickCreateForm } from "./QuickCreateForm"
+import { renderPinIcon, type PinStyle } from "./pin-styles"
 
 // ============================================================
-// Pin-Stile (Default-Set, spaeter konfigurierbar im Pin-Generator)
+// Default-Pin-Konfiguration pro Item-Typ
 // ============================================================
 
-function makePinIcon(color: string, iconSvg?: string): L.DivIcon {
-  const inner =
-    iconSvg ??
-    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`
-  return L.divIcon({
-    html: `<div style="width:32px;height:32px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center">${inner}</div>`,
-    className: "",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -34],
-  })
-}
-
-const DEFAULT_PIN_STYLES: Record<string, { color: string; label: string }> = {
-  place: { color: "#E8751A", label: "Werkstaetten" },
-  event: { color: "#3b82f6", label: "Events" },
-  offer: { color: "#10b981", label: "Angebote" },
-  need: { color: "#f59e0b", label: "Suche" },
-  quest: { color: "#a855f7", label: "Quests" },
-  profile: { color: "#ec4899", label: "Macher" },
+export const DEFAULT_PIN_STYLES: Record<string, { color: string; shape: PinStyle["shape"]; label: string }> = {
+  place: { color: "#E8751A", shape: "drop", label: "Werkstaetten" },
+  event: { color: "#3b82f6", shape: "drop", label: "Events" },
+  offer: { color: "#10b981", shape: "circle", label: "Angebote" },
+  need: { color: "#f59e0b", shape: "circle", label: "Suche" },
+  quest: { color: "#a855f7", shape: "hexagon", label: "Quests" },
+  profile: { color: "#ec4899", shape: "circle", label: "Macher" },
 }
 
 // ============================================================
@@ -50,8 +38,8 @@ export interface MapModuleConfig {
   defaultCenter?: [number, number]
   /** Default-Zoom wenn keine Pins. */
   defaultZoom?: number
-  /** Pin-Styles pro Item-Typ (color, optional Icon-SVG). */
-  pinStyles?: Record<string, { color: string; iconSvg?: string }>
+  /** Pin-Styles pro Item-Typ (Form + Farbe + Border + Glow). */
+  pinStyles?: Record<string, PinStyle>
   /** Zeige Action-Button unten rechts? */
   actionButton?: {
     enabled: boolean
@@ -131,7 +119,18 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
       .map((item) => {
         const loc = (item.data.location as { lat?: number; lng?: number } | undefined) ?? null
         if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return null
-        const style = cfg.pinStyles?.[item.type] ?? DEFAULT_PIN_STYLES[item.type] ?? { color: "#888" }
+        const userStyle = cfg.pinStyles?.[item.type]
+        const defaultStyle = DEFAULT_PIN_STYLES[item.type] ?? { color: "#888", shape: "drop" as const }
+        const style: PinStyle = {
+          shape: userStyle?.shape ?? defaultStyle.shape,
+          color: userStyle?.color ?? defaultStyle.color,
+          borderColor: userStyle?.borderColor,
+          borderWidth: userStyle?.borderWidth,
+          iconColor: userStyle?.iconColor,
+          glow: userStyle?.glow,
+          size: userStyle?.size,
+          iconSvg: userStyle?.iconSvg,
+        }
         return {
           item,
           lat: loc.lat,
@@ -139,7 +138,7 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
           title: String(item.data.title ?? "(ohne Titel)"),
           subtitle:
             String(item.data.address ?? item.data.description ?? item.data.start ?? ""),
-          icon: makePinIcon(style.color, "iconSvg" in style ? style.iconSvg : undefined),
+          icon: renderPinIcon(style),
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)

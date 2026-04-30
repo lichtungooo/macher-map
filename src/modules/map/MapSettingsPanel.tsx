@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   Label,
   Input,
@@ -6,9 +7,11 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@real-life-stack/toolkit"
-import { Pin, Layers, MousePointerClick, SlidersHorizontal, Search } from "lucide-react"
+import { Pin, Layers, MousePointerClick, SlidersHorizontal, Search, ChevronDown, ChevronRight } from "lucide-react"
 import type { MapModuleConfig } from "./MapView"
 import { TILE_PROVIDERS } from "./MapView"
+import { PinStyleEditor } from "./PinStyleEditor"
+import { renderPinHtml, type PinStyle } from "./pin-styles"
 
 /**
  * MapSettingsPanel — Editor-UI fuer die Karten-Konfig.
@@ -97,6 +100,8 @@ function PinsTab({
   onChange: (next: MapModuleConfig) => void
   pinTypeOptions: { id: string; label: string; defaultColor: string }[]
 }) {
+  const [expandedType, setExpandedType] = useState<string | null>(null)
+
   const togglePinType = (id: string) => {
     const set = new Set(config.pinTypes ?? [])
     if (set.has(id)) set.delete(id)
@@ -104,13 +109,10 @@ function PinsTab({
     onChange({ ...config, pinTypes: Array.from(set) })
   }
 
-  const setPinColor = (typeId: string, color: string) => {
+  const setPinStyle = (typeId: string, style: PinStyle) => {
     onChange({
       ...config,
-      pinStyles: {
-        ...(config.pinStyles ?? {}),
-        [typeId]: { ...(config.pinStyles?.[typeId] ?? {}), color },
-      },
+      pinStyles: { ...(config.pinStyles ?? {}), [typeId]: style },
     })
   }
 
@@ -118,43 +120,81 @@ function PinsTab({
     <div className="space-y-3">
       <div>
         <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
-          Was wird auf der Karte gezeigt
+          Pin-Typen
         </h4>
         <p className="text-[11px] text-muted-foreground/70 mb-2">
-          Klick zum Aktivieren. Color-Picker fuer die Pin-Farbe.
+          Aktiviere Item-Typen die als Pins erscheinen. Klick auf "Stil" um Form/Farbe/Glow
+          pro Typ anzupassen.
         </p>
         <div className="space-y-2">
           {pinTypeOptions.map((opt) => {
             const enabled = (config.pinTypes ?? []).includes(opt.id)
-            const currentColor = config.pinStyles?.[opt.id]?.color ?? opt.defaultColor
+            const userStyle = config.pinStyles?.[opt.id]
+            const currentStyle: PinStyle = {
+              color: userStyle?.color ?? opt.defaultColor,
+              shape: userStyle?.shape ?? "drop",
+              borderColor: userStyle?.borderColor,
+              borderWidth: userStyle?.borderWidth,
+              iconColor: userStyle?.iconColor,
+              glow: userStyle?.glow,
+              size: userStyle?.size,
+              iconSvg: userStyle?.iconSvg,
+            }
+            const isExpanded = expandedType === opt.id
+
             return (
-              <div key={opt.id} className="flex items-center gap-2 p-2 border rounded-md bg-card">
-                <input
-                  type="checkbox"
-                  id={`pin-${opt.id}`}
-                  checked={enabled}
-                  onChange={() => togglePinType(opt.id)}
-                />
-                <Label htmlFor={`pin-${opt.id}`} className="flex-1 cursor-pointer text-sm">
-                  {opt.label}
-                </Label>
-                <input
-                  type="color"
-                  value={currentColor}
-                  onChange={(e) => setPinColor(opt.id, e.target.value)}
-                  className="h-7 w-9 rounded border cursor-pointer"
-                  title="Pin-Farbe"
-                />
+              <div key={opt.id} className="border rounded-md bg-card overflow-hidden">
+                <div className="flex items-center gap-2 p-2">
+                  <input
+                    type="checkbox"
+                    id={`pin-${opt.id}`}
+                    checked={enabled}
+                    onChange={() => togglePinType(opt.id)}
+                  />
+                  <Label htmlFor={`pin-${opt.id}`} className="flex-1 cursor-pointer text-sm">
+                    {opt.label}
+                  </Label>
+                  {/* Mini-Pin-Preview */}
+                  <div
+                    className="shrink-0"
+                    style={{
+                      width: 28,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    dangerouslySetInnerHTML={{ __html: renderPinHtml(currentStyle, 24) }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setExpandedType(isExpanded ? null : opt.id)}
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50"
+                    disabled={!enabled}
+                  >
+                    {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    Stil
+                  </button>
+                </div>
+                {isExpanded && enabled && (
+                  <div className="p-3 border-t bg-muted/20">
+                    <PinStyleEditor
+                      value={currentStyle}
+                      onChange={(next) => setPinStyle(opt.id, next)}
+                      defaultColor={opt.defaultColor}
+                    />
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Phase B Hint */}
+      {/* Phase D Hint */}
       <div className="border border-dashed border-border rounded-md p-3 text-[11px] text-muted-foreground/70">
-        🔜 <strong>Phase B</strong> kommt: Pin-Library mit vordefinierten Stilen
-        (Tropfen, rund, eckig), eigener Pin-Generator (Bild → Pin), Form/Border/Glow-Editor.
+        🔜 <strong>Phase D</strong> kommt: Pin-Generator (eigene Bilder → Pin),
+        z.B. Werkstatt-Logo direkt auf der Karte.
       </div>
     </div>
   )
