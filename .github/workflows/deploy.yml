@@ -23,20 +23,23 @@ jobs:
         with:
           path: macher-map
 
-      # Real-Life-Stack (Antons Toolkit) — gleicher Parent-Pfad
+      # Real-Life-Stack (Antons Toolkit) — auf bekannt-guten Commit gepinned.
+      # Antons aktueller master enthaelt einen Refactor (@real-life/wot-core)
+      # der noch nicht mit web-of-trust synchronisiert ist. Wir bleiben bis
+      # zur Abstimmung mit Anton auf b046e96 (zuletzt gruener Build).
       - name: Checkout real-life-stack
         uses: actions/checkout@v4
         with:
           repository: real-life-org/real-life-stack
-          ref: master
+          ref: b046e96afa68cbc4f4ad62c7ddef1a3e3019727f
           path: real-life-stack
 
-      # Web-of-Trust (Antons Identitaets-Stack)
+      # Web-of-Trust (Antons Identitaets-Stack) — pinned auf lokal bewaehrten Stand
       - name: Checkout web-of-trust
         uses: actions/checkout@v4
         with:
           repository: antontranelis/web-of-trust
-          ref: main
+          ref: b970f51963002a34ad8065a04da8b1619ebc2369
           path: web-of-trust
 
       - name: Login to GHCR
