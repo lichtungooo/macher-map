@@ -61,6 +61,8 @@ import { marketplaceModule } from '../modules/marketplace'
 import { calendarModule } from '../modules/calendar'
 import { modulschmiedeModule, useAvailableModules } from '../modules/modulschmiede'
 import { membersModule } from '../modules/members'
+import { themeModule } from '../modules/theme'
+import { useSpaceTheme } from '../themes/use-space-theme'
 
 registerModule(mapModule)
 registerModule(kanbanModule)
@@ -68,6 +70,7 @@ registerModule(marketplaceModule)
 registerModule(calendarModule)
 registerModule(modulschmiedeModule)
 registerModule(membersModule)
+registerModule(themeModule)
 
 const STORAGE_KEY_CONNECTOR = 'macher-connector'
 const STORAGE_KEY_GROUP = 'macher-active-group'
@@ -190,14 +193,18 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
   }, [urlSpaceId, workspaces])
 
   // Default-Module fuer Overview oder Spaces ohne eigene Konfig
-  const DEFAULT_MODULE_IDS = ['map', 'kanban', 'calendar', 'marketplace', 'modulschmiede', 'members']
+  const DEFAULT_MODULE_IDS = ['map', 'kanban', 'calendar', 'marketplace', 'modulschmiede', 'members', 'theme']
   // Meta-Module die IMMER sichtbar sind (auch wenn ein Space sie nicht in
   // group.data.modules hat). Das sind die Schaufenster-Module der Macher-Map:
   // Marketplace + Kalender zum Probieren, Modulschmiede zum Bauen.
-  const ALWAYS_VISIBLE_MODULES = ['marketplace', 'calendar', 'modulschmiede', 'members']
+  const ALWAYS_VISIBLE_MODULES = ['marketplace', 'calendar', 'modulschmiede', 'members', 'theme']
 
   const isOverview = activeWorkspace?.scope === 'overview'
   const activeGroup = isOverview ? null : groups.find((g) => g.id === activeWorkspace?.id) ?? null
+
+  // Theme aus group.data.theme aufs Document anwenden — bei Space-Wechsel
+  // werden die CSS-Variablen automatisch aktualisiert.
+  useSpaceTheme(activeGroup)
   const groupModuleIds = useMemo(() => {
     if (isOverview) return DEFAULT_MODULE_IDS
     const groupMods = (activeGroup?.data?.modules as string[] | undefined) ?? DEFAULT_MODULE_IDS
