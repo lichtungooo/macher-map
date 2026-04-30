@@ -198,6 +198,35 @@ export function CalendarSettingsPanel({ config, onChange }: CalendarSettingsPane
           <span className="text-sm">"Neuer Termin / Event" Button anzeigen</span>
         </label>
       </section>
+
+      {/* Erinnerungen */}
+      <section>
+        <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+          Erinnerungen
+        </h4>
+        <label className="flex items-center gap-2 p-2 border rounded-md cursor-pointer mb-2">
+          <input
+            type="checkbox"
+            checked={config.notificationsEnabled ?? true}
+            onChange={(e) => set("notificationsEnabled", e.target.checked)}
+          />
+          <span className="text-sm">Browser-Notifications aktivieren</span>
+        </label>
+        <div className="mt-2">
+          <Label className="text-xs">Standard-Reminder fuer neue Events (Min vorher)</Label>
+          <Input
+            type="number"
+            value={config.defaultReminderMinutes ?? 15}
+            onChange={(e) => set("defaultReminderMinutes", parseInt(e.target.value, 10) || 0)}
+            min={0}
+            max={43200}
+            className="h-9"
+          />
+          <p className="text-[11px] text-muted-foreground/70 mt-1">
+            Wird automatisch hinzugefuegt wenn ein Event keine eigenen Erinnerungen hat. 0 = bei Start, 1440 = 1 Tag.
+          </p>
+        </div>
+      </section>
     </div>
   )
 }

@@ -28,6 +28,9 @@ import { ImageUploadField } from "./ImageUploadField"
 import { LocationField, type EventLocation } from "./LocationField"
 import { RecurrenceEditor } from "./RecurrenceEditor"
 import { expandRecurrence, summarizeRecurrence, type RecurrenceRule, type ExpandedInstance } from "./recurrence"
+import { ReminderEditor } from "./ReminderEditor"
+import type { Reminder } from "./reminders"
+import { useReminderScheduler } from "./useReminderScheduler"
 
 // ============================================================
 // Types
@@ -51,6 +54,10 @@ export interface CalendarModuleConfig {
   defaultDurationMinutes?: number
   /** "Neuer Termin"-Button anzeigen */
   showCreateButton?: boolean
+  /** Standard-Reminder fuer neue Events (Minuten vor Start). undefined = aus. */
+  defaultReminderMinutes?: number
+  /** Browser-Notifications aktivieren */
+  notificationsEnabled?: boolean
 }
 
 export const calendarDefaultConfig: CalendarModuleConfig = {
@@ -62,6 +69,8 @@ export const calendarDefaultConfig: CalendarModuleConfig = {
   timeFormat: "24h",
   defaultDurationMinutes: 60,
   showCreateButton: true,
+  defaultReminderMinutes: 15,
+  notificationsEnabled: true,
 }
 
 export interface CalendarViewProps extends ModuleViewProps<CalendarModuleConfig> {
@@ -108,6 +117,13 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
     () => [...eventItems, ...apptItems, ...questItems].filter((it) => it.data.start),
     [eventItems, apptItems, questItems]
   )
+
+  // Reminder-Scheduler (Browser-Notifications, nur ausserhalb von Preview)
+  useReminderScheduler({
+    events: !isPreview && cfg.notificationsEnabled ? allItems : [],
+    defaultReminderMinutes: cfg.defaultReminderMinutes,
+    onItemOpen: setEditItem,
+  })
 
   const handleSaveConfig = useCallback(
     async (next: CalendarModuleConfig) => {
@@ -724,6 +740,9 @@ function EventForm({
   const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(
     initialData.recurrence as RecurrenceRule | undefined
   )
+  const [reminders, setReminders] = useState<Reminder[]>(
+    (initialData.reminders as Reminder[] | undefined) ?? []
+  )
   const [saving, setSaving] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -768,6 +787,7 @@ function EventForm({
         ticketUrl: ticketUrl.trim() || undefined,
         hashtags: hashtags.length > 0 ? hashtags : undefined,
         recurrence,
+        reminders: reminders.length > 0 ? reminders : undefined,
       })
     } finally {
       setSaving(false)
@@ -857,6 +877,12 @@ function EventForm({
       <div>
         <Label className="text-xs">Wiederholung</Label>
         <RecurrenceEditor value={recurrence} onChange={setRecurrence} />
+      </div>
+
+      {/* Erinnerungen */}
+      <div>
+        <Label className="text-xs">Erinnerungen</Label>
+        <ReminderEditor value={reminders} onChange={setReminders} />
       </div>
 
       {/* Erweiterte Optionen aufklappbar */}
