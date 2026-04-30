@@ -1,0 +1,866 @@
+import { useState, useMemo, useCallback } from "react"
+import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket } from "lucide-react"
+import {
+  useItems,
+  useCreateItem,
+  useUpdateItem,
+  useDeleteItem,
+  useCurrentUser,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  Label,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  AdaptivePanel,
+} from "@real-life-stack/toolkit"
+import type { Item } from "@real-life-stack/data-interface"
+import type { ModuleViewProps } from "../registry"
+import { useIsSpaceAdmin, useModuleConfig } from "../use-module-config"
+import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
+import { CalendarSettingsPanel } from "./CalendarSettingsPanel"
+import { MarkdownEditor, MarkdownView } from "./MarkdownEditor"
+import { ImageUploadField } from "./ImageUploadField"
+import { LocationField, type EventLocation } from "./LocationField"
+
+// ============================================================
+// Types
+// ============================================================
+
+export type CalendarMode = "event-calendar" | "group-calendar" | "mixed"
+export type CalendarView = "month" | "week" | "agenda" | "events"
+export type FirstDayOfWeek = "monday" | "sunday"
+export type TimeFormat = "24h" | "12h"
+
+export interface CalendarModuleConfig {
+  mode: CalendarMode
+  defaultView: CalendarView
+  /** Welche Item-Typen werden angezeigt? */
+  itemTypes: string[]
+  /** Farbe pro Item-Typ */
+  colors?: Record<string, string>
+  firstDayOfWeek: FirstDayOfWeek
+  timeFormat: TimeFormat
+  /** Standard-Dauer fuer neue Termine (Minuten) */
+  defaultDurationMinutes?: number
+  /** "Neuer Termin"-Button anzeigen */
+  showCreateButton?: boolean
+}
+
+export const calendarDefaultConfig: CalendarModuleConfig = {
+  mode: "event-calendar",
+  defaultView: "month",
+  itemTypes: ["event"],
+  colors: { event: "#3b82f6", appointment: "#10b981", quest: "#a855f7" },
+  firstDayOfWeek: "monday",
+  timeFormat: "24h",
+  defaultDurationMinutes: 60,
+  showCreateButton: true,
+}
+
+export interface CalendarViewProps extends ModuleViewProps<CalendarModuleConfig> {
+  isPreview?: boolean
+}
+
+// ============================================================
+// Constants
+// ============================================================
+
+const MONTH_NAMES = [
+  "Januar", "Februar", "Maerz", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember",
+]
+
+const WEEKDAYS_MO = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+const WEEKDAYS_SO = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
+
+// ============================================================
+// View
+// ============================================================
+
+export function CalendarView({ spaceId, activeGroup, config, isPreview }: CalendarViewProps) {
+  const cfg = { ...calendarDefaultConfig, ...(config ?? {}) }
+  const isAdmin = useIsSpaceAdmin(spaceId)
+  const { setModuleConfig } = useModuleConfig()
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [activeView, setActiveView] = useState<CalendarView>(cfg.defaultView)
+  const [currentMonth, setCurrentMonth] = useState(() => new Date())
+  const [creating, setCreating] = useState(false)
+  const [editItem, setEditItem] = useState<Item | null>(null)
+  const { data: currentUser } = useCurrentUser()
+  const { mutate: createItem } = useCreateItem()
+  const { mutate: updateItem } = useUpdateItem()
+  const { mutate: deleteItem } = useDeleteItem()
+
+  // Items pro Typ holen (max 3)
+  const eventItems = useItems({ type: cfg.itemTypes.includes("event") ? "event" : "__none__" }).data
+  const apptItems = useItems({ type: cfg.itemTypes.includes("appointment") ? "appointment" : "__none__" }).data
+  const questItems = useItems({ type: cfg.itemTypes.includes("quest") ? "quest" : "__none__" }).data
+
+  const allItems = useMemo(
+    () => [...eventItems, ...apptItems, ...questItems].filter((it) => it.data.start),
+    [eventItems, apptItems, questItems]
+  )
+
+  const handleSaveConfig = useCallback(
+    async (next: CalendarModuleConfig) => {
+      if (!activeGroup) return
+      await setModuleConfig(activeGroup, "calendar", next)
+    },
+    [activeGroup, setModuleConfig]
+  )
+
+  const handleCreate = useCallback(
+    async (data: Record<string, unknown>) => {
+      const itemType = cfg.mode === "group-calendar" ? "appointment" : "event"
+      await createItem({
+        type: itemType,
+        createdBy: currentUser?.id ?? "anonymous",
+        data,
+      })
+      setCreating(false)
+    },
+    [createItem, currentUser?.id, cfg.mode]
+  )
+
+  const handleUpdate = useCallback(
+    async (data: Record<string, unknown>) => {
+      if (!editItem) return
+      await updateItem(editItem.id, { data: { ...editItem.data, ...data } })
+      setEditItem(null)
+    },
+    [editItem, updateItem]
+  )
+
+  const handleDelete = useCallback(async () => {
+    if (!editItem) return
+    await deleteItem(editItem.id)
+    setEditItem(null)
+  }, [editItem, deleteItem])
+
+  return (
+    <div className="space-y-4 relative">
+      {/* Edit-Screen Vollbild */}
+      {!isPreview && activeGroup && (
+        <ModuleEditScreen<CalendarModuleConfig>
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          title="Kalender"
+          description="Modus, Ansichten, Item-Typen, Farben"
+          initialConfig={cfg}
+          onSave={handleSaveConfig}
+          renderEditor={(draft, setDraft) => (
+            <CalendarSettingsPanel config={draft} onChange={setDraft} />
+          )}
+          renderPreview={(draft) => (
+            <div className="p-4">
+              <CalendarView
+                spaceId={spaceId}
+                activeGroup={activeGroup}
+                allGroups={[]}
+                config={draft}
+                isPreview
+              />
+            </div>
+          )}
+        />
+      )}
+
+      {/* Toolbar */}
+      <div className="flex gap-2 items-center flex-wrap">
+        {/* View-Switcher */}
+        <div className="inline-flex rounded-md border bg-muted/30 p-0.5">
+          {(["month", "week", "agenda", "events"] as CalendarView[]).map((v) => {
+            const Icon = v === "month" ? CalendarDays : v === "week" ? Layers : v === "agenda" ? List : Layers
+            const isActive = activeView === v
+            const label = v === "month" ? "Monat" : v === "week" ? "Woche" : v === "agenda" ? "Agenda" : "Events"
+            return (
+              <button
+                key={v}
+                onClick={() => setActiveView(v)}
+                className={`px-2.5 h-8 inline-flex items-center gap-1.5 text-xs rounded transition-colors ${
+                  isActive ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Zahnrad */}
+        {!isPreview && isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setEditOpen(true)}
+            title="Kalender konfigurieren"
+            aria-label="Kalender konfigurieren"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* Create-Button */}
+        {cfg.showCreateButton && (
+          <Button onClick={() => setCreating(true)} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            {cfg.mode === "group-calendar" ? "Neuer Termin" : "Neues Event"}
+          </Button>
+        )}
+      </div>
+
+      {/* View-Inhalt */}
+      {activeView === "month" && (
+        <MonthView
+          items={allItems}
+          currentMonth={currentMonth}
+          onMonthChange={setCurrentMonth}
+          firstDayOfWeek={cfg.firstDayOfWeek}
+          colors={cfg.colors ?? {}}
+          onItemClick={setEditItem}
+        />
+      )}
+      {activeView === "week" && (
+        <AgendaView items={allItems} colors={cfg.colors ?? {}} timeFormat={cfg.timeFormat} onItemClick={setEditItem} weekOnly />
+      )}
+      {activeView === "agenda" && (
+        <AgendaView items={allItems} colors={cfg.colors ?? {}} timeFormat={cfg.timeFormat} onItemClick={setEditItem} />
+      )}
+      {activeView === "events" && (
+        <EventListView items={allItems} colors={cfg.colors ?? {}} onItemClick={setEditItem} />
+      )}
+
+      {/* Create-Dialog */}
+      <EventFormDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        onSubmit={handleCreate}
+        defaultDuration={cfg.defaultDurationMinutes ?? 60}
+        title={cfg.mode === "group-calendar" ? "Neuer Termin" : "Neues Event"}
+      />
+
+      {/* Edit-Panel */}
+      <AdaptivePanel
+        open={editItem !== null}
+        onClose={() => setEditItem(null)}
+        allowedModes={["sidebar", "drawer", "modal"]}
+        sidebarWidth="420px"
+      >
+        {editItem && (
+          <EventEditForm
+            item={editItem}
+            onSubmit={handleUpdate}
+            onDelete={handleDelete}
+            onCancel={() => setEditItem(null)}
+          />
+        )}
+      </AdaptivePanel>
+    </div>
+  )
+}
+
+// ============================================================
+// MonthView (Grid mit Tagen + Punkte fuer Events)
+// ============================================================
+
+function MonthView({
+  items,
+  currentMonth,
+  onMonthChange,
+  firstDayOfWeek,
+  colors,
+  onItemClick,
+}: {
+  items: Item[]
+  currentMonth: Date
+  onMonthChange: (d: Date) => void
+  firstDayOfWeek: FirstDayOfWeek
+  colors: Record<string, string>
+  onItemClick: (item: Item) => void
+}) {
+  const year = currentMonth.getFullYear()
+  const month = currentMonth.getMonth()
+  const today = new Date()
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month
+
+  const weekdays = firstDayOfWeek === "monday" ? WEEKDAYS_MO : WEEKDAYS_SO
+
+  const days = useMemo(() => {
+    const firstDay = new Date(year, month, 1).getDay()
+    const startOffset = firstDayOfWeek === "monday"
+      ? (firstDay === 0 ? 6 : firstDay - 1)
+      : firstDay
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    return Array.from({ length: 42 }, (_, i) => {
+      const dayNum = i - startOffset + 1
+      const inMonth = dayNum >= 1 && dayNum <= daysInMonth
+      const date = new Date(year, month, dayNum)
+      const dayItems = items.filter((it) => {
+        const start = new Date(String(it.data.start))
+        return inMonth && start.getDate() === dayNum && start.getMonth() === month && start.getFullYear() === year
+      })
+      return {
+        date,
+        number: dayNum,
+        isCurrentMonth: inMonth,
+        isToday: isCurrentMonth && dayNum === today.getDate(),
+        items: dayItems,
+      }
+    })
+  }, [year, month, items, firstDayOfWeek, isCurrentMonth, today])
+
+  const navigate = (delta: number) => {
+    const next = new Date(year, month + delta, 1)
+    onMonthChange(next)
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <span className="text-base">{MONTH_NAMES[month]} {year}</span>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(-1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onMonthChange(new Date())}>
+              Heute
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-7 gap-1 text-center mb-2">
+          {weekdays.map((d) => (
+            <div key={d} className="text-[11px] font-semibold text-muted-foreground py-1">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((d, i) => (
+            <div
+              key={i}
+              className={`aspect-square p-1 rounded text-xs flex flex-col ${
+                !d.isCurrentMonth
+                  ? "text-muted-foreground/30"
+                  : d.isToday
+                  ? "bg-primary/10 ring-1 ring-primary/30 font-semibold"
+                  : "hover:bg-muted/50"
+              }`}
+            >
+              <span className="self-end">{d.number}</span>
+              <div className="flex-1 flex flex-wrap gap-0.5 mt-1 content-start">
+                {d.items.slice(0, 3).map((it) => (
+                  <button
+                    key={it.id}
+                    onClick={() => onItemClick(it)}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: colors[it.type] ?? "#888" }}
+                    title={String(it.data.title ?? "")}
+                  />
+                ))}
+                {d.items.length > 3 && (
+                  <span className="text-[9px] text-muted-foreground">+{d.items.length - 3}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================
+// AgendaView (Liste sortiert nach Datum)
+// ============================================================
+
+function AgendaView({
+  items,
+  colors,
+  timeFormat,
+  onItemClick,
+  weekOnly,
+}: {
+  items: Item[]
+  colors: Record<string, string>
+  timeFormat: TimeFormat
+  onItemClick: (item: Item) => void
+  weekOnly?: boolean
+}) {
+  const filtered = useMemo(() => {
+    const now = new Date()
+    const start = new Date(now)
+    start.setHours(0, 0, 0, 0)
+    const limit = weekOnly ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) : null
+
+    return items
+      .filter((it) => {
+        const d = new Date(String(it.data.start))
+        if (d < start) return false
+        if (limit && d > limit) return false
+        return true
+      })
+      .sort((a, b) => String(a.data.start).localeCompare(String(b.data.start)))
+  }, [items, weekOnly])
+
+  if (filtered.length === 0) {
+    return (
+      <div className="py-12 text-center text-muted-foreground text-sm">
+        {weekOnly ? "Diese Woche keine Termine." : "Keine kommenden Termine."}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      {filtered.map((it) => {
+        const d = new Date(String(it.data.start))
+        const loc = it.data.location as EventLocation | undefined
+        const cover = it.data.coverImageUrl as string | undefined
+        const hashtags = (it.data.hashtags as string[] | undefined) ?? []
+        return (
+          <button
+            key={it.id}
+            onClick={() => onItemClick(it)}
+            className="w-full text-left p-3 border rounded-lg hover:bg-muted/30 transition-colors flex gap-3 items-start"
+          >
+            <div
+              className="w-1 self-stretch rounded-full shrink-0"
+              style={{ background: colors[it.type] ?? "#888" }}
+            />
+            {cover && (
+              <img src={cover} alt="" className="w-16 h-16 rounded-md object-cover shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm">{String(it.data.title ?? "(ohne Titel)")}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {formatDateTime(d, timeFormat)}
+                {loc?.address && (
+                  <span className="inline-flex items-center gap-1 ml-2">
+                    <MapPin className="h-3 w-3" />
+                    {loc.address}
+                  </span>
+                )}
+              </div>
+              {it.data.plainDescription && (
+                <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {String(it.data.plainDescription)}
+                </div>
+              )}
+              {hashtags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {hashtags.slice(0, 4).map((t) => (
+                    <span key={t} className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ============================================================
+// EventListView (Cards mit Bildern)
+// ============================================================
+
+function EventListView({
+  items,
+  colors,
+  onItemClick,
+}: {
+  items: Item[]
+  colors: Record<string, string>
+  onItemClick: (item: Item) => void
+}) {
+  const sorted = useMemo(
+    () => items.sort((a, b) => String(a.data.start).localeCompare(String(b.data.start))),
+    [items]
+  )
+
+  if (sorted.length === 0) {
+    return <div className="py-12 text-center text-muted-foreground text-sm">Keine Events.</div>
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {sorted.map((it) => {
+        const cover = it.data.coverImageUrl as string | undefined
+        const d = new Date(String(it.data.start))
+        const loc = it.data.location as EventLocation | undefined
+        const hashtags = (it.data.hashtags as string[] | undefined) ?? []
+        const price = it.data.price as string | undefined
+        return (
+          <Card
+            key={it.id}
+            className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+            onClick={() => onItemClick(it)}
+          >
+            {cover && (
+              <div className="aspect-[16/9] bg-muted">
+                <img src={cover} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <CardHeader className="pb-2">
+              <div className="flex items-start gap-2">
+                <div className="w-1 h-5 rounded-full mt-0.5" style={{ background: colors[it.type] ?? "#888" }} />
+                <CardTitle className="text-base flex-1">
+                  {String(it.data.title ?? "(ohne Titel)")}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="text-xs text-muted-foreground space-y-1">
+              <div>
+                {d.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+              </div>
+              {loc?.address && (
+                <div className="inline-flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {loc.address}
+                </div>
+              )}
+              {price && (
+                <div className="inline-flex items-center gap-1">
+                  <Ticket className="h-3 w-3" />
+                  {price}
+                </div>
+              )}
+              {it.data.plainDescription && (
+                <p className="text-foreground/70 line-clamp-2 pt-1">
+                  {String(it.data.plainDescription)}
+                </p>
+              )}
+              {hashtags.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {hashtags.slice(0, 5).map((t) => (
+                    <span key={t} className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5">
+                      <Tag className="h-2 w-2" />
+                      {t.replace(/^#/, "")}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })}
+    </div>
+  )
+}
+
+// ============================================================
+// Event-Form (Dialog + Edit-Form)
+// ============================================================
+
+function EventFormDialog({
+  open,
+  onClose,
+  onSubmit,
+  defaultDuration,
+  title,
+}: {
+  open: boolean
+  onClose: () => void
+  onSubmit: (data: Record<string, unknown>) => Promise<void>
+  defaultDuration: number
+  title: string
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+        <DialogTitle>{title}</DialogTitle>
+        <EventForm
+          initialData={{}}
+          onSubmit={async (data) => {
+            await onSubmit(data)
+          }}
+          onCancel={onClose}
+          defaultDuration={defaultDuration}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EventEditForm({
+  item,
+  onSubmit,
+  onDelete,
+  onCancel,
+}: {
+  item: Item
+  onSubmit: (data: Record<string, unknown>) => Promise<void>
+  onDelete: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-4">
+        <h3 className="font-semibold mb-4">Bearbeiten</h3>
+        <EventForm
+          initialData={item.data}
+          onSubmit={onSubmit}
+          onCancel={onCancel}
+          onDelete={onDelete}
+          defaultDuration={60}
+        />
+      </div>
+    </div>
+  )
+}
+
+function EventForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  onDelete,
+  defaultDuration,
+}: {
+  initialData: Record<string, unknown>
+  onSubmit: (data: Record<string, unknown>) => Promise<void>
+  onCancel: () => void
+  onDelete?: () => void
+  defaultDuration: number
+}) {
+  const [title, setTitle] = useState(String(initialData.title ?? ""))
+  const [start, setStart] = useState(toDateTimeLocal(initialData.start))
+  const [end, setEnd] = useState(toDateTimeLocal(initialData.end))
+  const [allDay, setAllDay] = useState(Boolean(initialData.allDay))
+  const [markdownBody, setMarkdownBody] = useState(String(initialData.markdownBody ?? initialData.description ?? ""))
+  const [coverImageUrl, setCoverImageUrl] = useState<string | undefined>(
+    initialData.coverImageUrl as string | undefined
+  )
+  const [galleryImageUrls, setGalleryImageUrls] = useState<string[] | undefined>(
+    initialData.galleryImageUrls as string[] | undefined
+  )
+  const [location, setLocation] = useState<EventLocation | undefined>(
+    initialData.location as EventLocation | undefined
+  )
+  const [price, setPrice] = useState(String(initialData.price ?? ""))
+  const [ticketUrl, setTicketUrl] = useState(String(initialData.ticketUrl ?? ""))
+  const [hashtagsRaw, setHashtagsRaw] = useState(
+    Array.isArray(initialData.hashtags) ? (initialData.hashtags as string[]).join(", ") : ""
+  )
+  const [saving, setSaving] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Auto-Endzeit bei Startzeit-Eingabe
+  const handleStartChange = (v: string) => {
+    setStart(v)
+    if (!end && v) {
+      const startDate = new Date(v)
+      const endDate = new Date(startDate.getTime() + defaultDuration * 60 * 1000)
+      setEnd(toDateTimeLocal(endDate.toISOString()))
+    }
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const hashtags = hashtagsRaw
+        .split(/[,\s]+/)
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map((t) => (t.startsWith("#") ? t : `#${t}`))
+
+      // plainDescription aus Markdown (fuer Suche)
+      const plainDescription = markdownBody
+        .replace(/[#*`>_-]/g, "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/\n+/g, " ")
+        .trim()
+        .slice(0, 500)
+
+      await onSubmit({
+        title: title.trim(),
+        start: start ? new Date(start).toISOString() : undefined,
+        end: end ? new Date(end).toISOString() : undefined,
+        allDay,
+        markdownBody: markdownBody.trim() || undefined,
+        plainDescription: plainDescription || undefined,
+        coverImageUrl,
+        galleryImageUrls: galleryImageUrls && galleryImageUrls.length > 0 ? galleryImageUrls : undefined,
+        location: location && (location.address || location.lat || location.lng) ? location : undefined,
+        price: price.trim() || undefined,
+        ticketUrl: ticketUrl.trim() || undefined,
+        hashtags: hashtags.length > 0 ? hashtags : undefined,
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const valid = title.trim().length > 0 && (allDay || start)
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label className="text-xs">Titel</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="z.B. Werkstatt-Treffen" />
+      </div>
+
+      {/* Coverbild */}
+      <ImageUploadField
+        mode="cover"
+        label="Coverbild"
+        hint="Wird in der Event-Liste prominent angezeigt"
+        value={coverImageUrl}
+        onChange={setCoverImageUrl}
+      />
+
+      {/* Datum + Zeit */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="all-day"
+            checked={allDay}
+            onChange={(e) => setAllDay(e.target.checked)}
+          />
+          <Label htmlFor="all-day" className="text-xs cursor-pointer">Ganztaegig</Label>
+        </div>
+        {!allDay ? (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">Start</Label>
+              <Input type="datetime-local" value={start} onChange={(e) => handleStartChange(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Ende</Label>
+              <Input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
+            </div>
+          </div>
+        ) : (
+          <div>
+            <Label className="text-xs">Datum</Label>
+            <Input
+              type="date"
+              value={start.split("T")[0]}
+              onChange={(e) => setStart(e.target.value + "T00:00")}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Beschreibung — Markdown */}
+      <div>
+        <Label className="text-xs">Beschreibung</Label>
+        <MarkdownEditor
+          value={markdownBody}
+          onChange={setMarkdownBody}
+          placeholder="**Was passiert beim Event?** Programm, Ablauf, Mitbringsel..."
+          rows={6}
+        />
+      </div>
+
+      {/* Standort */}
+      <div>
+        <Label className="text-xs">Standort</Label>
+        <LocationField value={location} onChange={setLocation} />
+      </div>
+
+      {/* Tags */}
+      <div>
+        <Label className="text-xs">Hashtags</Label>
+        <Input
+          value={hashtagsRaw}
+          onChange={(e) => setHashtagsRaw(e.target.value)}
+          placeholder="z.B. #konzert, #werkstatt"
+        />
+      </div>
+
+      {/* Erweiterte Optionen aufklappbar */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          {showAdvanced ? "▾" : "▸"} Erweitert (Bilder, Preis, Tickets)
+        </button>
+        {showAdvanced && (
+          <div className="space-y-3 mt-3 pl-2 border-l-2">
+            <ImageUploadField
+              mode="gallery"
+              label="Galerie"
+              hint="Zusaetzliche Bilder (max. 10)"
+              value={galleryImageUrls}
+              onChange={setGalleryImageUrls}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Preis (optional)</Label>
+                <Input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="z.B. 12 EUR / Frei"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Ticket-Link</Label>
+                <Input
+                  type="url"
+                  value={ticketUrl}
+                  onChange={(e) => setTicketUrl(e.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-between items-center pt-3 border-t">
+        {onDelete ? (
+          <Button variant="ghost" size="sm" className="text-destructive" onClick={onDelete}>
+            Loeschen
+          </Button>
+        ) : <div />}
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>Abbrechen</Button>
+          <Button size="sm" onClick={handleSave} disabled={saving || !valid}>
+            {saving ? "Speichern..." : "Speichern"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function toDateTimeLocal(iso: unknown): string {
+  if (!iso || typeof iso !== "string") return ""
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ""
+  // YYYY-MM-DDTHH:MM
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function formatDateTime(d: Date, format: TimeFormat): string {
+  const datePart = d.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" })
+  const timePart = format === "24h"
+    ? d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hour12: false })
+    : d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+  return `${datePart} ${timePart}`
+}

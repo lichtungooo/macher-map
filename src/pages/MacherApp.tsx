@@ -58,11 +58,13 @@ import { registerModule, getModuleConfig } from '../modules/registry'
 import { mapModule } from '../modules/map'
 import { kanbanModule } from '../modules/kanban'
 import { marketplaceModule } from '../modules/marketplace'
+import { calendarModule } from '../modules/calendar'
 import { modulschmiedeModule, useAvailableModules } from '../modules/modulschmiede'
 
 registerModule(mapModule)
 registerModule(kanbanModule)
 registerModule(marketplaceModule)
+registerModule(calendarModule)
 registerModule(modulschmiedeModule)
 
 const STORAGE_KEY_CONNECTOR = 'macher-connector'
@@ -186,11 +188,11 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
   }, [urlSpaceId, workspaces])
 
   // Default-Module fuer Overview oder Spaces ohne eigene Konfig
-  const DEFAULT_MODULE_IDS = ['map', 'kanban', 'marketplace', 'modulschmiede']
+  const DEFAULT_MODULE_IDS = ['map', 'kanban', 'calendar', 'marketplace', 'modulschmiede']
   // Meta-Module die IMMER sichtbar sind (auch wenn ein Space sie nicht in
   // group.data.modules hat). Das sind die Schaufenster-Module der Macher-Map:
-  // Marketplace zum Probieren, Modulschmiede zum Bauen.
-  const ALWAYS_VISIBLE_MODULES = ['marketplace', 'modulschmiede']
+  // Marketplace + Kalender zum Probieren, Modulschmiede zum Bauen.
+  const ALWAYS_VISIBLE_MODULES = ['marketplace', 'calendar', 'modulschmiede']
 
   const isOverview = activeWorkspace?.scope === 'overview'
   const activeGroup = isOverview ? null : groups.find((g) => g.id === activeWorkspace?.id) ?? null
