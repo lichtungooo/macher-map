@@ -43,7 +43,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
       address: "Hohenzollernstr. 92, 80796 Muenchen",
       location: { lat: 48.1745, lng: 11.5798, address: "Hohenzollernstr. 92, 80796 Muenchen" },
       markdownBody:
-        "FabLab mit 3D-Druckern, Lasercutter, CNC-Fraese. Mitgliedschaft guenstig fuer Studis und Maker:innen.",
+        "FabLab mit 3D-Druckern, Lasercutter, CNC-Fraese. Mitgliedschaft guenstig fuer Studis und Maker.",
       hashtags: ["3d-druck", "lasern", "elektronik", "muenchen", "fablab"],
       isDemo: true,
     },
@@ -67,7 +67,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
       address: "Heliosstr. 6a, 50825 Koeln",
       location: { lat: 50.9558, lng: 6.9051, address: "Heliosstr. 6a, 50825 Koeln" },
       markdownBody:
-        "Jeden Samstag: bring kaputtes Zeug, repariere es mit Helfer:innen. Kaffee + Kuchen umsonst, Spende erwuenscht.",
+        "Jeden Samstag: bring kaputtes Zeug, repariere es mit Helfern. Kaffee + Kuchen umsonst, Spende erwuenscht.",
       hashtags: ["reparieren", "koeln", "open", "samstag"],
       isDemo: true,
     },
@@ -79,7 +79,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
       address: "Karl-Heine-Str. 99, 04229 Leipzig",
       location: { lat: 51.3296, lng: 12.336, address: "Karl-Heine-Str. 99, 04229 Leipzig" },
       markdownBody:
-        "Drehscheiben, Brennofen, Kurse fuer Anfaenger:innen. Tee + Kekse inklusive.",
+        "Drehscheiben, Brennofen, Kurse fuer Anfaenger. Tee + Kekse inklusive.",
       hashtags: ["toepfern", "keramik", "leipzig", "kurse"],
       isDemo: true,
     },
@@ -91,7 +91,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
       address: "Bischofsweg 50, 01099 Dresden",
       location: { lat: 51.0689, lng: 13.747, address: "Bischofsweg 50, 01099 Dresden" },
       markdownBody:
-        "Hardware-Hacker:innen treffen sich jeden Mittwoch. Loetstationen, Oszilloskope, Maker-Vibes.",
+        "Hardware-Hacker treffen sich jeden Mittwoch. Loetstationen, Oszilloskope, Maker-Vibes.",
       hashtags: ["elektronik", "hardware", "dresden", "open-source"],
       isDemo: true,
     },
@@ -135,7 +135,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
       start: "2026-08-06T16:00:00.000Z",
       end: "2026-08-09T22:00:00.000Z",
       markdownBody:
-        "Das grosse Treffen aller Macher:innen. Drei Tage, viele Werkstaetten, ein Funke.",
+        "Das grosse Treffen aller Macher. Drei Tage, viele Werkstaetten, ein Funke.",
       hashtags: ["festival", "ferropolis", "macher", "sommer"],
       isDemo: true,
     },
@@ -173,7 +173,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
   {
     type: "need",
     data: {
-      title: "Mitstreiter:in fuer Lastenrad-Bau",
+      title: "Mitstreiter fuer Lastenrad-Bau",
       address: "Frankfurt-Bornheim",
       location: { lat: 50.1306, lng: 8.705, address: "Frankfurt-Bornheim" },
       markdownBody:
@@ -216,7 +216,7 @@ export const MACHER_DEMO_ITEMS: DemoItem[] = [
       address: "Hamburg-Altona",
       location: { lat: 53.55, lng: 9.9333, address: "Hamburg-Altona" },
       markdownBody:
-        "Raeumlichkeit + 5 Reparateur:innen finden. Termin: Fruehling 2026.",
+        "Raeumlichkeit + 5 Reparateure finden. Termin: Fruehling 2026.",
       hashtags: ["reparieren", "hamburg", "kollab"],
       isDemo: true,
     },

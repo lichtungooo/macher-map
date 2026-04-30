@@ -281,7 +281,7 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
     const searchActive = cfg.search?.enabled === true
     return allItems
       .map((item) => {
-        const loc = (item.data.location as { lat?: number; lng?: number } | undefined) ?? null
+        const loc = (item.data.location as { lat?: number; lng?: number; address?: string } | undefined) ?? null
         if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return null
         if (searchActive && !itemMatchesSearch(item, parsedSearch)) return null
         const style = resolvePinStyle(item.type, cfg)
@@ -290,14 +290,21 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
         const title = isProfile
           ? String(item.data.name ?? item.data.title ?? "Macher")
           : String(item.data.title ?? "(ohne Titel)")
+        const address =
+          loc.address ??
+          (typeof item.data.address === "string" ? item.data.address : undefined)
+        const start = typeof item.data.start === "string" ? item.data.start : undefined
+        const description = isProfile
+          ? (typeof item.data.bio === "string" ? item.data.bio : undefined)
+          : (typeof item.data.markdownBody === "string" ? item.data.markdownBody : undefined)
         return {
           item,
           lat: loc.lat,
           lng: loc.lng,
           title,
-          subtitle: isProfile
-            ? String(item.data.bio ?? item.data.address ?? "")
-            : String(item.data.address ?? item.data.description ?? item.data.start ?? ""),
+          address,
+          start,
+          description,
           icon: renderPinIcon(style),
         }
       })
@@ -407,7 +414,11 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
       {/* Karten-Suche oben links (konfigurierbar, nicht im Preview) */}
       {!isPreview && cfg.search?.enabled && !creatingType && (
         <div className="absolute top-3 left-3 z-[1000] flex items-center bg-background/95 backdrop-blur rounded-md shadow-md border">
-          <SearchIcon className="h-4 w-4 text-muted-foreground ml-2.5 shrink-0" />
+          <SearchIcon
+            className={`h-4 w-4 ml-2.5 shrink-0 transition-colors ${
+              searchQuery ? "text-primary" : "text-muted-foreground"
+            }`}
+          />
           <input
             type="text"
             value={searchQuery}
@@ -417,15 +428,23 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
             aria-label="Karte durchsuchen"
           />
           {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="h-8 w-8 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
-              title="Suche leeren"
-              aria-label="Suche leeren"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+            <>
+              <span
+                className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded mr-1 shrink-0"
+                title={`${markers.length} Treffer`}
+              >
+                {markers.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="h-8 w-8 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                title="Suche leeren"
+                aria-label="Suche leeren"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
           )}
         </div>
       )}
@@ -503,15 +522,13 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
         {markers.map((m) => (
           <Marker key={m.item.id} position={[m.lat, m.lng]} icon={m.icon}>
             <Popup>
-              <div style={{ fontFamily: "Inter, sans-serif", minWidth: 160 }}>
-                <p style={{ fontWeight: 600, fontSize: "0.9rem", margin: 0 }}>{m.title}</p>
-                {m.subtitle && (
-                  <p style={{ fontSize: "0.75rem", color: "#666", margin: "4px 0 0" }}>{m.subtitle}</p>
-                )}
-                <p style={{ fontSize: "0.65rem", color: "#999", margin: "4px 0 0" }}>
-                  {m.item.type}
-                </p>
-              </div>
+              <PinPopupContent
+                title={m.title}
+                start={m.start}
+                address={m.address}
+                description={m.description}
+                type={m.item.type}
+              />
             </Popup>
           </Marker>
         ))}
@@ -603,6 +620,107 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
           />
         )}
       </AdaptivePanel>
+    </div>
+  )
+}
+
+// ============================================================
+// PinPopupContent — strukturierter Pin-Popup-Inhalt
+// ============================================================
+
+const TYPE_LABEL: Record<string, string> = {
+  place: "Werkstatt",
+  event: "Event",
+  offer: "Angebot",
+  need: "Suche",
+  quest: "Quest",
+  profile: "Macher",
+  appointment: "Termin",
+}
+
+function formatPopupDate(start: string): string {
+  const d = new Date(start)
+  if (Number.isNaN(d.getTime())) return start
+  return d.toLocaleString("de-DE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+function PinPopupContent({
+  title,
+  start,
+  address,
+  description,
+  type,
+}: {
+  title: string
+  start?: string
+  address?: string
+  description?: string
+  type: string
+}) {
+  const typeLabel = TYPE_LABEL[type] ?? type
+  const shortDesc = description
+    ? description.length > 120
+      ? description.slice(0, 117) + "..."
+      : description
+    : undefined
+
+  return (
+    <div style={{ fontFamily: "Inter, sans-serif", minWidth: 200, maxWidth: 280 }}>
+      <div style={{
+        fontSize: "0.65rem",
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        color: "#E8751A",
+        fontWeight: 600,
+        margin: "0 0 4px",
+      }}>
+        {typeLabel}
+      </div>
+      <div style={{ fontWeight: 600, fontSize: "0.95rem", margin: 0, lineHeight: 1.3 }}>
+        {title}
+      </div>
+      {start && (
+        <div style={{
+          fontSize: "0.75rem",
+          color: "#1A1A1A",
+          margin: "6px 0 0",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}>
+          <span>📅</span>
+          <span>{formatPopupDate(start)}</span>
+        </div>
+      )}
+      {address && (
+        <div style={{
+          fontSize: "0.7rem",
+          color: "#666",
+          margin: "4px 0 0",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "4px",
+        }}>
+          <span>📍</span>
+          <span>{address}</span>
+        </div>
+      )}
+      {shortDesc && (
+        <p style={{
+          fontSize: "0.75rem",
+          color: "#444",
+          margin: "8px 0 0",
+          lineHeight: 1.45,
+        }}>
+          {shortDesc}
+        </p>
+      )}
     </div>
   )
 }
