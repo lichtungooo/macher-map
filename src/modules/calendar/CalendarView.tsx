@@ -26,6 +26,8 @@ import { CalendarSettingsPanel } from "./CalendarSettingsPanel"
 import { MarkdownEditor, MarkdownView } from "./MarkdownEditor"
 import { ImageUploadField } from "./ImageUploadField"
 import { LocationField, type EventLocation } from "./LocationField"
+import { RecurrenceEditor } from "./RecurrenceEditor"
+import { expandRecurrence, summarizeRecurrence, type RecurrenceRule, type ExpandedInstance } from "./recurrence"
 
 // ============================================================
 // Types
@@ -270,6 +272,42 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
 }
 
 // ============================================================
+// Helper: Items + Recurrence-Expansion → flache Liste fuer Render
+// ============================================================
+
+interface RenderInstance {
+  item: Item
+  start: Date
+  end: Date | null
+  /** Index der Recurrence-Instanz (0 = Original / einmalig) */
+  instanceIndex: number
+  /** Eindeutiger Key fuer React */
+  key: string
+}
+
+function expandItemsForRange(items: Item[], rangeStart: Date, rangeEnd: Date): RenderInstance[] {
+  const out: RenderInstance[] = []
+  for (const item of items) {
+    const start = new Date(String(item.data.start))
+    if (isNaN(start.getTime())) continue
+    const end = item.data.end ? new Date(String(item.data.end)) : null
+    const rule = item.data.recurrence as RecurrenceRule | undefined
+
+    const expanded: ExpandedInstance[] = expandRecurrence(start, end, rule, rangeStart, rangeEnd)
+    for (const inst of expanded) {
+      out.push({
+        item,
+        start: inst.start,
+        end: inst.end,
+        instanceIndex: inst.index,
+        key: `${item.id}#${inst.index}`,
+      })
+    }
+  }
+  return out
+}
+
+// ============================================================
 // MonthView (Grid mit Tagen + Punkte fuer Events)
 // ============================================================
 
@@ -302,20 +340,28 @@ function MonthView({
       : firstDay
     const daysInMonth = new Date(year, month + 1, 0).getDate()
 
+    // Range fuer Recurrence-Expansion: kompletter sichtbarer Monat (auch Vor-/Nach-Schau)
+    const rangeStart = new Date(year, month, 1 - startOffset)
+    const rangeEnd = new Date(year, month, daysInMonth + (42 - startOffset - daysInMonth) + 1)
+    const instances = expandItemsForRange(items, rangeStart, rangeEnd)
+
     return Array.from({ length: 42 }, (_, i) => {
       const dayNum = i - startOffset + 1
       const inMonth = dayNum >= 1 && dayNum <= daysInMonth
       const date = new Date(year, month, dayNum)
-      const dayItems = items.filter((it) => {
-        const start = new Date(String(it.data.start))
-        return inMonth && start.getDate() === dayNum && start.getMonth() === month && start.getFullYear() === year
+      const dayInstances = instances.filter((inst) => {
+        return (
+          inst.start.getDate() === date.getDate() &&
+          inst.start.getMonth() === date.getMonth() &&
+          inst.start.getFullYear() === date.getFullYear()
+        )
       })
       return {
         date,
         number: dayNum,
         isCurrentMonth: inMonth,
         isToday: isCurrentMonth && dayNum === today.getDate(),
-        items: dayItems,
+        instances: dayInstances,
       }
     })
   }, [year, month, items, firstDayOfWeek, isCurrentMonth, today])
@@ -363,17 +409,17 @@ function MonthView({
             >
               <span className="self-end">{d.number}</span>
               <div className="flex-1 flex flex-wrap gap-0.5 mt-1 content-start">
-                {d.items.slice(0, 3).map((it) => (
+                {d.instances.slice(0, 3).map((inst) => (
                   <button
-                    key={it.id}
-                    onClick={() => onItemClick(it)}
+                    key={inst.key}
+                    onClick={() => onItemClick(inst.item)}
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: colors[it.type] ?? "#888" }}
-                    title={String(it.data.title ?? "")}
+                    style={{ background: colors[inst.item.type] ?? "#888" }}
+                    title={String(inst.item.data.title ?? "")}
                   />
                 ))}
-                {d.items.length > 3 && (
-                  <span className="text-[9px] text-muted-foreground">+{d.items.length - 3}</span>
+                {d.instances.length > 3 && (
+                  <span className="text-[9px] text-muted-foreground">+{d.instances.length - 3}</span>
                 )}
               </div>
             </div>
@@ -401,23 +447,20 @@ function AgendaView({
   onItemClick: (item: Item) => void
   weekOnly?: boolean
 }) {
-  const filtered = useMemo(() => {
+  const instances = useMemo(() => {
     const now = new Date()
-    const start = new Date(now)
-    start.setHours(0, 0, 0, 0)
-    const limit = weekOnly ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) : null
+    const rangeStart = new Date(now)
+    rangeStart.setHours(0, 0, 0, 0)
+    const rangeEnd = weekOnly
+      ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
 
-    return items
-      .filter((it) => {
-        const d = new Date(String(it.data.start))
-        if (d < start) return false
-        if (limit && d > limit) return false
-        return true
-      })
-      .sort((a, b) => String(a.data.start).localeCompare(String(b.data.start)))
+    return expandItemsForRange(items, rangeStart, rangeEnd).sort(
+      (a, b) => a.start.getTime() - b.start.getTime()
+    )
   }, [items, weekOnly])
 
-  if (filtered.length === 0) {
+  if (instances.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground text-sm">
         {weekOnly ? "Diese Woche keine Termine." : "Keine kommenden Termine."}
@@ -427,14 +470,16 @@ function AgendaView({
 
   return (
     <div className="space-y-2">
-      {filtered.map((it) => {
-        const d = new Date(String(it.data.start))
+      {instances.map((inst) => {
+        const it = inst.item
+        const d = inst.start
         const loc = it.data.location as EventLocation | undefined
         const cover = it.data.coverImageUrl as string | undefined
         const hashtags = (it.data.hashtags as string[] | undefined) ?? []
+        const rule = it.data.recurrence as RecurrenceRule | undefined
         return (
           <button
-            key={it.id}
+            key={inst.key}
             onClick={() => onItemClick(it)}
             className="w-full text-left p-3 border rounded-lg hover:bg-muted/30 transition-colors flex gap-3 items-start"
           >
@@ -446,7 +491,14 @@ function AgendaView({
               <img src={cover} alt="" className="w-16 h-16 rounded-md object-cover shrink-0" />
             )}
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm">{String(it.data.title ?? "(ohne Titel)")}</div>
+              <div className="font-medium text-sm flex items-center gap-2">
+                {String(it.data.title ?? "(ohne Titel)")}
+                {rule && (
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                    {summarizeRecurrence(rule)}
+                  </span>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground mt-0.5">
                 {formatDateTime(d, timeFormat)}
                 {loc?.address && (
@@ -489,26 +541,33 @@ function EventListView({
   colors: Record<string, string>
   onItemClick: (item: Item) => void
 }) {
-  const sorted = useMemo(
-    () => items.sort((a, b) => String(a.data.start).localeCompare(String(b.data.start))),
-    [items]
-  )
+  const instances = useMemo(() => {
+    const now = new Date()
+    const rangeStart = new Date(now)
+    rangeStart.setHours(0, 0, 0, 0)
+    const rangeEnd = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
+    return expandItemsForRange(items, rangeStart, rangeEnd).sort(
+      (a, b) => a.start.getTime() - b.start.getTime()
+    )
+  }, [items])
 
-  if (sorted.length === 0) {
+  if (instances.length === 0) {
     return <div className="py-12 text-center text-muted-foreground text-sm">Keine Events.</div>
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {sorted.map((it) => {
+      {instances.map((inst) => {
+        const it = inst.item
         const cover = it.data.coverImageUrl as string | undefined
-        const d = new Date(String(it.data.start))
+        const d = inst.start
         const loc = it.data.location as EventLocation | undefined
         const hashtags = (it.data.hashtags as string[] | undefined) ?? []
         const price = it.data.price as string | undefined
+        const rule = it.data.recurrence as RecurrenceRule | undefined
         return (
           <Card
-            key={it.id}
+            key={inst.key}
             className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
             onClick={() => onItemClick(it)}
           >
@@ -526,8 +585,13 @@ function EventListView({
               </div>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground space-y-1">
-              <div>
-                {d.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span>{d.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
+                {rule && (
+                  <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                    {summarizeRecurrence(rule)}
+                  </span>
+                )}
               </div>
               {loc?.address && (
                 <div className="inline-flex items-center gap-1">
@@ -657,6 +721,9 @@ function EventForm({
   const [hashtagsRaw, setHashtagsRaw] = useState(
     Array.isArray(initialData.hashtags) ? (initialData.hashtags as string[]).join(", ") : ""
   )
+  const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(
+    initialData.recurrence as RecurrenceRule | undefined
+  )
   const [saving, setSaving] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -700,6 +767,7 @@ function EventForm({
         price: price.trim() || undefined,
         ticketUrl: ticketUrl.trim() || undefined,
         hashtags: hashtags.length > 0 ? hashtags : undefined,
+        recurrence,
       })
     } finally {
       setSaving(false)
@@ -783,6 +851,12 @@ function EventForm({
           onChange={(e) => setHashtagsRaw(e.target.value)}
           placeholder="z.B. #konzert, #werkstatt"
         />
+      </div>
+
+      {/* Wiederholung */}
+      <div>
+        <Label className="text-xs">Wiederholung</Label>
+        <RecurrenceEditor value={recurrence} onChange={setRecurrence} />
       </div>
 
       {/* Erweiterte Optionen aufklappbar */}
