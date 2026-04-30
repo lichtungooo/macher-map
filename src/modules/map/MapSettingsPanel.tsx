@@ -2,14 +2,15 @@ import { useState } from "react"
 import {
   Label,
   Input,
+  Button,
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
 } from "@real-life-stack/toolkit"
-import { Pin, Layers, MousePointerClick, SlidersHorizontal, Search, ChevronDown, ChevronRight } from "lucide-react"
-import type { MapModuleConfig } from "./MapView"
-import { TILE_PROVIDERS } from "./MapView"
+import { Pin, Layers, MousePointerClick, SlidersHorizontal, Search, ChevronDown, ChevronRight, Trash2, Plus, ArrowUp, ArrowDown } from "lucide-react"
+import type { MapModuleConfig, MapActionEntry } from "./MapView"
+import { TILE_PROVIDERS, DEFAULT_PIN_STYLES, resolvePinStyle } from "./MapView"
 import { PinStyleEditor } from "./PinStyleEditor"
 import { renderPinHtml, type PinStyle } from "./pin-styles"
 
@@ -244,8 +245,14 @@ function LayerTab({
 }
 
 // ============================================================
-// Tab: Aktionen (FAB-Konfig)
+// Tab: Aktionen (Multi-Action-FAB-Konfig)
 // ============================================================
+
+const DEFAULT_ACTIONS: MapActionEntry[] = [
+  { id: "place", label: "Werkstatt eintragen", createItemType: "place" },
+  { id: "event", label: "Event anlegen", createItemType: "event" },
+  { id: "quest", label: "Quest setzen", createItemType: "quest" },
+]
 
 function ActionsTab({
   config,
@@ -254,61 +261,197 @@ function ActionsTab({
   config: MapModuleConfig
   onChange: (next: MapModuleConfig) => void
 }) {
+  const ab = config.actionButton ?? { enabled: false }
+  // Migrations-View: zeigt Legacy-Single-Action als 1-Eintrag-Liste
+  const effectiveActions: MapActionEntry[] =
+    ab.actions && ab.actions.length > 0
+      ? ab.actions
+      : ab.createItemType
+      ? [{ id: "legacy", label: ab.label?.trim() || "Neu", createItemType: ab.createItemType }]
+      : []
+
   const setActionButton = (patch: Partial<NonNullable<MapModuleConfig["actionButton"]>>) => {
-    onChange({
-      ...config,
-      actionButton: { ...(config.actionButton ?? { enabled: false }), ...patch },
-    })
+    onChange({ ...config, actionButton: { ...ab, ...patch } })
   }
+
+  const setActions = (next: MapActionEntry[]) => {
+    // Beim ersten Schreiben Legacy-Felder ablegen, damit es nur eine Wahrheit gibt
+    setActionButton({ actions: next, createItemType: undefined, label: undefined })
+  }
+
+  const addAction = (preset?: MapActionEntry) => {
+    const newId = `act-${Date.now().toString(36)}`
+    const next: MapActionEntry = preset
+      ? { ...preset, id: newId }
+      : { id: newId, label: "Neu", createItemType: "place" }
+    setActions([...effectiveActions, next])
+  }
+
+  const updateAction = (id: string, patch: Partial<MapActionEntry>) => {
+    setActions(effectiveActions.map((a) => (a.id === id ? { ...a, ...patch } : a)))
+  }
+
+  const removeAction = (id: string) => {
+    setActions(effectiveActions.filter((a) => a.id !== id))
+  }
+
+  const moveAction = (id: string, dir: -1 | 1) => {
+    const idx = effectiveActions.findIndex((a) => a.id === id)
+    if (idx < 0) return
+    const target = idx + dir
+    if (target < 0 || target >= effectiveActions.length) return
+    const next = [...effectiveActions]
+    ;[next[idx], next[target]] = [next[target], next[idx]]
+    setActions(next)
+  }
+
+  const resetToDefaults = () => setActions(DEFAULT_ACTIONS)
+
+  // Vorschlaege fuer Item-Typ-Chips (aus DEFAULT_PIN_STYLES)
+  const typePresets = Object.entries(DEFAULT_PIN_STYLES).map(([id, s]) => ({
+    id,
+    label: s.label,
+  }))
 
   return (
     <div className="space-y-3">
-      <h4 className="text-xs font-semibold uppercase text-muted-foreground">
-        Action-Button (FAB unten rechts)
-      </h4>
-      <p className="text-[11px] text-muted-foreground/70">
-        Plus-Button auf der Karte zum schnellen Anlegen. Klick → Quick-Create-Form mit
-        Standort-Picker per Map-Klick.
-      </p>
+      <div>
+        <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+          Aktions-Knopf (FAB unten rechts)
+        </h4>
+        <p className="text-[11px] text-muted-foreground/70 mt-1">
+          Plus-Knopf auf der Karte. <strong>Eine Aktion</strong> → direkter Klick legt sie an.
+          <strong> Mehrere Aktionen</strong> → der Klick oeffnet ein Menu zur Auswahl.
+        </p>
+      </div>
 
       <label className="flex items-center gap-2 p-2 border rounded-md cursor-pointer">
         <input
           type="checkbox"
-          checked={config.actionButton?.enabled ?? false}
+          checked={ab.enabled ?? false}
           onChange={(e) => setActionButton({ enabled: e.target.checked })}
         />
-        <span className="text-sm">Action-Button anzeigen</span>
+        <span className="text-sm">Aktions-Knopf anzeigen</span>
       </label>
 
-      {config.actionButton?.enabled && (
-        <div className="space-y-2 pl-2 border-l-2 ml-2">
-          <div>
-            <Label className="text-xs">Beschriftung</Label>
-            <Input
-              value={config.actionButton?.label ?? ""}
-              onChange={(e) => setActionButton({ label: e.target.value })}
-              placeholder="z.B. Werkstatt eintragen"
-            />
+      {ab.enabled && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium">Aktionen</span>
+            <div className="flex gap-1">
+              {effectiveActions.length === 0 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={resetToDefaults}
+                  className="text-xs h-7"
+                >
+                  Standard-Set
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => addAction()}
+                className="text-xs h-7"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Aktion
+              </Button>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs">Item-Typ beim Klick anlegen</Label>
-            <Input
-              value={config.actionButton?.createItemType ?? ""}
-              onChange={(e) => setActionButton({ createItemType: e.target.value })}
-              placeholder="z.B. place, event, appointment, quest"
-            />
-            <p className="text-[10px] text-muted-foreground/70 mt-1">
-              Form passt sich am Typ an: <code>event/appointment</code> zeigt Datum/Zeit,
-              <code> place/quest</code> zeigt nur Beschreibung.
-            </p>
+
+          {effectiveActions.length === 0 && (
+            <div className="text-center py-6 border border-dashed rounded-md text-[11px] text-muted-foreground/70">
+              Noch keine Aktion. <br />
+              "Standard-Set" nimmt Werkstatt + Event + Quest.
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {effectiveActions.map((action, idx) => {
+              const style = resolvePinStyle(action.createItemType, config)
+              return (
+                <div key={action.id} className="border rounded-md bg-card p-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      style={{ width: 24, height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                      dangerouslySetInnerHTML={{ __html: renderPinHtml(style, 22) }}
+                    />
+                    <Input
+                      value={action.label}
+                      onChange={(e) => updateAction(action.id, { label: e.target.value })}
+                      placeholder="Beschriftung"
+                      className="h-7 text-sm flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => moveAction(action.id, -1)}
+                      disabled={idx === 0}
+                      className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted/50 disabled:opacity-30"
+                      title="Nach oben"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveAction(action.id, 1)}
+                      disabled={idx === effectiveActions.length - 1}
+                      className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted/50 disabled:opacity-30"
+                      title="Nach unten"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeAction(action.id)}
+                      className="h-7 w-7 inline-flex items-center justify-center rounded text-destructive hover:bg-destructive/10"
+                      title="Entfernen"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 pl-8">
+                    <Label className="text-[10px] uppercase text-muted-foreground/70 shrink-0">
+                      Item-Typ
+                    </Label>
+                    <Input
+                      value={action.createItemType}
+                      onChange={(e) => updateAction(action.id, { createItemType: e.target.value })}
+                      placeholder="place, event, quest, ..."
+                      className="h-7 text-xs flex-1"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1 pl-8">
+                    {typePresets.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => updateAction(action.id, { createItemType: p.id })}
+                        className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
+                          action.createItemType === p.id
+                            ? "bg-primary/10 border-primary/40 text-primary"
+                            : "border-border text-muted-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
+
+          <p className="text-[10px] text-muted-foreground/70 pl-1">
+            Tipp: Form & Farbe einer Aktion kommen automatisch aus dem Pin-Stil des
+            Item-Typs (siehe Tab "Pins"). Item-Typ <code>event/appointment</code> zeigt
+            Datum/Zeit im Quick-Create, sonst nur Beschreibung.
+          </p>
         </div>
       )}
-
-      <div className="mt-4 border border-dashed border-border rounded-md p-3 text-[11px] text-muted-foreground/70">
-        🔜 <strong>Phase C</strong>: Multi-Action-Menu. Plus-Klick oeffnet Menu mit
-        mehreren Aktionen ("Werkstatt / Event / Profil-Pin / Quest").
-      </div>
     </div>
   )
 }

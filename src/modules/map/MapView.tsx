@@ -1,5 +1,5 @@
-import { useMemo, useState, useCallback } from "react"
-import { Settings } from "lucide-react"
+import { useMemo, useState, useCallback, useEffect } from "react"
+import { Settings, Plus, X } from "lucide-react"
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet"
 import L from "leaflet"
 import { useItems, useCreateItem, useCurrentUser, Button, AdaptivePanel } from "@real-life-stack/toolkit"
@@ -8,7 +8,7 @@ import { useModuleConfig, useIsSpaceAdmin } from "../use-module-config"
 import { MapSettingsPanel } from "./MapSettingsPanel"
 import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
 import { QuickCreateForm } from "./QuickCreateForm"
-import { renderPinIcon, type PinStyle } from "./pin-styles"
+import { renderPinIcon, renderPinHtml, type PinStyle } from "./pin-styles"
 
 // ============================================================
 // Default-Pin-Konfiguration pro Item-Typ
@@ -43,10 +43,25 @@ export interface MapModuleConfig {
   /** Zeige Action-Button unten rechts? */
   actionButton?: {
     enabled: boolean
+    /** @deprecated nur fuer Legacy-Configs — bitte `actions` nutzen. */
     label?: string
-    /** Welcher Item-Typ wird beim Klick angelegt. */
+    /** @deprecated nur fuer Legacy-Configs — bitte `actions` nutzen. */
     createItemType?: string
+    /**
+     * Liste der Aktionen. 1 Action: direkter Klick. >1: aufklappbares Menu.
+     * Bei leerer Liste + Legacy-Felder werden diese als 1-Action-Liste interpretiert.
+     */
+    actions?: MapActionEntry[]
   }
+}
+
+export interface MapActionEntry {
+  /** Stabile ID (fuer Reihenfolge + React-Keys). */
+  id: string
+  /** Beschriftung im Menu. */
+  label: string
+  /** Welcher Item-Typ wird beim Klick angelegt. */
+  createItemType: string
 }
 
 export const TILE_PROVIDERS: Record<NonNullable<MapModuleConfig["tileProvider"]>, { url: string; label: string }> = {
@@ -73,7 +88,41 @@ export const mapDefaultConfig: MapModuleConfig = {
   tileProvider: "osm-de",
   defaultCenter: [50.0, 10.0],
   defaultZoom: 6,
-  actionButton: { enabled: false },
+  actionButton: { enabled: false, actions: [] },
+}
+
+/**
+ * Liest die effektive Actions-Liste aus der Konfig.
+ * Migriert Legacy (createItemType + label) automatisch.
+ */
+export function resolveMapActions(cfg: MapModuleConfig): MapActionEntry[] {
+  const ab = cfg.actionButton
+  if (!ab?.enabled) return []
+  if (ab.actions && ab.actions.length > 0) return ab.actions
+  if (ab.createItemType) {
+    return [{
+      id: "legacy",
+      label: ab.label?.trim() || "Neu",
+      createItemType: ab.createItemType,
+    }]
+  }
+  return []
+}
+
+/** Merged User-Pin-Style mit Default fuer einen Item-Typ. */
+export function resolvePinStyle(type: string, cfg: MapModuleConfig): PinStyle {
+  const userStyle = cfg.pinStyles?.[type]
+  const defaultStyle = DEFAULT_PIN_STYLES[type] ?? { color: "#888", shape: "drop" as const }
+  return {
+    shape: userStyle?.shape ?? defaultStyle.shape,
+    color: userStyle?.color ?? defaultStyle.color,
+    borderColor: userStyle?.borderColor,
+    borderWidth: userStyle?.borderWidth,
+    iconColor: userStyle?.iconColor,
+    glow: userStyle?.glow,
+    size: userStyle?.size,
+    iconSvg: userStyle?.iconSvg,
+  }
 }
 
 // ============================================================
@@ -96,6 +145,7 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
   // Quick-Create-Flow von der Karte aus
   const [creatingType, setCreatingType] = useState<string | null>(null)
   const [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [actionMenuOpen, setActionMenuOpen] = useState(false)
 
   const pinTypes = cfg.pinTypes ?? mapDefaultConfig.pinTypes!
   const tileUrl = cfg.tileUrl ?? TILE_PROVIDERS[cfg.tileProvider ?? "osm-de"].url
@@ -119,18 +169,7 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
       .map((item) => {
         const loc = (item.data.location as { lat?: number; lng?: number } | undefined) ?? null
         if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return null
-        const userStyle = cfg.pinStyles?.[item.type]
-        const defaultStyle = DEFAULT_PIN_STYLES[item.type] ?? { color: "#888", shape: "drop" as const }
-        const style: PinStyle = {
-          shape: userStyle?.shape ?? defaultStyle.shape,
-          color: userStyle?.color ?? defaultStyle.color,
-          borderColor: userStyle?.borderColor,
-          borderWidth: userStyle?.borderWidth,
-          iconColor: userStyle?.iconColor,
-          glow: userStyle?.glow,
-          size: userStyle?.size,
-          iconSvg: userStyle?.iconSvg,
-        }
+        const style = resolvePinStyle(item.type, cfg)
         return {
           item,
           lat: loc.lat,
@@ -142,7 +181,7 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
-  }, [allItems, cfg.pinStyles])
+  }, [allItems, cfg])
 
   const center: [number, number] = markers.length > 0
     ? [
@@ -158,11 +197,32 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
     await setModuleConfig(activeGroup, "map", next)
   }
 
-  const startQuickCreate = useCallback(() => {
-    const type = cfg.actionButton?.createItemType?.trim() || "place"
-    setCreatingType(type)
+  const actions = useMemo(() => resolveMapActions(cfg), [cfg])
+
+  const startActionCreate = useCallback((createItemType: string) => {
+    setActionMenuOpen(false)
+    setCreatingType(createItemType)
     setPickedLocation(null)
-  }, [cfg.actionButton?.createItemType])
+  }, [])
+
+  const handleFabClick = useCallback(() => {
+    if (actions.length === 0) return
+    if (actions.length === 1) {
+      startActionCreate(actions[0].createItemType)
+    } else {
+      setActionMenuOpen((open) => !open)
+    }
+  }, [actions, startActionCreate])
+
+  // ESC schliesst das Aktionen-Menu
+  useEffect(() => {
+    if (!actionMenuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setActionMenuOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [actionMenuOpen])
 
   const handleQuickCreate = useCallback(
     async (data: Record<string, unknown>) => {
@@ -285,15 +345,61 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
         ))}
       </MapContainer>
 
-      {/* Action-Button unten rechts (konfigurierbar) */}
-      {!isPreview && cfg.actionButton?.enabled && !creatingType && (
-        <button
-          className="absolute bottom-6 right-4 z-[1000] h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
-          title={cfg.actionButton.label ?? "Neu"}
-          onClick={startQuickCreate}
-        >
-          <span className="text-2xl leading-none">+</span>
-        </button>
+      {/* Action-Button unten rechts + Multi-Action-Menu */}
+      {!isPreview && actions.length > 0 && !creatingType && (
+        <>
+          {/* Backdrop schliesst das Menu beim Klick neben dran */}
+          {actionMenuOpen && (
+            <div
+              className="absolute inset-0 z-[999]"
+              onClick={() => setActionMenuOpen(false)}
+            />
+          )}
+
+          {/* Aufgeklappte Aktions-Liste oberhalb des FAB */}
+          {actionMenuOpen && actions.length > 1 && (
+            <div className="absolute bottom-24 right-4 z-[1001] flex flex-col gap-2 items-end animate-in fade-in slide-in-from-bottom-2 duration-150">
+              {actions.map((action) => {
+                const style = resolvePinStyle(action.createItemType, cfg)
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => startActionCreate(action.createItemType)}
+                    className="bg-background/95 backdrop-blur shadow-lg pl-2 pr-4 py-2 rounded-full border flex items-center gap-2 hover:bg-muted/80 hover:scale-[1.02] transition-all"
+                    title={action.label}
+                  >
+                    <span
+                      style={{ width: 24, height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                      dangerouslySetInnerHTML={{ __html: renderPinHtml(style, 22) }}
+                    />
+                    <span className="text-sm font-medium whitespace-nowrap">{action.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Eigentlicher FAB */}
+          <button
+            className="absolute bottom-6 right-4 z-[1001] h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
+            title={
+              actions.length === 1
+                ? actions[0].label
+                : actionMenuOpen
+                ? "Menu schliessen"
+                : "Aktion waehlen"
+            }
+            onClick={handleFabClick}
+            aria-expanded={actions.length > 1 ? actionMenuOpen : undefined}
+          >
+            {actionMenuOpen && actions.length > 1 ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Plus className="h-6 w-6" />
+            )}
+          </button>
+        </>
       )}
 
       {/* Hint waehrend Picker aktiv */}
