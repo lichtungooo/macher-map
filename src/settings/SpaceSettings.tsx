@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Settings as SettingsIcon,
   Home,
@@ -72,6 +72,8 @@ export interface SpaceSettingsProps {
   activeGroup: Group | null
   /** Welcher Tab beim Oeffnen aktiv sein soll. Default: "general". */
   initialTab?: SpaceSettingsTab
+  /** Wenn gesetzt: im Module-Tab automatisch dieses Modul aufgeklappt zeigen. */
+  initialModuleId?: string | null
 }
 
 interface TabDef {
@@ -97,9 +99,18 @@ export function SpaceSettings({
   spaceId,
   activeGroup,
   initialTab = "general",
+  initialModuleId = null,
 }: SpaceSettingsProps) {
   const [activeTab, setActiveTab] = useState<SpaceSettingsTab>(initialTab)
   const [previewVisible, setPreviewVisible] = useState(true)
+
+  // Wenn Dialog mit initialTab/initialModuleId neu geoeffnet wird:
+  // den State entsprechend setzen.
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab)
+    }
+  }, [open, initialTab])
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
@@ -194,7 +205,7 @@ export function SpaceSettings({
                 <SplitContent
                   previewVisible={previewVisible}
                   hasPreview={tabHasPreview(activeTab)}
-                  editor={renderEditor(activeTab, spaceId, activeGroup)}
+                  editor={renderEditor(activeTab, spaceId, activeGroup, initialModuleId)}
                   preview={renderPreview(activeTab, activeGroup)}
                 />
               )}
@@ -263,7 +274,8 @@ function tabHasPreview(tab: SpaceSettingsTab): boolean {
 function renderEditor(
   tab: SpaceSettingsTab,
   spaceId: string | null,
-  activeGroup: Group
+  activeGroup: Group,
+  initialModuleId: string | null
 ): React.ReactNode {
   switch (tab) {
     case "general":
@@ -280,7 +292,7 @@ function renderEditor(
         </EmbeddedView>
       )
     case "modules":
-      return <ModulesTab group={activeGroup} />
+      return <ModulesTab group={activeGroup} initialOpenModuleId={initialModuleId} />
     case "modulschmiede":
       return (
         <EmbeddedView>
@@ -505,12 +517,25 @@ const FUNCTION_MODULE_IDS = ["map", "kanban", "calendar", "marketplace"]
 
 const MODULES_WITH_CONFIG = new Set(["map", "calendar"])
 
-function ModulesTab({ group }: { group: Group }) {
+function ModulesTab({ group, initialOpenModuleId }: { group: Group; initialOpenModuleId?: string | null }) {
   const updateGroup = useUpdateGroup()
   const { setModuleConfig } = useModuleConfig()
   const [busy, setBusy] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draft, setDraft] = useState<unknown>(null)
+
+  // Initial: wenn jemand mit initialOpenModuleId reinkommt (z.B. Inline-
+  // Zahnrad auf der Karte), das Modul direkt aufgeklappt zeigen.
+  useEffect(() => {
+    if (initialOpenModuleId && MODULES_WITH_CONFIG.has(initialOpenModuleId)) {
+      const mod = getModule(initialOpenModuleId)
+      if (mod) {
+        const current = getModuleConfig(group, initialOpenModuleId, mod.defaultConfig)
+        setSelectedId(initialOpenModuleId)
+        setDraft(current ?? mod.defaultConfig ?? {})
+      }
+    }
+  }, [initialOpenModuleId, group])
 
   const enabled = useMemo<string[]>(
     () => (group.data?.modules as string[] | undefined) ?? FUNCTION_MODULE_IDS,

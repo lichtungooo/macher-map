@@ -4,9 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "re
 import L from "leaflet"
 import { useItems, useCreateItem, useCurrentUser, Button, AdaptivePanel } from "@real-life-stack/toolkit"
 import type { ModuleViewProps } from "../registry"
-import { useModuleConfig, useIsSpaceAdmin } from "../use-module-config"
-import { MapSettingsPanel } from "./MapSettingsPanel"
-import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
+import { useIsSpaceAdmin } from "../use-module-config"
 import { QuickCreateForm } from "./QuickCreateForm"
 import { renderPinIcon, renderPinHtml, type PinStyle } from "./pin-styles"
 import { EmptyMapBanner } from "../../demo/EmptyMapBanner"
@@ -229,13 +227,11 @@ export interface MapViewProps extends ModuleViewProps<MapModuleConfig> {
   isPreview?: boolean
 }
 
-export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProps) {
+export function MapView({ spaceId, activeGroup, config, isPreview, onOpenSettings }: MapViewProps) {
   const cfg = { ...mapDefaultConfig, ...(config ?? {}) }
   const isAdmin = useIsSpaceAdmin(spaceId)
-  const { setModuleConfig } = useModuleConfig()
   const { mutate: createItem } = useCreateItem()
   const { data: currentUser } = useCurrentUser()
-  const [editOpen, setEditOpen] = useState(false)
 
   // Quick-Create-Flow von der Karte aus
   const [creatingType, setCreatingType] = useState<string | null>(null)
@@ -320,11 +316,6 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
 
   const zoom = markers.length > 0 ? 11 : (cfg.defaultZoom ?? 6)
 
-  const handleSaveConfig = async (next: MapModuleConfig) => {
-    if (!activeGroup) return
-    await setModuleConfig(activeGroup, "map", next)
-  }
-
   const actions = useMemo(() => resolveMapActions(cfg), [cfg])
 
   const startActionCreate = useCallback((createItemType: string) => {
@@ -370,12 +361,6 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
     setPickedLocation({ lat: latlng.lat, lng: latlng.lng })
   }, [])
 
-  const pinTypeOptions = Object.entries(DEFAULT_PIN_STYLES).map(([id, s]) => ({
-    id,
-    label: s.label,
-    defaultColor: s.color,
-  }))
-
   return (
     <div style={{ height: isPreview ? "100%" : "calc(100dvh - 3.5rem)", isolation: "isolate", position: "relative" }}>
       {/* Settings-Zahnrad oben rechts (nur Admin, NICHT im Preview) */}
@@ -386,7 +371,7 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => setEditOpen(true)}
+              onClick={() => onOpenSettings?.("modules", "map")}
               title="Karte konfigurieren"
               aria-label="Karte konfigurieren"
             >
@@ -454,34 +439,6 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
         <div className="absolute top-14 left-3 z-[1000] bg-background/95 backdrop-blur rounded-md shadow-md border px-3 py-1.5 text-xs text-muted-foreground">
           Keine Treffer fuer <code className="text-foreground">{searchQuery}</code>
         </div>
-      )}
-
-      {/* Edit-Screen (Vollbild Split: Editor links, Live-Preview rechts) */}
-      {!isPreview && activeGroup && (
-        <ModuleEditScreen<MapModuleConfig>
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          title="Karte"
-          description="Pin-Typen, Karten-Stil, Action-Button"
-          initialConfig={cfg}
-          onSave={handleSaveConfig}
-          renderEditor={(draft, setDraft) => (
-            <MapSettingsPanel
-              config={draft}
-              onChange={setDraft}
-              pinTypeOptions={pinTypeOptions}
-            />
-          )}
-          renderPreview={(draft) => (
-            <MapView
-              spaceId={spaceId}
-              activeGroup={activeGroup}
-              allGroups={[]}
-              config={draft}
-              isPreview
-            />
-          )}
-        />
       )}
 
       <MapContainer

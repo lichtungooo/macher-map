@@ -39,6 +39,12 @@ export interface ModuleViewProps<TConfig = unknown> {
   onItemSelect?: (id: string) => void
   /** Item-Detail schliessen. */
   onItemClose?: () => void
+  /**
+   * Oeffnet das Vollbild-Space-Settings. Optional mit einem Tab + Modul-ID,
+   * sodass z.B. das Inline-Zahnrad auf der Karte direkt zur Karten-Konfig
+   * springt.
+   */
+  onOpenSettings?: (tab?: string, moduleId?: string) => void
 }
 
 /** Props fuer Widget-Variante (kompakt, eingebettet). */

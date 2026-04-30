@@ -20,8 +20,7 @@ import {
 } from "@real-life-stack/toolkit"
 import type { Item } from "@real-life-stack/data-interface"
 import type { ModuleViewProps } from "../registry"
-import { useIsSpaceAdmin, useModuleConfig } from "../use-module-config"
-import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
+import { useIsSpaceAdmin } from "../use-module-config"
 import { CalendarSettingsPanel } from "./CalendarSettingsPanel"
 import { MarkdownEditor, MarkdownView } from "./MarkdownEditor"
 import { ImageUploadField } from "./ImageUploadField"
@@ -108,12 +107,10 @@ const WEEKDAYS_SO = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
 // View
 // ============================================================
 
-export function CalendarView({ spaceId, activeGroup, config, isPreview }: CalendarViewProps) {
+export function CalendarView({ spaceId, activeGroup, config, isPreview, onOpenSettings }: CalendarViewProps) {
   const cfg = { ...calendarDefaultConfig, ...(config ?? {}) }
   const isAdmin = useIsSpaceAdmin(spaceId)
-  const { setModuleConfig } = useModuleConfig()
 
-  const [editOpen, setEditOpen] = useState(false)
   const [activeView, setActiveView] = useState<CalendarView>(cfg.defaultView)
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
   const [currentDay, setCurrentDay] = useState(() => new Date())
@@ -174,14 +171,6 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
     onItemOpen: setEditItem,
   })
 
-  const handleSaveConfig = useCallback(
-    async (next: CalendarModuleConfig) => {
-      if (!activeGroup) return
-      await setModuleConfig(activeGroup, "calendar", next)
-    },
-    [activeGroup, setModuleConfig]
-  )
-
   const handleCreate = useCallback(
     async (data: Record<string, unknown>) => {
       const itemType = cfg.mode === "group-calendar" ? "appointment" : "event"
@@ -214,32 +203,6 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
 
   return (
     <div className="space-y-4 relative">
-      {/* Edit-Screen Vollbild */}
-      {!isPreview && activeGroup && (
-        <ModuleEditScreen<CalendarModuleConfig>
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          title="Kalender"
-          description="Modus, Ansichten, Item-Typen, Farben"
-          initialConfig={cfg}
-          onSave={handleSaveConfig}
-          renderEditor={(draft, setDraft) => (
-            <CalendarSettingsPanel config={draft} onChange={setDraft} />
-          )}
-          renderPreview={(draft) => (
-            <div className="p-4">
-              <CalendarView
-                spaceId={spaceId}
-                activeGroup={activeGroup}
-                allGroups={[]}
-                config={draft}
-                isPreview
-              />
-            </div>
-          )}
-        />
-      )}
-
       {/* Toolbar */}
       <div className="flex gap-2 items-center flex-wrap">
         {/* View-Switcher */}
@@ -295,7 +258,7 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setEditOpen(true)}
+            onClick={() => onOpenSettings?.("modules", "calendar")}
             title="Kalender konfigurieren"
             aria-label="Kalender konfigurieren"
           >

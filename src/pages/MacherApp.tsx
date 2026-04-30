@@ -168,6 +168,7 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
   const [isDark, setIsDark] = useState(false)
   const [spaceSettingsOpen, setSpaceSettingsOpen] = useState(false)
   const [spaceSettingsTab, setSpaceSettingsTab] = useState<SpaceSettingsTab>('general')
+  const [spaceSettingsModuleId, setSpaceSettingsModuleId] = useState<string | null>(null)
 
   const OVERVIEW_WORKSPACE: Workspace = { id: '__overview__', name: 'Alle Werkstaetten', scope: 'overview' }
   const workspaces: Workspace[] = useMemo(
@@ -216,8 +217,9 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
   // werden die CSS-Variablen automatisch aktualisiert.
   useSpaceTheme(activeGroup)
 
-  const openSpaceSettings = useCallback((tab: SpaceSettingsTab = 'general') => {
+  const openSpaceSettings = useCallback((tab: SpaceSettingsTab = 'general', moduleId: string | null = null) => {
     setSpaceSettingsTab(tab)
+    setSpaceSettingsModuleId(moduleId)
     setSpaceSettingsOpen(true)
   }, [])
   const groupModuleIds = useMemo(() => {
@@ -428,6 +430,12 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
             activeGroup,
             allGroups: groups,
             config: moduleConfig,
+            onOpenSettings: (tab?: string, moduleId?: string) => {
+              openSpaceSettings(
+                (tab as SpaceSettingsTab) ?? 'general',
+                moduleId ?? null,
+              )
+            },
           }
           return activeModuleDef.fullWidth ? (
             <View {...viewProps} />
@@ -515,6 +523,7 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
         spaceId={activeGroup?.id ?? null}
         activeGroup={activeGroup}
         initialTab={spaceSettingsTab}
+        initialModuleId={spaceSettingsModuleId}
       />
 
       {new URLSearchParams(window.location.search).has('dev') && (
