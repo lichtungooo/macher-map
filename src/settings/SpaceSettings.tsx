@@ -32,6 +32,7 @@ import {
 import type { Group } from "@real-life-stack/data-interface"
 import { ThemeView } from "../modules/theme/ThemeView"
 import { MembersView } from "../modules/members/MembersView"
+import { ModulschmiedeView } from "../modules/modulschmiede/ModulschmiedeView"
 import { DemoSection } from "../demo/DemoSection"
 import { getAllModules, getModule, getModuleConfig } from "../modules/registry"
 import { useModuleConfig } from "../modules/use-module-config"
@@ -281,7 +282,16 @@ function renderEditor(
     case "modules":
       return <ModulesTab group={activeGroup} />
     case "modulschmiede":
-      return <ModulschmiedePlaceholder />
+      return (
+        <EmbeddedView>
+          <ModulschmiedeView
+            spaceId={spaceId}
+            activeGroup={activeGroup}
+            allGroups={[]}
+            config={undefined}
+          />
+        </EmbeddedView>
+      )
     case "members":
       return (
         <EmbeddedView>
@@ -300,7 +310,7 @@ function renderEditor(
         </div>
       )
     case "advanced":
-      return <AdvancedPlaceholder />
+      return <AdvancedTab group={activeGroup} />
   }
 }
 
@@ -780,30 +790,105 @@ function ModuleConfigPreview({ moduleId, draft }: { moduleId: string; draft: unk
   )
 }
 
-function ModulschmiedePlaceholder() {
-  return (
-    <div className="max-w-2xl">
-      <h3 className="text-base font-semibold mb-1">Modulschmiede</h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        Eigene Daten-Module bauen — Felder definieren, Layouts waehlen,
-        Aktionen verdrahten. Templates sind als Items im Space gespeichert.
-      </p>
-      <div className="border border-dashed rounded-md p-6 text-center text-sm text-muted-foreground">
-        Modulschmiede-Embed folgt — bis dahin im Tab "Modulschmiede" oben.
-      </div>
-    </div>
-  )
-}
+// ============================================================
+// Tab: Erweitert
+// ============================================================
 
-function AdvancedPlaceholder() {
+function AdvancedTab({ group }: { group: Group }) {
+  const updateGroup = useUpdateGroup()
+  const [busy, setBusy] = useState(false)
+  const [confirmReset, setConfirmReset] = useState(false)
+
+  const moduleConfigs = (group.data?.moduleConfig as Record<string, unknown> | undefined) ?? {}
+  const configCount = Object.keys(moduleConfigs).length
+
+  const resetModuleConfigs = async () => {
+    setBusy(true)
+    try {
+      const next = { ...(group.data ?? {}) }
+      delete (next as { moduleConfig?: unknown }).moduleConfig
+      await updateGroup(group.id, { data: next })
+      setConfirmReset(false)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const exportSpaceJson = () => {
+    const blob = new Blob([JSON.stringify(group, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `space-${group.id.slice(0, 12)}-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div className="max-w-2xl">
-      <h3 className="text-base font-semibold mb-1">Erweitert</h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        Space exportieren, zuruecksetzen, Connector-Quelle wechseln.
-      </p>
-      <div className="border border-dashed rounded-md p-6 text-center text-sm text-muted-foreground">
-        Diese Werkzeuge folgen sobald der Rest steht.
+    <div className="max-w-2xl space-y-4">
+      <div>
+        <h3 className="text-base font-semibold mb-1">Erweitert</h3>
+        <p className="text-xs text-muted-foreground">
+          Werkzeuge fuer Aufraeumen, Export und Reset.
+        </p>
+      </div>
+
+      {/* Export */}
+      <div className="border rounded-md p-3 bg-card space-y-2">
+        <div>
+          <h4 className="text-sm font-semibold">Space exportieren</h4>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Laedt die Group-Daten als JSON herunter — Name, Beschreibung,
+            Mitglieder, Modul-Konfig, Theme. Items selbst sind getrennt im
+            WoT gespeichert.
+          </p>
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={exportSpaceJson}>
+          JSON herunterladen
+        </Button>
+      </div>
+
+      {/* Modul-Konfig zuruecksetzen */}
+      <div className="border rounded-md p-3 bg-card space-y-2">
+        <div>
+          <h4 className="text-sm font-semibold">Modul-Konfiguration zuruecksetzen</h4>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Setzt alle pro-Modul-Einstellungen (Karte, Kalender, ...) auf
+            ihre Default-Werte zurueck. Der Modul-Tab zeigt wieder die
+            volle Demo-First-Ausstattung.
+          </p>
+          {configCount > 0 && (
+            <p className="text-[11px] text-amber-700 mt-1">
+              Aktuell {configCount} Modul{configCount === 1 ? "" : "e"} mit eigener Konfig.
+            </p>
+          )}
+        </div>
+        {!confirmReset ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setConfirmReset(true)}
+            disabled={busy || configCount === 0}
+          >
+            Zuruecksetzen
+          </Button>
+        ) : (
+          <div className="flex gap-2 items-center">
+            <span className="text-[11px] text-amber-700">Wirklich alle Modul-Konfigs zuruecksetzen?</span>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmReset(false)} disabled={busy}>
+              Abbrechen
+            </Button>
+            <Button type="button" size="sm" onClick={resetModuleConfigs} disabled={busy}>
+              {busy ? "Setze zurueck..." : "Ja, zuruecksetzen"}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="border border-dashed rounded-md p-3 text-[11px] text-muted-foreground/80 leading-relaxed">
+        💡 Demo-Daten loeschen geht im Tab "Demo-Daten". Mitglieder verwalten
+        im Tab "Mitglieder". Theme zuruecksetzen via Theme-Tab → Macher-Orange.
       </div>
     </div>
   )
