@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useEffect } from "react"
-import { Settings, Plus, X } from "lucide-react"
+import { Settings, Plus, X, Search as SearchIcon } from "lucide-react"
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet"
 import L from "leaflet"
 import { useItems, useCreateItem, useCurrentUser, Button, AdaptivePanel } from "@real-life-stack/toolkit"
@@ -53,6 +53,11 @@ export interface MapModuleConfig {
      */
     actions?: MapActionEntry[]
   }
+  /** Karten-Suche (Volltext + #hashtag + @user) als floating Suchfeld. */
+  search?: {
+    enabled: boolean
+    placeholder?: string
+  }
 }
 
 export interface MapActionEntry {
@@ -89,6 +94,7 @@ export const mapDefaultConfig: MapModuleConfig = {
   defaultCenter: [50.0, 10.0],
   defaultZoom: 6,
   actionButton: { enabled: false, actions: [] },
+  search: { enabled: false },
 }
 
 /**
@@ -107,6 +113,77 @@ export function resolveMapActions(cfg: MapModuleConfig): MapActionEntry[] {
     }]
   }
   return []
+}
+
+// ============================================================
+// Karten-Suche: Tokenizer (#hashtag, @user, Freitext)
+// ============================================================
+
+export interface ParsedSearch {
+  hashtags: string[]
+  users: string[]
+  text: string[]
+}
+
+export function parseSearchQuery(query: string): ParsedSearch {
+  const hashtags: string[] = []
+  const users: string[] = []
+  const text: string[] = []
+  query
+    .trim()
+    .split(/\s+/)
+    .forEach((token) => {
+      if (!token) return
+      if (token.startsWith("#") && token.length > 1) {
+        hashtags.push(token.slice(1).toLowerCase())
+      } else if (token.startsWith("@") && token.length > 1) {
+        users.push(token.slice(1).toLowerCase())
+      } else {
+        text.push(token.toLowerCase())
+      }
+    })
+  return { hashtags, users, text }
+}
+
+/** Prueft ob ein Item-Datensatz auf eine geparste Suchanfrage passt. */
+export function itemMatchesSearch(
+  item: { type: string; createdBy?: string; data: Record<string, unknown> },
+  parsed: ParsedSearch
+): boolean {
+  if (parsed.hashtags.length === 0 && parsed.users.length === 0 && parsed.text.length === 0) {
+    return true
+  }
+  // Tags / Hashtags — wir akzeptieren beide Felder + strippen optionales "#"
+  if (parsed.hashtags.length > 0) {
+    const raw = [
+      ...((item.data.hashtags as string[] | undefined) ?? []),
+      ...((item.data.tags as string[] | undefined) ?? []),
+    ]
+    const tags = raw.map((t) => String(t).toLowerCase().replace(/^#/, ""))
+    if (!parsed.hashtags.every((h) => tags.includes(h))) return false
+  }
+  // User — Substring im createdBy (DID oder Name, je nachdem was im Feld steht)
+  if (parsed.users.length > 0) {
+    const created = String(item.createdBy ?? "").toLowerCase()
+    if (!parsed.users.some((u) => created.includes(u))) return false
+  }
+  // Freitext — Substring in Titel/Beschreibung/Adresse
+  if (parsed.text.length > 0) {
+    const blob = [
+      item.data.title,
+      item.data.description,
+      item.data.markdownBody,
+      item.data.plainDescription,
+      item.data.address,
+      item.data.name,
+      item.data.bio,
+    ]
+      .filter(Boolean)
+      .map((s) => String(s).toLowerCase())
+      .join(" ")
+    if (!parsed.text.every((t) => blob.includes(t))) return false
+  }
+  return true
 }
 
 /** Merged User-Pin-Style mit Default fuer einen Item-Typ. */
@@ -148,41 +225,64 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
   const [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [actionMenuOpen, setActionMenuOpen] = useState(false)
 
+  // Karten-Suche (#hashtag, @user, Freitext)
+  const [searchQuery, setSearchQuery] = useState("")
+
   const pinTypes = cfg.pinTypes ?? mapDefaultConfig.pinTypes!
   const tileUrl = cfg.tileUrl ?? TILE_PROVIDERS[cfg.tileProvider ?? "osm-de"].url
 
   // Items pro Typ laden — wir nutzen useItems pro Type weil Filter im
-  // useItems-Hook nicht alle Typen kombinieren kann. Limit hier: max 6 Typen.
+  // useItems-Hook nicht alle Typen kombinieren kann.
   const placeItems = useItems({ type: pinTypes.includes("place") ? "place" : "__none__" }).data
   const eventItems = useItems({ type: pinTypes.includes("event") ? "event" : "__none__" }).data
   const offerItems = useItems({ type: pinTypes.includes("offer") ? "offer" : "__none__" }).data
   const needItems = useItems({ type: pinTypes.includes("need") ? "need" : "__none__" }).data
   const questItems = useItems({ type: pinTypes.includes("quest") ? "quest" : "__none__" }).data
+  // User-Pins: profile-extension-Items (eines pro User) mit data.location
+  const profileExtItems = useItems({
+    type: pinTypes.includes("profile") ? "profile-extension" : "__none__",
+  }).data
+
+  // Profile-Extension-Items werden fuer Marker-Logik wie type "profile" behandelt.
+  const profileItems = useMemo(
+    () => profileExtItems.map((it) => ({ ...it, type: "profile" })),
+    [profileExtItems]
+  )
 
   const allItems = useMemo(
-    () => [...placeItems, ...eventItems, ...offerItems, ...needItems, ...questItems],
-    [placeItems, eventItems, offerItems, needItems, questItems]
+    () => [...placeItems, ...eventItems, ...offerItems, ...needItems, ...questItems, ...profileItems],
+    [placeItems, eventItems, offerItems, needItems, questItems, profileItems]
   )
+
+  const parsedSearch = useMemo(() => parseSearchQuery(searchQuery), [searchQuery])
 
   // Marker erzeugen — Items mit gueltigem location-Field oder data.location
   const markers = useMemo(() => {
+    const searchActive = cfg.search?.enabled === true
     return allItems
       .map((item) => {
         const loc = (item.data.location as { lat?: number; lng?: number } | undefined) ?? null
         if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return null
+        if (searchActive && !itemMatchesSearch(item, parsedSearch)) return null
         const style = resolvePinStyle(item.type, cfg)
+        // User-Pins (type "profile") zeigen Name aus data.name oder data.title
+        const isProfile = item.type === "profile"
+        const title = isProfile
+          ? String(item.data.name ?? item.data.title ?? "Macher")
+          : String(item.data.title ?? "(ohne Titel)")
         return {
           item,
           lat: loc.lat,
           lng: loc.lng,
-          title: String(item.data.title ?? "(ohne Titel)"),
-          subtitle:
-            String(item.data.address ?? item.data.description ?? item.data.start ?? ""),
+          title,
+          subtitle: isProfile
+            ? String(item.data.bio ?? item.data.address ?? "")
+            : String(item.data.address ?? item.data.description ?? item.data.start ?? ""),
           icon: renderPinIcon(style),
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
-  }, [allItems, cfg])
+  }, [allItems, cfg, parsedSearch])
 
   const center: [number, number] = markers.length > 0
     ? [
@@ -266,6 +366,39 @@ export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProp
               <Settings className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Karten-Suche oben links (konfigurierbar, nicht im Preview) */}
+      {!isPreview && cfg.search?.enabled && !creatingType && (
+        <div className="absolute top-3 left-3 z-[1000] flex items-center bg-background/95 backdrop-blur rounded-md shadow-md border">
+          <SearchIcon className="h-4 w-4 text-muted-foreground ml-2.5 shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={cfg.search?.placeholder ?? "Suche... #hashtag @user"}
+            className="px-2 py-1.5 text-sm bg-transparent outline-none w-48 sm:w-64"
+            aria-label="Karte durchsuchen"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="h-8 w-8 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+              title="Suche leeren"
+              aria-label="Suche leeren"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Such-Status: keine Treffer */}
+      {!isPreview && cfg.search?.enabled && searchQuery && markers.length === 0 && (
+        <div className="absolute top-14 left-3 z-[1000] bg-background/95 backdrop-blur rounded-md shadow-md border px-3 py-1.5 text-xs text-muted-foreground">
+          Keine Treffer fuer <code className="text-foreground">{searchQuery}</code>
         </div>
       )}
 

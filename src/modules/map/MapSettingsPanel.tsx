@@ -79,10 +79,7 @@ export function MapSettingsPanel({ config, onChange, pinTypeOptions }: MapSettin
       </TabsContent>
 
       <TabsContent value="search" className="space-y-4 mt-4">
-        <ComingSoon
-          title="Suche"
-          description="Hashtag- und User-Suche direkt auf der Karte. Pins werden gefiltert."
-        />
+        <SearchTab config={config} onChange={onChange} />
       </TabsContent>
     </Tabs>
   )
@@ -193,9 +190,16 @@ function PinsTab({
         </div>
       </div>
 
-      <div className="border border-dashed border-border rounded-md p-3 text-[11px] text-muted-foreground/70">
-        💡 <strong>Tipp:</strong> Im Stil-Editor pro Typ kannst du ein eigenes Bild hochladen
-        (z.B. Werkstatt-Logo). Das Bild wird in die Pin-Form geclippt.
+      <div className="border border-dashed border-border rounded-md p-3 text-[11px] text-muted-foreground/70 space-y-1.5">
+        <div>
+          💡 <strong>Bild als Pin:</strong> Im Stil-Editor pro Typ kannst du ein eigenes Bild
+          hochladen (z.B. Werkstatt-Logo). Das Bild wird in die Pin-Form geclippt.
+        </div>
+        <div>
+          👤 <strong>Macher als Pin:</strong> Aktiviere "Macher" oben — dann erscheinen alle
+          Profile mit Standort als Pins. Profile mit <code>data.location.lat/lng</code> in
+          ihrer Extension werden gerendert.
+        </div>
       </div>
     </div>
   )
@@ -452,6 +456,78 @@ function ActionsTab({
           </p>
         </div>
       )}
+    </div>
+  )
+}
+
+// ============================================================
+// Tab: Suche
+// ============================================================
+
+function SearchTab({
+  config,
+  onChange,
+}: {
+  config: MapModuleConfig
+  onChange: (next: MapModuleConfig) => void
+}) {
+  const search = config.search ?? { enabled: false }
+
+  const setSearch = (patch: Partial<NonNullable<MapModuleConfig["search"]>>) => {
+    onChange({ ...config, search: { ...search, ...patch } })
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+          Karten-Suche
+        </h4>
+        <p className="text-[11px] text-muted-foreground/70 mt-1">
+          Floating-Suchfeld oben links auf der Karte. Filtert sichtbare Pins live.
+        </p>
+      </div>
+
+      <label className="flex items-center gap-2 p-2 border rounded-md cursor-pointer">
+        <input
+          type="checkbox"
+          checked={search.enabled ?? false}
+          onChange={(e) => setSearch({ enabled: e.target.checked })}
+        />
+        <span className="text-sm">Suchfeld auf der Karte zeigen</span>
+      </label>
+
+      {search.enabled && (
+        <div className="pl-2 border-l-2 ml-2 space-y-2">
+          <div>
+            <Label className="text-xs">Platzhalter-Text</Label>
+            <Input
+              value={search.placeholder ?? ""}
+              onChange={(e) => setSearch({ placeholder: e.target.value })}
+              placeholder="Suche... #hashtag @user"
+            />
+            <p className="text-[10px] text-muted-foreground/70 mt-1">
+              Kurze Anleitung im Suchfeld. Leer lassen fuer Default.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="border border-dashed border-border rounded-md p-3 text-[11px] text-muted-foreground/70 space-y-1.5">
+        <div className="font-medium text-foreground">Such-Syntax</div>
+        <ul className="space-y-0.5 list-none">
+          <li>
+            <code className="text-foreground">holz</code> — sucht in Titel, Beschreibung, Adresse, Bio
+          </li>
+          <li>
+            <code className="text-foreground">#sommerfest</code> — Items mit Hashtag/Tag
+          </li>
+          <li>
+            <code className="text-foreground">@did:key:abc</code> — Items von einem User
+          </li>
+          <li>Mehrere Tokens kombinieren — alle muessen passen.</li>
+        </ul>
+      </div>
     </div>
   )
 }
