@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react"
-import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket, Search, Clock, Grid3x3 } from "lucide-react"
+import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket, Search, Clock, Grid3x3, User as UserIcon } from "lucide-react"
 import {
   useItems,
   useCreateItem,
@@ -36,6 +36,7 @@ import { useMyParticipations } from "./useParticipation"
 import { CalendarFilterBar, applyCalendarFilter, collectHashtags, emptyFilter, type CalendarFilterState } from "./CalendarFilterBar"
 import { DayView } from "./views/DayView"
 import { YearView } from "./views/YearView"
+import { MyEventsView } from "./views/MyEventsView"
 import { useCalendars } from "./useCalendars"
 import { TagInput } from "../profile/TagInput"
 
@@ -44,7 +45,7 @@ import { TagInput } from "../profile/TagInput"
 // ============================================================
 
 export type CalendarMode = "event-calendar" | "group-calendar" | "mixed"
-export type CalendarView = "day" | "week" | "month" | "year" | "agenda" | "events"
+export type CalendarView = "day" | "week" | "month" | "year" | "agenda" | "events" | "mine"
 export type FirstDayOfWeek = "monday" | "sunday"
 export type TimeFormat = "24h" | "12h"
 
@@ -235,14 +236,15 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
       {/* Toolbar */}
       <div className="flex gap-2 items-center flex-wrap">
         {/* View-Switcher */}
-        <div className="inline-flex rounded-md border bg-muted/30 p-0.5">
-          {(["day", "week", "month", "year", "agenda", "events"] as CalendarView[]).map((v) => {
+        <div className="inline-flex rounded-md border bg-muted/30 p-0.5 flex-wrap">
+          {(["day", "week", "month", "year", "agenda", "events", "mine"] as CalendarView[]).map((v) => {
             const Icon =
               v === "day" ? Clock
               : v === "week" ? Layers
               : v === "month" ? CalendarDays
               : v === "year" ? Grid3x3
               : v === "agenda" ? List
+              : v === "mine" ? UserIcon
               : Layers
             const isActive = activeView === v
             const label =
@@ -251,6 +253,7 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
               : v === "month" ? "Monat"
               : v === "year" ? "Jahr"
               : v === "agenda" ? "Agenda"
+              : v === "mine" ? "Meine"
               : "Events"
             return (
               <button
@@ -353,6 +356,14 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
       )}
       {activeView === "events" && (
         <EventListView items={allItems} colors={cfg.colors ?? {}} onItemClick={setEditItem} />
+      )}
+      {activeView === "mine" && (
+        <MyEventsView
+          items={allItems}
+          colors={cfg.colors ?? {}}
+          timeFormat={cfg.timeFormat}
+          onItemClick={setEditItem}
+        />
       )}
 
       {/* Create-Dialog */}
