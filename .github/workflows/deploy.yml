@@ -23,27 +23,24 @@ jobs:
         with:
           path: macher-map
 
-      # Real-Life-Stack (Antons Toolkit) — auf bekannt-guten Commit gepinned.
-      # Antons aktueller master enthaelt einen Refactor (@real-life/wot-core)
-      # der noch nicht mit web-of-trust synchronisiert ist. Wir bleiben bis
-      # zur Abstimmung mit Anton auf b046e96 (zuletzt gruener Build).
-      # fetch-depth: 0 noetig damit ein nicht-HEAD Commit erreichbar ist.
-      - name: Checkout real-life-stack
+      # Real-Life-Stack: lichtungooo-Fork (Timos eigener Stand). Antons
+      # real-life-org/master hat einen mid-flight Refactor (@real-life/wot-core)
+      # der noch nicht mit web-of-trust synchronisiert ist. Spaeter mit Anton
+      # abstimmen und ggf. wieder auf real-life-org/master umstellen.
+      - name: Checkout real-life-stack (Timo-Fork)
         uses: actions/checkout@v4
         with:
-          repository: real-life-org/real-life-stack
-          ref: b046e96afa68cbc4f4ad62c7ddef1a3e3019727f
+          repository: lichtungooo/real-life-stack
+          ref: master
           path: real-life-stack
-          fetch-depth: 0
 
-      # Web-of-Trust (Antons Identitaets-Stack) — pinned auf lokal bewaehrten Stand
+      # Web-of-Trust (Antons Identitaets-Stack) — main-HEAD ist stabil
       - name: Checkout web-of-trust
         uses: actions/checkout@v4
         with:
           repository: antontranelis/web-of-trust
-          ref: b970f51963002a34ad8065a04da8b1619ebc2369
+          ref: main
           path: web-of-trust
-          fetch-depth: 0
 
       - name: Login to GHCR
         uses: docker/login-action@v3
