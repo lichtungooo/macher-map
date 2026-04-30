@@ -31,6 +31,8 @@ import { expandRecurrence, summarizeRecurrence, type RecurrenceRule, type Expand
 import { ReminderEditor } from "./ReminderEditor"
 import type { Reminder } from "./reminders"
 import { useReminderScheduler } from "./useReminderScheduler"
+import { ParticipationControls } from "./ParticipationControls"
+import { useMyParticipations } from "./useParticipation"
 
 // ============================================================
 // Types
@@ -280,6 +282,7 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
             onSubmit={handleUpdate}
             onDelete={handleDelete}
             onCancel={() => setEditItem(null)}
+            currentUserId={currentUser?.id}
           />
         )}
       </AdaptivePanel>
@@ -683,21 +686,27 @@ function EventEditForm({
   onSubmit,
   onDelete,
   onCancel,
+  currentUserId,
 }: {
   item: Item
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onDelete: () => void
   onCancel: () => void
+  currentUserId?: string
 }) {
+  const isOwn = currentUserId === item.createdBy
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4">
-        <h3 className="font-semibold mb-4">Bearbeiten</h3>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Participation oben */}
+        <ParticipationControls eventId={item.id} isOwnEvent={isOwn} />
+
+        <h3 className="font-semibold">Bearbeiten</h3>
         <EventForm
           initialData={item.data}
           onSubmit={onSubmit}
           onCancel={onCancel}
-          onDelete={onDelete}
+          onDelete={isOwn ? onDelete : undefined}
           defaultDuration={60}
         />
       </div>
