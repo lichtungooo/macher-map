@@ -39,6 +39,7 @@ import { YearView } from "./views/YearView"
 import { MyEventsView } from "./views/MyEventsView"
 import { useCalendars } from "./useCalendars"
 import { TagInput } from "../profile/TagInput"
+import { EmptyDemoBanner } from "../../demo/EmptyDemoBanner"
 
 // ============================================================
 // Types
@@ -68,10 +69,16 @@ export interface CalendarModuleConfig {
   notificationsEnabled?: boolean
 }
 
+/**
+ * Default-Konfig — "alles an" (Demo-First / Subtraction-Design).
+ *
+ * Frischer Kalender zeigt Events + Termine + Quests. Admins schalten
+ * ueber das Inline-Zahnrad ab, was sie nicht brauchen.
+ */
 export const calendarDefaultConfig: CalendarModuleConfig = {
-  mode: "event-calendar",
+  mode: "mixed",
   defaultView: "month",
-  itemTypes: ["event"],
+  itemTypes: ["event", "appointment", "quest"],
   colors: { event: "#3b82f6", appointment: "#10b981", quest: "#a855f7" },
   firstDayOfWeek: "monday",
   timeFormat: "24h",
@@ -312,6 +319,18 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
           onChange={setFilter}
           availableHashtags={availableHashtags}
           resultCount={allItems.length}
+        />
+      )}
+
+      {/* Empty-State: keiner Termin im Space → Demo-Banner mit Lade-Knopf */}
+      {!isPreview && activeGroup && (
+        <EmptyDemoBanner
+          visible={rawItems.length === 0 && !creating && !editItem}
+          isAdmin={isAdmin}
+          inline
+          title="Noch kein Termin im Kalender"
+          adminText="Lass uns mit Demo-Events starten — Sommerfest in Kreuzberg, 3D-Druck-Sprechstunde, Macher-Festival Ferropolis. Plus Werkstaetten und Macher mit Standort. Du kannst alles jederzeit wieder loeschen."
+          memberText="Sobald ein Admin Events anlegt, erscheinen sie hier."
         />
       )}
 
