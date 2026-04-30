@@ -64,6 +64,7 @@ import { themeModule } from '../modules/theme'
 import { useSpaceTheme } from '../themes/use-space-theme'
 import { SpaceSettings, type SpaceSettingsTab } from '../settings/SpaceSettings'
 import { MacherWorkspaceSwitcher } from '../spaces/MacherWorkspaceSwitcher'
+import { SpaceHierarchyBar } from '../spaces/SpaceHierarchyBar'
 
 registerModule(mapModule)
 registerModule(kanbanModule)
@@ -409,6 +410,16 @@ function MacherHome({ activeConnectorId, onConnectorChange }: { activeConnectorI
       </Navbar>
 
       <AppShellMain withBottomNav={!activeModuleDef?.fullWidth}>
+        {activeGroup && (
+          <SpaceHierarchyBar
+            group={activeGroup}
+            allGroups={groups}
+            onNavigate={(id) => {
+              const target = workspaces.find((w) => w.id === id)
+              if (target) handleWorkspaceChange(target)
+            }}
+          />
+        )}
         {activeModuleDef ? (() => {
           const View = activeModuleDef.View
           const moduleConfig = getModuleConfig(activeGroup, activeModuleDef.id, activeModuleDef.defaultConfig)
