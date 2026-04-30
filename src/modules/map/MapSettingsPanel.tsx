@@ -140,6 +140,7 @@ function PinsTab({
               glow: userStyle?.glow,
               size: userStyle?.size,
               iconSvg: userStyle?.iconSvg,
+              imageUrl: userStyle?.imageUrl,
             }
             const isExpanded = expandedType === opt.id
 
@@ -192,10 +193,9 @@ function PinsTab({
         </div>
       </div>
 
-      {/* Phase D Hint */}
       <div className="border border-dashed border-border rounded-md p-3 text-[11px] text-muted-foreground/70">
-        🔜 <strong>Phase D</strong> kommt: Pin-Generator (eigene Bilder → Pin),
-        z.B. Werkstatt-Logo direkt auf der Karte.
+        💡 <strong>Tipp:</strong> Im Stil-Editor pro Typ kannst du ein eigenes Bild hochladen
+        (z.B. Werkstatt-Logo). Das Bild wird in die Pin-Form geclippt.
       </div>
     </div>
   )

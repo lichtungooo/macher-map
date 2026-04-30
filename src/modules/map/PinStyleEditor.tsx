@@ -1,8 +1,9 @@
-import { useState } from "react"
-import { Sparkles, Library } from "lucide-react"
+import { useRef, useState } from "react"
+import { Sparkles, Library, Upload, ImageIcon, X } from "lucide-react"
 import { Button, Label } from "@real-life-stack/toolkit"
 import {
   PIN_LIBRARY,
+  fileToPinImage,
   renderPinHtml,
   type PinShape,
   type PinStyle,
@@ -38,10 +39,28 @@ const SHAPES: Array<{ value: PinShape; label: string }> = [
 
 export function PinStyleEditor({ value, onChange, defaultColor }: PinStyleEditorProps) {
   const [showLibrary, setShowLibrary] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
   const style: PinStyle = { color: value.color || defaultColor || "#E8751A", ...value }
 
   const set = <K extends keyof PinStyle>(key: K, val: PinStyle[K]) => {
     onChange({ ...style, [key]: val })
+  }
+
+  const handleImagePick = async (file: File | null | undefined) => {
+    if (!file) return
+    setUploadError(null)
+    setUploading(true)
+    try {
+      const dataUrl = await fileToPinImage(file)
+      onChange({ ...style, imageUrl: dataUrl })
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload fehlgeschlagen")
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ""
+    }
   }
 
   return (
@@ -95,6 +114,68 @@ export function PinStyleEditor({ value, onChange, defaultColor }: PinStyleEditor
           ))}
         </div>
       )}
+
+      {/* Bild-Pin (Phase D: Logo / Foto als Pin) */}
+      <div className="border rounded-md p-2 bg-card">
+        <div className="flex items-center justify-between mb-1.5">
+          <Label className="text-[10px] uppercase text-muted-foreground/70 flex items-center gap-1">
+            <ImageIcon className="h-3 w-3" />
+            Bild als Pin
+          </Label>
+          {style.imageUrl && (
+            <button
+              type="button"
+              onClick={() => set("imageUrl", undefined)}
+              className="text-[10px] text-destructive hover:underline inline-flex items-center gap-1"
+              title="Bild entfernen"
+            >
+              <X className="h-3 w-3" />
+              Entfernen
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <div
+            className="shrink-0 border rounded-md bg-muted/30 flex items-center justify-center"
+            style={{ width: 56, height: 56 }}
+          >
+            {style.imageUrl ? (
+              <div
+                style={{ width: 48, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}
+                dangerouslySetInnerHTML={{ __html: renderPinHtml(style, 44) }}
+              />
+            ) : (
+              <ImageIcon className="h-5 w-5 text-muted-foreground/40" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleImagePick(e.target.files?.[0])}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="text-xs w-full"
+            >
+              <Upload className="h-3 w-3 mr-1" />
+              {uploading ? "Lade..." : style.imageUrl ? "Anderes Bild" : "Bild hochladen"}
+            </Button>
+            <p className="text-[10px] text-muted-foreground/70 mt-1 leading-tight">
+              Quadratisches Crop, max 128×128. Form bleibt — Bild wird in den Pin geclippt.
+            </p>
+          </div>
+        </div>
+        {uploadError && (
+          <p className="text-[10px] text-destructive mt-1">{uploadError}</p>
+        )}
+      </div>
 
       {/* Shape-Picker */}
       <div>

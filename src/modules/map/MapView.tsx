@@ -122,6 +122,7 @@ export function resolvePinStyle(type: string, cfg: MapModuleConfig): PinStyle {
     glow: userStyle?.glow,
     size: userStyle?.size,
     iconSvg: userStyle?.iconSvg,
+    imageUrl: userStyle?.imageUrl,
   }
 }
 
