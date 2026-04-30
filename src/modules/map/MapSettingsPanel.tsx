@@ -13,6 +13,7 @@ import type { MapModuleConfig, MapActionEntry } from "./MapView"
 import { TILE_PROVIDERS, DEFAULT_PIN_STYLES, resolvePinStyle } from "./MapView"
 import { PinStyleEditor } from "./PinStyleEditor"
 import { renderPinHtml, type PinStyle } from "./pin-styles"
+import { DemoSection } from "../../demo/DemoSection"
 
 /**
  * MapSettingsPanel — Editor-UI fuer die Karten-Konfig.
@@ -116,6 +117,8 @@ function PinsTab({
 
   return (
     <div className="space-y-3">
+      <DemoSection />
+
       <div>
         <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
           Pin-Typen
