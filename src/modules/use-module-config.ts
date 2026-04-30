@@ -1,10 +1,11 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import {
   useUpdateGroup,
-  useMembers,
+  useGroups,
   useCurrentUser,
 } from "@real-life-stack/toolkit"
 import type { Group } from "@real-life-stack/data-interface"
+import { isAdmin as isAdminOf } from "../groups/roles"
 
 /**
  * Konfig-Persistenz pro Space + pro Modul.
@@ -44,12 +45,19 @@ export function useModuleConfig() {
 /**
  * Hook: ist der current User Admin im aktiven Space?
  *
- * Aktuell: Creator-Check (erstes Member ist Owner). Spaeter: Antons Rollen.
+ * Admin ist:
+ *   1. Owner (group.members[0]) — implizit, kann nicht aberkannt werden
+ *   2. expliziter "admin" in group.data.roles
  */
 export function useIsSpaceAdmin(spaceId: string | null): boolean {
   const { data: currentUser } = useCurrentUser()
-  const { data: members } = useMembers(spaceId)
+  const { data: groups } = useGroups()
 
-  if (!currentUser?.id || !spaceId || members.length === 0) return false
-  return members[0]?.id === currentUser.id
+  const group = useMemo(
+    () => (spaceId ? groups.find((g) => g.id === spaceId) ?? null : null),
+    [groups, spaceId]
+  )
+
+  if (!currentUser?.id || !group) return false
+  return isAdminOf(group, currentUser.id)
 }
