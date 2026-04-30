@@ -1,12 +1,12 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
+import { Settings } from "lucide-react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import L from "leaflet"
-import { useItems } from "@real-life-stack/toolkit"
-import type { Item } from "@real-life-stack/data-interface"
+import { useItems, Button } from "@real-life-stack/toolkit"
 import type { ModuleViewProps } from "../registry"
 import { useModuleConfig, useIsSpaceAdmin } from "../use-module-config"
 import { MapSettingsPanel } from "./MapSettingsPanel"
-import { ModuleSettingsButton } from "../renderers/ModuleSettingsButton"
+import { ModuleEditScreen } from "../renderers/ModuleEditScreen"
 
 // ============================================================
 // Pin-Stile (Default-Set, spaeter konfigurierbar im Pin-Generator)
@@ -91,10 +91,16 @@ export const mapDefaultConfig: MapModuleConfig = {
 // View
 // ============================================================
 
-export function MapView({ spaceId, activeGroup, config }: ModuleViewProps<MapModuleConfig>) {
+export interface MapViewProps extends ModuleViewProps<MapModuleConfig> {
+  /** Im Preview-Modus wird kein Zahnrad angezeigt (verhindert Inception). */
+  isPreview?: boolean
+}
+
+export function MapView({ spaceId, activeGroup, config, isPreview }: MapViewProps) {
   const cfg = { ...mapDefaultConfig, ...(config ?? {}) }
   const isAdmin = useIsSpaceAdmin(spaceId)
   const { setModuleConfig } = useModuleConfig()
+  const [editOpen, setEditOpen] = useState(false)
 
   const pinTypes = cfg.pinTypes ?? mapDefaultConfig.pinTypes!
   const tileUrl = cfg.tileUrl ?? TILE_PROVIDERS[cfg.tileProvider ?? "osm-de"].url
@@ -146,28 +152,58 @@ export function MapView({ spaceId, activeGroup, config }: ModuleViewProps<MapMod
     await setModuleConfig(activeGroup, "map", next)
   }
 
+  const pinTypeOptions = Object.entries(DEFAULT_PIN_STYLES).map(([id, s]) => ({
+    id,
+    label: s.label,
+    defaultColor: s.color,
+  }))
+
   return (
-    <div style={{ height: "calc(100dvh - 3.5rem)", isolation: "isolate", position: "relative" }}>
-      {/* Settings-Zahnrad oben rechts (nur Admin) */}
-      {isAdmin && activeGroup && (
+    <div style={{ height: isPreview ? "100%" : "calc(100dvh - 3.5rem)", isolation: "isolate", position: "relative" }}>
+      {/* Settings-Zahnrad oben rechts (nur Admin, NICHT im Preview) */}
+      {!isPreview && isAdmin && activeGroup && (
         <div className="absolute top-3 right-3 z-[1000]">
           <div className="bg-background/95 backdrop-blur rounded-md shadow-md border">
-            <ModuleSettingsButton
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setEditOpen(true)}
               title="Karte konfigurieren"
-              visible={true}
+              aria-label="Karte konfigurieren"
             >
-              <MapSettingsPanel
-                config={cfg}
-                pinTypeOptions={Object.entries(DEFAULT_PIN_STYLES).map(([id, s]) => ({
-                  id,
-                  label: s.label,
-                  defaultColor: s.color,
-                }))}
-                onSave={handleSaveConfig}
-              />
-            </ModuleSettingsButton>
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+      )}
+
+      {/* Edit-Screen (Vollbild Split: Editor links, Live-Preview rechts) */}
+      {!isPreview && activeGroup && (
+        <ModuleEditScreen<MapModuleConfig>
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          title="Karte"
+          description="Pin-Typen, Karten-Stil, Action-Button"
+          initialConfig={cfg}
+          onSave={handleSaveConfig}
+          renderEditor={(draft, setDraft) => (
+            <MapSettingsPanel
+              config={draft}
+              onChange={setDraft}
+              pinTypeOptions={pinTypeOptions}
+            />
+          )}
+          renderPreview={(draft) => (
+            <MapView
+              spaceId={spaceId}
+              activeGroup={activeGroup}
+              allGroups={[]}
+              config={draft}
+              isPreview
+            />
+          )}
+        />
       )}
 
       <MapContainer

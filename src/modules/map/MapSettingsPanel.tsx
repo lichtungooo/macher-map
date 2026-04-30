@@ -1,57 +1,45 @@
-import { useState } from "react"
-import { Save } from "lucide-react"
-import { Button, Input, Label } from "@real-life-stack/toolkit"
+import { Label } from "@real-life-stack/toolkit"
+import { Input } from "@real-life-stack/toolkit"
 import type { MapModuleConfig } from "./MapView"
 import { TILE_PROVIDERS } from "./MapView"
 
 /**
- * MapSettingsPanel — Inline-Editor fuer die Karten-Konfig.
+ * MapSettingsPanel — Editor-UI fuer die Karten-Konfig.
  *
- * Erscheint im Side-Panel wenn Admin aufs Zahnrad klickt.
- * Speichert in `group.data.moduleConfig.map`.
+ * **Controlled Component:** bekommt aktuellen Config-Draft + onChange.
+ * Lebt im linken Bereich des ModuleEditScreen, schreibt Aenderungen
+ * in den lokalen State des EditScreen. Speicherung passiert dort.
  */
 
 export interface MapSettingsPanelProps {
   config: MapModuleConfig
+  onChange: (next: MapModuleConfig) => void
   pinTypeOptions: { id: string; label: string; defaultColor: string }[]
-  onSave: (next: MapModuleConfig) => Promise<void>
 }
 
-export function MapSettingsPanel({ config, pinTypeOptions, onSave }: MapSettingsPanelProps) {
-  const [draft, setDraft] = useState<MapModuleConfig>({ ...config })
-  const [saving, setSaving] = useState(false)
-
+export function MapSettingsPanel({ config, onChange, pinTypeOptions }: MapSettingsPanelProps) {
   const togglePinType = (id: string) => {
-    const set = new Set(draft.pinTypes ?? [])
+    const set = new Set(config.pinTypes ?? [])
     if (set.has(id)) set.delete(id)
     else set.add(id)
-    setDraft({ ...draft, pinTypes: Array.from(set) })
+    onChange({ ...config, pinTypes: Array.from(set) })
   }
 
   const setPinColor = (typeId: string, color: string) => {
-    setDraft({
-      ...draft,
+    onChange({
+      ...config,
       pinStyles: {
-        ...(draft.pinStyles ?? {}),
-        [typeId]: { ...(draft.pinStyles?.[typeId] ?? {}), color },
+        ...(config.pinStyles ?? {}),
+        [typeId]: { ...(config.pinStyles?.[typeId] ?? {}), color },
       },
     })
   }
 
   const setActionButton = (patch: Partial<NonNullable<MapModuleConfig["actionButton"]>>) => {
-    setDraft({
-      ...draft,
-      actionButton: { ...(draft.actionButton ?? { enabled: false }), ...patch },
+    onChange({
+      ...config,
+      actionButton: { ...(config.actionButton ?? { enabled: false }), ...patch },
     })
-  }
-
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      await onSave(draft)
-    } finally {
-      setSaving(false)
-    }
   }
 
   return (
@@ -63,8 +51,8 @@ export function MapSettingsPanel({ config, pinTypeOptions, onSave }: MapSettings
         </h4>
         <div className="space-y-2">
           {pinTypeOptions.map((opt) => {
-            const enabled = (draft.pinTypes ?? []).includes(opt.id)
-            const currentColor = draft.pinStyles?.[opt.id]?.color ?? opt.defaultColor
+            const enabled = (config.pinTypes ?? []).includes(opt.id)
+            const currentColor = config.pinStyles?.[opt.id]?.color ?? opt.defaultColor
             return (
               <div key={opt.id} className="flex items-center gap-2 p-2 border rounded-md bg-card">
                 <input
@@ -104,8 +92,8 @@ export function MapSettingsPanel({ config, pinTypeOptions, onSave }: MapSettings
                 <input
                   type="radio"
                   name="tile-provider"
-                  checked={draft.tileProvider === id}
-                  onChange={() => setDraft({ ...draft, tileProvider: id, tileUrl: prov.url })}
+                  checked={config.tileProvider === id}
+                  onChange={() => onChange({ ...config, tileProvider: id, tileUrl: prov.url })}
                 />
                 <span className="text-sm">{prov.label}</span>
               </label>
@@ -122,17 +110,17 @@ export function MapSettingsPanel({ config, pinTypeOptions, onSave }: MapSettings
         <label className="flex items-center gap-2 p-2 border rounded-md cursor-pointer mb-2">
           <input
             type="checkbox"
-            checked={draft.actionButton?.enabled ?? false}
+            checked={config.actionButton?.enabled ?? false}
             onChange={(e) => setActionButton({ enabled: e.target.checked })}
           />
           <span className="text-sm">Action-Button anzeigen</span>
         </label>
-        {draft.actionButton?.enabled && (
+        {config.actionButton?.enabled && (
           <div className="space-y-2 pl-2">
             <div>
               <Label className="text-xs">Beschriftung</Label>
               <Input
-                value={draft.actionButton?.label ?? ""}
+                value={config.actionButton?.label ?? ""}
                 onChange={(e) => setActionButton({ label: e.target.value })}
                 placeholder="z.B. Werkstatt eintragen"
               />
@@ -140,7 +128,7 @@ export function MapSettingsPanel({ config, pinTypeOptions, onSave }: MapSettings
             <div>
               <Label className="text-xs">Item-Typ beim Klick anlegen</Label>
               <Input
-                value={draft.actionButton?.createItemType ?? ""}
+                value={config.actionButton?.createItemType ?? ""}
                 onChange={(e) => setActionButton({ createItemType: e.target.value })}
                 placeholder="z.B. place"
               />
@@ -148,14 +136,6 @@ export function MapSettingsPanel({ config, pinTypeOptions, onSave }: MapSettings
           </div>
         )}
       </section>
-
-      {/* Save */}
-      <div className="pt-4 border-t flex justify-end">
-        <Button size="sm" onClick={handleSave} disabled={saving}>
-          <Save className="h-4 w-4 mr-1" />
-          {saving ? "Speichern..." : "Speichern"}
-        </Button>
-      </div>
     </div>
   )
 }

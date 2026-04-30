@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react"
-import { Plus, Search, LayoutGrid, List as ListIcon, Map as MapIcon } from "lucide-react"
+import { Plus, Search, LayoutGrid, List as ListIcon, Map as MapIcon, Settings } from "lucide-react"
 import {
   useItems,
   useCreateItem,
@@ -24,6 +24,10 @@ import type { ModuleSchema, CardsLayoutConfig, MapLayoutConfig, LayoutType } fro
 import type { ModuleFieldConfig } from "../types"
 import { FieldRenderer } from "./FieldRenderer"
 import { SchemaMapLayout, findLocationField } from "./SchemaMapLayout"
+import { ModuleEditScreen } from "./ModuleEditScreen"
+import { SchemaEditor } from "./SchemaEditor"
+import { useIsSpaceAdmin } from "../use-module-config"
+import { useModuleTemplates } from "../modulschmiede/use-module-templates"
 
 const LAYOUT_ICONS: Record<LayoutType, typeof LayoutGrid> = {
   cards: LayoutGrid,
@@ -49,18 +53,42 @@ const LAYOUT_ICONS: Record<LayoutType, typeof LayoutGrid> = {
  * Filter, Sortierung, weitere Layouts (List, Map, Calendar, Board) folgen.
  */
 
-export function SchemaModuleView({ schema }: { schema: ModuleSchema }) {
+export interface SchemaModuleViewProps {
+  schema: ModuleSchema
+  /** Im Preview-Modus wird kein Zahnrad angezeigt (verhindert Inception). */
+  isPreview?: boolean
+  /** spaceId fuer Admin-Check (im Preview ignoriert). */
+  spaceId?: string | null
+}
+
+export function SchemaModuleView({ schema, isPreview, spaceId }: SchemaModuleViewProps) {
   const { data: items } = useItems({ type: schema.itemType })
   const { data: currentUser } = useCurrentUser()
   const { mutate: createItem } = useCreateItem()
   const { mutate: updateItem } = useUpdateItem()
   const { mutate: deleteItem } = useDeleteItem()
+  const isAdmin = useIsSpaceAdmin(spaceId ?? null)
+  const { templates, saveTemplate } = useModuleTemplates()
 
   const [search, setSearch] = useState("")
   const [editItem, setEditItem] = useState<Item | null>(null)
   const [creating, setCreating] = useState(false)
+  const [editScreenOpen, setEditScreenOpen] = useState(false)
   const [activeLayoutId, setActiveLayoutId] = useState<string>(
     schema.defaultLayout ?? schema.layouts[0]?.id ?? "cards"
+  )
+
+  // Existierendes Template fuer dieses Schema (falls schon mal editiert)
+  const existingTemplate = useMemo(
+    () => templates.find((t) => t.schema.id === schema.id),
+    [templates, schema.id]
+  )
+
+  const handleSaveSchema = useCallback(
+    async (next: ModuleSchema) => {
+      await saveTemplate(next, existingTemplate?.item.id)
+    },
+    [saveTemplate, existingTemplate?.item.id]
   )
 
   const activeLayout = useMemo(
@@ -115,7 +143,27 @@ export function SchemaModuleView({ schema }: { schema: ModuleSchema }) {
   const createAction = schema.actions.find((a) => a.type === "create")
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Edit-Screen Vollbild-Overlay */}
+      {!isPreview && (
+        <ModuleEditScreen<ModuleSchema>
+          open={editScreenOpen}
+          onClose={() => setEditScreenOpen(false)}
+          title={schema.label}
+          description="Felder, Layouts, Aktionen"
+          initialConfig={schema}
+          onSave={handleSaveSchema}
+          renderEditor={(draft, setDraft) => (
+            <SchemaEditor schema={draft} onChange={setDraft} />
+          )}
+          renderPreview={(draft) => (
+            <div className="p-4">
+              <SchemaModuleView schema={draft} isPreview />
+            </div>
+          )}
+        />
+      )}
+
       {/* Toolbar */}
       <div className="flex gap-2 items-center flex-wrap">
         <div className="flex-1 min-w-48 relative">
@@ -127,6 +175,18 @@ export function SchemaModuleView({ schema }: { schema: ModuleSchema }) {
             className="pl-9"
           />
         </div>
+        {/* Zahnrad fuer Admins (NICHT im Preview) */}
+        {!isPreview && isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setEditScreenOpen(true)}
+            title={`${schema.label} konfigurieren`}
+            aria-label={`${schema.label} konfigurieren`}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        )}
         {/* Layout-Switcher (nur wenn mehr als 1 Layout) */}
         {schema.layouts.length > 1 && (
           <div className="inline-flex rounded-md border bg-muted/30 p-0.5">
@@ -441,9 +501,29 @@ function autoMapConfig(fields: ModuleFieldConfig[]): MapLayoutConfig {
 /**
  * Generische ModuleViewProps-Wrapper-Funktion: erstellt aus einem Schema
  * eine View-Komponente die direkt in der Modul-Registry verwendet werden kann.
+ *
+ * Wenn ein passendes Template-Item existiert (Schema mit gleicher ID wurde
+ * schon mal im Zahnrad-Editor gespeichert), wird das Template-Schema
+ * verwendet — sonst das hardcoded Schema. So funktioniert "Code-Modul mit
+ * editierbarem Schema": initial das Default, nach erstem Edit live aus WoT.
  */
-export function makeSchemaModuleView(schema: ModuleSchema) {
-  return function GeneratedModuleView(_props: ModuleViewProps) {
-    return <SchemaModuleView schema={schema} />
+export function makeSchemaModuleView(defaultSchema: ModuleSchema) {
+  return function GeneratedModuleView(props: ModuleViewProps) {
+    return <SchemaModuleViewWithTemplate defaultSchema={defaultSchema} spaceId={props.spaceId} />
   }
+}
+
+function SchemaModuleViewWithTemplate({
+  defaultSchema,
+  spaceId,
+}: {
+  defaultSchema: ModuleSchema
+  spaceId: string | null
+}) {
+  const { templates } = useModuleTemplates()
+  const liveSchema = useMemo(() => {
+    const tpl = templates.find((t) => t.schema.id === defaultSchema.id)
+    return tpl?.schema ?? defaultSchema
+  }, [templates, defaultSchema])
+  return <SchemaModuleView schema={liveSchema} spaceId={spaceId} />
 }
