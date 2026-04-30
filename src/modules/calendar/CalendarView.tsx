@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react"
-import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket } from "lucide-react"
+import { Plus, Settings, ChevronLeft, ChevronRight, CalendarDays, List, Layers, MapPin, Tag, Ticket, Search } from "lucide-react"
 import {
   useItems,
   useCreateItem,
@@ -33,6 +33,7 @@ import type { Reminder } from "./reminders"
 import { useReminderScheduler } from "./useReminderScheduler"
 import { ParticipationControls } from "./ParticipationControls"
 import { useMyParticipations } from "./useParticipation"
+import { CalendarFilterBar, applyCalendarFilter, collectHashtags, emptyFilter, type CalendarFilterState } from "./CalendarFilterBar"
 
 // ============================================================
 // Types
@@ -105,6 +106,8 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
   const [creating, setCreating] = useState(false)
   const [editItem, setEditItem] = useState<Item | null>(null)
+  const [filter, setFilter] = useState<CalendarFilterState>(emptyFilter)
+  const [filterOpen, setFilterOpen] = useState(false)
   const { data: currentUser } = useCurrentUser()
   const { mutate: createItem } = useCreateItem()
   const { mutate: updateItem } = useUpdateItem()
@@ -115,10 +118,26 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
   const apptItems = useItems({ type: cfg.itemTypes.includes("appointment") ? "appointment" : "__none__" }).data
   const questItems = useItems({ type: cfg.itemTypes.includes("quest") ? "quest" : "__none__" }).data
 
-  const allItems = useMemo(
+  const rawItems = useMemo(
     () => [...eventItems, ...apptItems, ...questItems].filter((it) => it.data.start),
     [eventItems, apptItems, questItems]
   )
+
+  // Participation fuer Filter
+  const { acceptedEventIds, observingEventIds } = useMyParticipations()
+
+  // Filter anwenden
+  const allItems = useMemo(
+    () =>
+      applyCalendarFilter(rawItems, filter, {
+        currentUserId: currentUser?.id,
+        acceptedEventIds,
+        observingEventIds,
+      }),
+    [rawItems, filter, currentUser?.id, acceptedEventIds, observingEventIds]
+  )
+
+  const availableHashtags = useMemo(() => collectHashtags(rawItems), [rawItems])
 
   // Reminder-Scheduler (Browser-Notifications, nur ausserhalb von Preview)
   useReminderScheduler({
@@ -217,6 +236,16 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Filter-Toggle */}
+        <Button
+          variant={filter.search || filter.hashtags.length > 0 || filter.status !== "all" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setFilterOpen(!filterOpen)}
+          title="Suche und Filter"
+        >
+          <Search className="h-3.5 w-3.5" />
+        </Button>
+
         {/* Zahnrad */}
         {!isPreview && isAdmin && (
           <Button
@@ -238,6 +267,16 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
           </Button>
         )}
       </div>
+
+      {/* Filter-Bar (collapsible) */}
+      {filterOpen && (
+        <CalendarFilterBar
+          filter={filter}
+          onChange={setFilter}
+          availableHashtags={availableHashtags}
+          resultCount={allItems.length}
+        />
+      )}
 
       {/* View-Inhalt */}
       {activeView === "month" && (
