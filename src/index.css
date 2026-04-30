@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "@real-life-stack/toolkit/styles/globals.css";
 @import "leaflet/dist/leaflet.css";
-@import "leaflet.markercluster/dist/MarkerCluster.css";
-@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 /* Tailwind v4: scan toolkit sources so Toolkit-Komponenten ihre CSS-Klassen
    bekommen (Dialog/Card/Border etc. — sonst rendern Dialoge transparent). */
