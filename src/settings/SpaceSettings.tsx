@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import {
   Settings as SettingsIcon,
   Home,
@@ -33,6 +33,7 @@ import type { Group } from "@real-life-stack/data-interface"
 import { ThemeView } from "../modules/theme/ThemeView"
 import { MembersView } from "../modules/members/MembersView"
 import { DemoSection } from "../demo/DemoSection"
+import { getAllModules } from "../modules/registry"
 
 /**
  * SpaceSettings — Vollbild-Konfigurations-Dialog pro Space.
@@ -272,7 +273,7 @@ function renderEditor(
         </EmbeddedView>
       )
     case "modules":
-      return <ModulesPlaceholder />
+      return <ModulesTab group={activeGroup} />
     case "modulschmiede":
       return <ModulschmiedePlaceholder />
     case "members":
@@ -480,17 +481,104 @@ function GeneralTab({ group }: { group: Group }) {
 // Platzhalter — werden in Phase B/C gefuellt
 // ============================================================
 
-function ModulesPlaceholder() {
+// ============================================================
+// Tab: Module — An/Aus-Liste + (Phase B2) Sub-Konfig
+// ============================================================
+
+const FUNCTION_MODULE_IDS = ["map", "kanban", "calendar", "marketplace"]
+
+function ModulesTab({ group }: { group: Group }) {
+  const updateGroup = useUpdateGroup()
+  const [busy, setBusy] = useState(false)
+
+  const enabled = useMemo<string[]>(
+    () => (group.data?.modules as string[] | undefined) ?? FUNCTION_MODULE_IDS,
+    [group.data?.modules]
+  )
+
+  // Alle registrierten Module — Funktions-Module zuerst, dann der Rest.
+  const sortedModules = useMemo(() => {
+    const all = getAllModules()
+    const fn = FUNCTION_MODULE_IDS
+      .map((id) => all.find((m) => m.id === id))
+      .filter((m): m is NonNullable<typeof m> => Boolean(m))
+    const rest = all.filter((m) => !FUNCTION_MODULE_IDS.includes(m.id))
+    return [...fn, ...rest]
+  }, [])
+
+  const toggleModule = async (id: string) => {
+    setBusy(true)
+    try {
+      const next = enabled.includes(id)
+        ? enabled.filter((x) => x !== id)
+        : [...enabled, id]
+      await updateGroup(group.id, {
+        data: { ...(group.data ?? {}), modules: next },
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="max-w-2xl">
-      <h3 className="text-base font-semibold mb-1">Module</h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        Schalte Module ein und aus. Pro aktivem Modul erscheint hier rechts ein
-        Sub-Tab mit den Modul-eigenen Einstellungen (Karte: Pins/Layer/Suche,
-        Kalender: Modus/Reminders, Marktplatz: Felder/Layouts).
-      </p>
-      <div className="border border-dashed rounded-md p-6 text-center text-sm text-muted-foreground">
-        Module-Verwaltung kommt in der naechsten Phase.
+    <div className="max-w-2xl space-y-4">
+      <div>
+        <h3 className="text-base font-semibold mb-1">Module</h3>
+        <p className="text-xs text-muted-foreground">
+          Schalte ein, was dieser Space koennen soll. Aktive Module
+          erscheinen sofort als Tab in der Navbar oben.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {sortedModules.map((mod) => {
+          const Icon = mod.icon
+          const isOn = enabled.includes(mod.id)
+          const isFunction = FUNCTION_MODULE_IDS.includes(mod.id)
+          return (
+            <div
+              key={mod.id}
+              className={`flex items-center gap-3 p-3 border rounded-md transition-colors ${
+                isOn ? "bg-card" : "bg-muted/20"
+              }`}
+            >
+              <Icon className={`h-5 w-5 shrink-0 ${isOn ? "text-primary" : "text-muted-foreground"}`} />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium leading-tight">{mod.label}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {isFunction
+                    ? "Funktions-Modul — erscheint als Tab in der Navbar"
+                    : "Konfigurations-Modul — sichtbar als Tab wenn aktiv"}
+                  {mod.itemTypes && mod.itemTypes.length > 0 && (
+                    <span> · Item-Typen: {mod.itemTypes.join(", ")}</span>
+                  )}
+                </div>
+              </div>
+              <label className="inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={isOn}
+                  onChange={() => toggleModule(mod.id)}
+                  disabled={busy}
+                  className="sr-only peer"
+                />
+                <div className={`relative w-10 h-5 rounded-full transition-colors ${
+                  isOn ? "bg-primary" : "bg-muted-foreground/30"
+                }`}>
+                  <div className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                    isOn ? "translate-x-5" : "translate-x-0"
+                  }`} />
+                </div>
+              </label>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="border border-dashed rounded-md p-3 text-[11px] text-muted-foreground/80 leading-relaxed">
+        💡 <strong>Sub-Konfiguration pro Modul</strong> kommt im naechsten Schritt
+        — dann oeffnet ein Klick auf ein aktives Modul einen Editor mit
+        Live-Vorschau der Karte/des Kalenders rechts daneben.
       </div>
     </div>
   )
