@@ -37,6 +37,7 @@ import { CalendarFilterBar, applyCalendarFilter, collectHashtags, emptyFilter, t
 import { DayView } from "./views/DayView"
 import { YearView } from "./views/YearView"
 import { useCalendars } from "./useCalendars"
+import { TagInput } from "../profile/TagInput"
 
 // ============================================================
 // Types
@@ -361,6 +362,7 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
         onSubmit={handleCreate}
         defaultDuration={cfg.defaultDurationMinutes ?? 60}
         title={cfg.mode === "group-calendar" ? "Neuer Termin" : "Neues Event"}
+        availableHashtags={availableHashtags}
       />
 
       {/* Edit-Panel */}
@@ -377,6 +379,7 @@ export function CalendarView({ spaceId, activeGroup, config, isPreview }: Calend
             onDelete={handleDelete}
             onCancel={() => setEditItem(null)}
             currentUserId={currentUser?.id}
+            availableHashtags={availableHashtags}
           />
         )}
       </AdaptivePanel>
@@ -751,12 +754,14 @@ function EventFormDialog({
   onSubmit,
   defaultDuration,
   title,
+  availableHashtags,
 }: {
   open: boolean
   onClose: () => void
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   defaultDuration: number
   title: string
+  availableHashtags?: string[]
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -769,6 +774,7 @@ function EventFormDialog({
           }}
           onCancel={onClose}
           defaultDuration={defaultDuration}
+          availableHashtags={availableHashtags}
         />
       </DialogContent>
     </Dialog>
@@ -781,12 +787,14 @@ function EventEditForm({
   onDelete,
   onCancel,
   currentUserId,
+  availableHashtags,
 }: {
   item: Item
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onDelete: () => void
   onCancel: () => void
   currentUserId?: string
+  availableHashtags?: string[]
 }) {
   const isOwn = currentUserId === item.createdBy
   return (
@@ -802,6 +810,7 @@ function EventEditForm({
           onCancel={onCancel}
           onDelete={isOwn ? onDelete : undefined}
           defaultDuration={60}
+          availableHashtags={availableHashtags}
         />
       </div>
     </div>
@@ -814,12 +823,15 @@ function EventForm({
   onCancel,
   onDelete,
   defaultDuration,
+  availableHashtags,
 }: {
   initialData: Record<string, unknown>
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
   onDelete?: () => void
   defaultDuration: number
+  /** Vorhandene Hashtags fuer Autocomplete. */
+  availableHashtags?: string[]
 }) {
   const { calendars, defaultCalendar } = useCalendars()
   const [calendarId, setCalendarId] = useState<string | undefined>(
@@ -829,6 +841,11 @@ function EventForm({
   const [start, setStart] = useState(toDateTimeLocal(initialData.start))
   const [end, setEnd] = useState(toDateTimeLocal(initialData.end))
   const [allDay, setAllDay] = useState(Boolean(initialData.allDay))
+  // Mehrtaegig-Modus: Datum-Range statt Single-Datetime
+  const initialMultiDay = Boolean(
+    initialData.start && initialData.end && computeIsMultiDay(initialData.start, initialData.end)
+  )
+  const [multiDay, setMultiDay] = useState(initialMultiDay)
   const [markdownBody, setMarkdownBody] = useState(String(initialData.markdownBody ?? initialData.description ?? ""))
   const [coverImageUrl, setCoverImageUrl] = useState<string | undefined>(
     initialData.coverImageUrl as string | undefined
@@ -841,8 +858,8 @@ function EventForm({
   )
   const [price, setPrice] = useState(String(initialData.price ?? ""))
   const [ticketUrl, setTicketUrl] = useState(String(initialData.ticketUrl ?? ""))
-  const [hashtagsRaw, setHashtagsRaw] = useState(
-    Array.isArray(initialData.hashtags) ? (initialData.hashtags as string[]).join(", ") : ""
+  const [hashtags, setHashtags] = useState<string[]>(
+    Array.isArray(initialData.hashtags) ? (initialData.hashtags as string[]) : []
   )
   const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(
     initialData.recurrence as RecurrenceRule | undefined
@@ -851,7 +868,14 @@ function EventForm({
     (initialData.reminders as Reminder[] | undefined) ?? []
   )
   const [saving, setSaving] = useState(false)
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  // Optionale Sektionen — kollabiert by default ausser wenn schon befuellt
+  const [showRecurrence, setShowRecurrence] = useState(Boolean(initialData.recurrence))
+  const [showReminders, setShowReminders] = useState(
+    Array.isArray(initialData.reminders) && (initialData.reminders as Reminder[]).length > 0
+  )
+  const [showAdvanced, setShowAdvanced] = useState(
+    Boolean(initialData.galleryImageUrls || initialData.price || initialData.ticketUrl)
+  )
 
   // Auto-Endzeit bei Startzeit-Eingabe
   const handleStartChange = (v: string) => {
@@ -866,11 +890,15 @@ function EventForm({
   const handleSave = async () => {
     setSaving(true)
     try {
-      const hashtags = hashtagsRaw
-        .split(/[,\s]+/)
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .map((t) => (t.startsWith("#") ? t : `#${t}`))
+      // Hashtags normalisieren: # Prefix sicherstellen, lowercase, dedupe
+      const normalizedHashtags = Array.from(
+        new Set(
+          hashtags
+            .map((t) => t.trim().toLowerCase())
+            .filter(Boolean)
+            .map((t) => (t.startsWith("#") ? t : `#${t}`))
+        )
+      )
 
       // plainDescription aus Markdown (fuer Suche)
       const plainDescription = markdownBody
@@ -892,7 +920,7 @@ function EventForm({
         location: location && (location.address || location.lat || location.lng) ? location : undefined,
         price: price.trim() || undefined,
         ticketUrl: ticketUrl.trim() || undefined,
-        hashtags: hashtags.length > 0 ? hashtags : undefined,
+        hashtags: normalizedHashtags.length > 0 ? normalizedHashtags : undefined,
         recurrence,
         reminders: reminders.length > 0 ? reminders : undefined,
         calendarId,
@@ -938,18 +966,28 @@ function EventForm({
         onChange={setCoverImageUrl}
       />
 
-      {/* Datum + Zeit */}
+      {/* Datum + Zeit (smart) */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="all-day"
-            checked={allDay}
-            onChange={(e) => setAllDay(e.target.checked)}
-          />
-          <Label htmlFor="all-day" className="text-xs cursor-pointer">Ganztaegig</Label>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="inline-flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allDay}
+              onChange={(e) => setAllDay(e.target.checked)}
+            />
+            <span className="text-xs">Ganztaegig</span>
+          </label>
+          <label className="inline-flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={multiDay}
+              onChange={(e) => setMultiDay(e.target.checked)}
+            />
+            <span className="text-xs">Ueber mehrere Tage</span>
+          </label>
         </div>
-        {!allDay ? (
+
+        {!allDay && !multiDay && (
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-xs">Start</Label>
@@ -960,7 +998,9 @@ function EventForm({
               <Input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
           </div>
-        ) : (
+        )}
+
+        {allDay && !multiDay && (
           <div>
             <Label className="text-xs">Datum</Label>
             <Input
@@ -968,6 +1008,33 @@ function EventForm({
               value={start.split("T")[0]}
               onChange={(e) => setStart(e.target.value + "T00:00")}
             />
+          </div>
+        )}
+
+        {multiDay && (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">Von</Label>
+              <Input
+                type="date"
+                value={start.split("T")[0]}
+                onChange={(e) => setStart(e.target.value + "T00:00")}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Bis</Label>
+              <Input
+                type="date"
+                value={end.split("T")[0]}
+                onChange={(e) => setEnd(e.target.value + "T23:59")}
+              />
+            </div>
+            {!allDay && (
+              <p className="col-span-2 text-[11px] text-muted-foreground/70">
+                Mehrtaegige Events laufen ohne Uhrzeit. Aktiviere "Ganztaegig" zur Klarstellung
+                oder lass es weg fuer einen offenen Zeitraum.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -989,26 +1056,62 @@ function EventForm({
         <LocationField value={location} onChange={setLocation} />
       </div>
 
-      {/* Tags */}
+      {/* Tags — TagInput mit Enter-Hinzufuegen + Autocomplete */}
       <div>
         <Label className="text-xs">Hashtags</Label>
-        <Input
-          value={hashtagsRaw}
-          onChange={(e) => setHashtagsRaw(e.target.value)}
-          placeholder="z.B. #konzert, #werkstatt"
+        <TagInput
+          value={hashtags}
+          onChange={setHashtags}
+          placeholder="Hashtag eingeben + Enter"
+          suggestions={availableHashtags ?? []}
+          quickSuggestions={8}
         />
       </div>
 
-      {/* Wiederholung */}
-      <div>
-        <Label className="text-xs">Wiederholung</Label>
-        <RecurrenceEditor value={recurrence} onChange={setRecurrence} />
+      {/* Wiederholung — optional */}
+      <div className="border rounded-md p-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showRecurrence}
+            onChange={(e) => {
+              setShowRecurrence(e.target.checked)
+              if (!e.target.checked) setRecurrence(undefined)
+            }}
+          />
+          <span className="text-xs font-medium">🔁 Wiederholung</span>
+          {recurrence && !showRecurrence && (
+            <span className="text-[10px] text-muted-foreground ml-2">aktiviert</span>
+          )}
+        </label>
+        {showRecurrence && (
+          <div className="mt-2">
+            <RecurrenceEditor value={recurrence} onChange={setRecurrence} />
+          </div>
+        )}
       </div>
 
-      {/* Erinnerungen */}
-      <div>
-        <Label className="text-xs">Erinnerungen</Label>
-        <ReminderEditor value={reminders} onChange={setReminders} />
+      {/* Erinnerungen — optional */}
+      <div className="border rounded-md p-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showReminders}
+            onChange={(e) => {
+              setShowReminders(e.target.checked)
+              if (!e.target.checked) setReminders([])
+            }}
+          />
+          <span className="text-xs font-medium">🔔 Erinnerungen</span>
+          {reminders.length > 0 && !showReminders && (
+            <span className="text-[10px] text-muted-foreground ml-2">{reminders.length} gesetzt</span>
+          )}
+        </label>
+        {showReminders && (
+          <div className="mt-2">
+            <ReminderEditor value={reminders} onChange={setReminders} />
+          </div>
+        )}
       </div>
 
       {/* Erweiterte Optionen aufklappbar */}
@@ -1073,6 +1176,18 @@ function EventForm({
 // ============================================================
 // Helpers
 // ============================================================
+
+function computeIsMultiDay(startIso: unknown, endIso: unknown): boolean {
+  if (typeof startIso !== "string" || typeof endIso !== "string") return false
+  const s = new Date(startIso)
+  const e = new Date(endIso)
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) return false
+  return (
+    s.getFullYear() !== e.getFullYear() ||
+    s.getMonth() !== e.getMonth() ||
+    s.getDate() !== e.getDate()
+  )
+}
 
 function toDateTimeLocal(iso: unknown): string {
   if (!iso || typeof iso !== "string") return ""
