@@ -1,7 +1,14 @@
 @import "tailwindcss";
+@import "@real-life-stack/toolkit/styles/globals.css";
 @import "leaflet/dist/leaflet.css";
 @import "leaflet.markercluster/dist/MarkerCluster.css";
 @import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
+/* Tailwind v4: scan toolkit sources so Toolkit-Komponenten ihre CSS-Klassen
+   bekommen (Dialog/Card/Border etc. — sonst rendern Dialoge transparent). */
+@source "../../real-life-stack/packages/toolkit/src/**/*.tsx";
+
+@custom-variant dark (&:is(.dark *));
 
 /* Cluster-Icon */
 .macher-cluster-wrap {
@@ -228,6 +235,23 @@ body {
   color: #1A1A1A;
   padding: 0.12em 0.4em;
   border-radius: 4px;
+}
+
+/* Navbar ueber Leaflet-Karte: z-index braucht position */
+.glass-navbar {
+  position: relative;
+}
+
+/* Dropdowns und Popovers: solider Hintergrund ueber der Karte */
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"],
+[data-slot="dialog-content"] {
+  background-color: #fff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+[data-slot="dialog-overlay"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Zauberstab → ausblenden fuer Macher-Map */

@@ -19,7 +19,16 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* RLS Package Aliases */
+    "paths": {
+      "@real-life-stack/data-interface": ["../real-life-stack/packages/data-interface/src/index.ts"],
+      "@real-life-stack/data-interface/demo-data": ["../real-life-stack/packages/data-interface/src/demo-data.ts"],
+      "@real-life-stack/toolkit": ["../real-life-stack/packages/toolkit/src/index.ts"],
+      "@real-life-stack/local-connector": ["../real-life-stack/packages/local-connector/src/index.ts"],
+      "@real-life-stack/mock-connector": ["../real-life-stack/packages/mock-connector/src/index.ts"]
+    }
   },
   "include": ["src"]
 }
