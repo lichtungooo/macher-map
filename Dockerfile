@@ -8,15 +8,16 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN apk add --no-cache git python3 make g++
 
-# Web-of-Trust zuerst — pnpm-Workspace mit eigenen Deps
+# Web-of-Trust zuerst — pnpm-Workspace mit eigenen Deps.
+# --no-frozen-lockfile damit drift in der Workspace-Lockfile nicht blockt.
 COPY web-of-trust /app/web-of-trust
 WORKDIR /app/web-of-trust
-RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --ignore-scripts
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # Real-Life-Stack — pnpm-Workspace, referenziert WoT via overrides
 COPY real-life-stack /app/real-life-stack
 WORKDIR /app/real-life-stack
-RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --ignore-scripts
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # Macher-Map — eigentliche App, nutzt beide via Vite-Aliase
 WORKDIR /app/macher-map

@@ -20,6 +20,11 @@ export default defineConfig({
       { find: '@real-life-stack/wot-connector', replacement: path.join(rls, 'wot-connector/src/index.ts') },
       { find: '@web_of_trust/adapter-yjs', replacement: path.resolve(__dirname, '../web-of-trust/packages/adapter-yjs/src/index.ts') },
       { find: '@web_of_trust/core', replacement: path.resolve(__dirname, '../web-of-trust/packages/wot-core/src/index.ts') },
+      // Antons Refactor (real-life-stack:master): Imports nutzen @real-life/* statt @web_of_trust/*
+      // Pfade zeigen weiterhin auf web-of-trust-Paket-Source. Override per Vite-Alias damit
+      // unabhaengig von pnpm-overrides geloest wird.
+      { find: '@real-life/adapter-yjs', replacement: path.resolve(__dirname, '../web-of-trust/packages/adapter-yjs/src/index.ts') },
+      { find: '@real-life/wot-core', replacement: path.resolve(__dirname, '../web-of-trust/packages/wot-core/src/index.ts') },
       { find: /^@\//, replacement: path.join(rls, 'toolkit/src') + '/' },
       // Force single React instance — prevent RLS deps from loading their own React
       { find: 'react', replacement: path.resolve(__dirname, 'node_modules/react') },
